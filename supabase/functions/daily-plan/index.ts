@@ -25,7 +25,7 @@ Return a JSON array of 3-5 plan items. Each item must have:
 - "task": concise task description (max 10 words)
 - "reason": why this is recommended (max 12 words)
 
-Consider: high burnout = fewer/lighter sessions; high cognitive readiness = harder material first; peak window = schedule hardest work there.`;
+Consider: high burnout = fewer/lighter sessions; high cognitive readiness = harder material first; peak window = schedule hardest work there.${feedbackContext}`;
 
     const userPrompt = `Metrics:
 - Cognitive Readiness: ${cognitiveReadiness}/100
