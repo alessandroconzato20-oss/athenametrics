@@ -119,6 +119,10 @@ const DailyStudyPlan = ({ scores }: DailyStudyPlanProps) => {
               <span className="text-[10px] font-semibold text-primary">AI</span>
             </div>
           )}
+          <DisagreeButton
+            feedbackType="daily_plan"
+            context={{ plan: plan.map(p => p.task) }}
+          />
           {expanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
         </div>
       </button>
