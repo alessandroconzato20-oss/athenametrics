@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Zap, Coffee, Moon, Brain, Sunrise } from "lucide-react";
+import DisagreeButton from "@/components/DisagreeButton";
 
 interface HeroActionProps {
   displayName: string;
