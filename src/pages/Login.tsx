@@ -69,10 +69,20 @@ const Login = () => {
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-muted-foreground">
-          Don't have an account?{" "}
-          <Link to="/signup" className="font-medium text-primary hover:underline">Sign up</Link>
-        </p>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="mt-8 rounded-2xl border border-primary/20 bg-primary/5 p-5 text-center"
+        >
+          <p className="mb-2 text-sm font-medium text-foreground">New to CoFactor?</p>
+          <p className="mb-4 text-xs text-muted-foreground">Join Humanitas students already optimising their study performance 🚀</p>
+          <Link to="/signup">
+            <Button variant="outline" className="w-full h-11 rounded-xl border-primary text-primary font-semibold hover:bg-primary hover:text-primary-foreground transition-colors">
+              Create your free account →
+            </Button>
+          </Link>
+        </motion.div>
       </motion.div>
     </div>
   );
