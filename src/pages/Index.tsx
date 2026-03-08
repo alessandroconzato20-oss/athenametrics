@@ -90,6 +90,22 @@ const Index = () => {
   const scores = useMemo(() => healthData ? computeScores(healthData) : null, [healthData]);
   const scoresData = useMemo(() => scores ? buildScoresData(scores) : [], [scores]);
 
+  // Save daily burnout score
+  useEffect(() => {
+    if (!scores || !user) return;
+    const today = format(new Date(), "yyyy-MM-dd");
+    supabase
+      .from("daily_scores")
+      .upsert({
+        user_id: user.id,
+        score_date: today,
+        burnout_risk: scores.burnoutRisk,
+        cognitive_readiness: scores.cognitiveReadiness,
+        retention_outlook: scores.retentionOutlook,
+      }, { onConflict: "user_id,score_date" })
+      .then(({ error }) => { if (error) console.error("Failed to save daily score:", error); });
+  }, [scores, user]);
+
   if (authLoading) return null;
   if (!user) return <Navigate to="/login" replace />;
 
