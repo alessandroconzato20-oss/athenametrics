@@ -10,9 +10,13 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { cognitiveReadiness, burnoutRisk, peakWindow, studyCapacity } = await req.json();
+    const { cognitiveReadiness, burnoutRisk, peakWindow, studyCapacity, pastFeedback } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not set");
+
+    const feedbackContext = pastFeedback && pastFeedback.length > 0
+      ? `\n\nIMPORTANT - The student has previously disagreed with recommendations. Adapt the plan based on their feedback:\n${pastFeedback.map((f: any) => `- Disagreed with "${f.feedback_type}": "${f.reason}"`).join("\n")}`
+      : "";
 
     const systemPrompt = `You are a medical student study coach. Based on the student's daily health metrics, create a personalized daily study plan.
 
@@ -21,7 +25,7 @@ Return a JSON array of 3-5 plan items. Each item must have:
 - "task": concise task description (max 10 words)
 - "reason": why this is recommended (max 12 words)
 
-Consider: high burnout = fewer/lighter sessions; high cognitive readiness = harder material first; peak window = schedule hardest work there.`;
+Consider: high burnout = fewer/lighter sessions; high cognitive readiness = harder material first; peak window = schedule hardest work there.${feedbackContext}`;
 
     const userPrompt = `Metrics:
 - Cognitive Readiness: ${cognitiveReadiness}/100

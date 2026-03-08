@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Zap, Coffee, Moon, Brain, Sunrise } from "lucide-react";
+import DisagreeButton from "@/components/DisagreeButton";
 
 interface HeroActionProps {
   displayName: string;
@@ -100,10 +101,14 @@ const HeroAction = ({ displayName, scores }: HeroActionProps) => {
         >
           {icon}
         </motion.div>
-        <div>
+        <div className="flex-1">
           <p className="font-display text-lg font-bold leading-snug text-foreground">{text}</p>
           {sub && <p className="mt-1 text-sm text-muted-foreground">{sub}</p>}
         </div>
+        <DisagreeButton
+          feedbackType="hero_recommendation"
+          context={{ message: text, sub, hour: new Date().getHours() }}
+        />
       </div>
     </motion.div>
   );

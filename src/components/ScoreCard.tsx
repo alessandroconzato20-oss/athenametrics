@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Brain, Clock, AlertTriangle, BookOpen, Sun, ChevronRight, Sparkles } from "lucide-react";
+import DisagreeButton from "@/components/DisagreeButton";
 
 interface ScoreCardProps {
   label: string;
@@ -70,7 +71,14 @@ const ScoreCard = ({ label, value, icon, colorClass, index, actionText, numValue
         <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground/80 line-clamp-2">{actionText}</p>
       </div>
       
-      <ChevronRight className="mt-3 h-4 w-4 shrink-0 text-muted-foreground/40 transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+      <div className="flex flex-col items-center gap-1.5 shrink-0">
+        <DisagreeButton
+          feedbackType="metric"
+          context={{ metric: label, value, numValue }}
+          size="sm"
+        />
+        <ChevronRight className="h-4 w-4 text-muted-foreground/40 transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+      </div>
     </motion.button>
   );
 };

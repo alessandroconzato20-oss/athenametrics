@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Lightbulb } from "lucide-react";
+import DisagreeButton from "@/components/DisagreeButton";
 
 interface TodaysInsightProps {
   scores: {
@@ -70,7 +71,7 @@ const TodaysInsight = ({ scores }: TodaysInsightProps) => {
         >
           {insight.emoji}
         </motion.div>
-        <div>
+        <div className="flex-1">
           <div className="flex items-center gap-2">
             <Lightbulb className="h-3.5 w-3.5 text-accent" />
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Today's Insight</p>
@@ -78,6 +79,10 @@ const TodaysInsight = ({ scores }: TodaysInsightProps) => {
           <p className="mt-1 font-display text-sm font-bold text-foreground">{insight.title}</p>
           <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{insight.body}</p>
         </div>
+        <DisagreeButton
+          feedbackType="daily_insight"
+          context={{ title: insight.title, body: insight.body }}
+        />
       </div>
     </motion.div>
   );

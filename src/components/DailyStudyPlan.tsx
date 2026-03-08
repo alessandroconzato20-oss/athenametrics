@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CalendarClock, Sparkles, ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import DisagreeButton from "@/components/DisagreeButton";
 
 interface PlanItem {
   time: string;
@@ -31,12 +32,20 @@ const DailyStudyPlan = ({ scores }: DailyStudyPlanProps) => {
     if (!user || !scores) return;
     setLoading(true);
     try {
+      // Fetch recent feedback to recalibrate
+      const { data: feedbackData } = await supabase
+        .from("user_feedback")
+        .select("feedback_type, reason, context")
+        .order("created_at", { ascending: false })
+        .limit(10) as any;
+
       const { data, error } = await supabase.functions.invoke("daily-plan", {
         body: {
           cognitiveReadiness: scores.cognitiveReadiness,
           burnoutRisk: scores.burnoutRisk,
           peakWindow: scores.peakWindow,
           studyCapacity: scores.studyCapacity,
+          pastFeedback: feedbackData || [],
         },
       });
       if (error) throw error;
@@ -118,6 +127,10 @@ const DailyStudyPlan = ({ scores }: DailyStudyPlanProps) => {
               <span className="text-[10px] font-semibold text-primary">AI</span>
             </div>
           )}
+          <DisagreeButton
+            feedbackType="daily_plan"
+            context={{ plan: plan.map(p => p.task) }}
+          />
           {expanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
         </div>
       </button>

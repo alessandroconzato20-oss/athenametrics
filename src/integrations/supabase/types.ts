@@ -107,6 +107,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_feedback: {
+        Row: {
+          context: Json
+          created_at: string
+          feedback_type: string
+          id: string
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          context?: Json
+          created_at?: string
+          feedback_type: string
+          id?: string
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          context?: Json
+          created_at?: string
+          feedback_type?: string
+          id?: string
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       leaderboard: {
