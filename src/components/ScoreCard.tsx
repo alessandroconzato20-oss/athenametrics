@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Brain, Clock, AlertTriangle, BookOpen, Sun, ChevronRight, Sparkles } from "lucide-react";
+import DisagreeButton from "@/components/DisagreeButton";
 
 interface ScoreCardProps {
   label: string;
