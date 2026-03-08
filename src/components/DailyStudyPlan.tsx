@@ -1,0 +1,193 @@
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { CalendarClock, Sparkles, ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+
+interface PlanItem {
+  time: string;
+  task: string;
+  reason: string;
+  done: boolean;
+}
+
+interface DailyStudyPlanProps {
+  scores: {
+    cognitiveReadiness: number;
+    burnoutRisk: number;
+    peakWindow: string;
+    studyCapacity: string;
+  } | null;
+}
+
+const DailyStudyPlan = ({ scores }: DailyStudyPlanProps) => {
+  const { user } = useAuth();
+  const [plan, setPlan] = useState<PlanItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [expanded, setExpanded] = useState(true);
+  const [generated, setGenerated] = useState(false);
+
+  const generatePlan = async () => {
+    if (!user || !scores) return;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("daily-plan", {
+        body: {
+          cognitiveReadiness: scores.cognitiveReadiness,
+          burnoutRisk: scores.burnoutRisk,
+          peakWindow: scores.peakWindow,
+          studyCapacity: scores.studyCapacity,
+        },
+      });
+      if (error) throw error;
+      if (data?.plan) {
+        setPlan(data.plan.map((p: any) => ({ ...p, done: false })));
+        setGenerated(true);
+      }
+    } catch (e) {
+      console.error("Plan generation failed:", e);
+      // Fallback plan
+      setPlan(getFallbackPlan(scores));
+      setGenerated(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getFallbackPlan = (s: DailyStudyPlanProps["scores"]): PlanItem[] => {
+    if (!s) return [];
+    const peak = s.peakWindow;
+    const isHighBurnout = s.burnoutRisk > 50;
+    
+    if (isHighBurnout) {
+      return [
+        { time: "Morning", task: "Light flashcard review (30 min)", reason: "Ease into the day with low effort", done: false },
+        { time: "Midday", task: "Walk or rest (20 min)", reason: "Recovery reduces burnout risk", done: false },
+        { time: "Afternoon", task: "One focused session (45 min)", reason: "Keep it short to avoid overload", done: false },
+      ];
+    }
+    
+    return [
+      { time: "Pre-peak", task: "Warm up with flashcards (20 min)", reason: "Prime your brain before peak window", done: false },
+      { time: peak, task: "Deep study — hardest topic (90 min)", reason: "Peak cognitive readiness window", done: false },
+      { time: "Post-peak", task: "Active recall practice (45 min)", reason: "Cement what you learned", done: false },
+      { time: "Evening", task: "Light review + log session", reason: "Consolidate and track progress", done: false },
+    ];
+  };
+
+  const toggleDone = (idx: number) => {
+    setPlan(prev => prev.map((p, i) => i === idx ? { ...p, done: !p.done } : p));
+  };
+
+  const doneCount = plan.filter(p => p.done).length;
+
+  useEffect(() => {
+    if (scores && !generated) {
+      generatePlan();
+    }
+  }, [scores]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.7 }}
+      className="rounded-3xl bg-card p-5 shadow-card"
+    >
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="flex w-full items-center justify-between"
+      >
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
+            <CalendarClock className="h-4.5 w-4.5 text-primary" />
+          </div>
+          <div className="text-left">
+            <h3 className="font-display text-base font-bold text-foreground">Today's Plan</h3>
+            {generated && (
+              <p className="text-xs text-muted-foreground">
+                {doneCount}/{plan.length} completed
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {generated && (
+            <div className="flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5">
+              <Sparkles className="h-3 w-3 text-primary" />
+              <span className="text-[10px] font-semibold text-primary">AI</span>
+            </div>
+          )}
+          {expanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+        </div>
+      </button>
+
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="overflow-hidden"
+          >
+            {loading ? (
+              <div className="mt-4 space-y-3">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="h-16 animate-pulse rounded-xl bg-muted" />
+                ))}
+              </div>
+            ) : (
+              <div className="mt-4 space-y-2">
+                {plan.map((item, i) => (
+                  <motion.button
+                    key={i}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.08 }}
+                    onClick={() => toggleDone(i)}
+                    className={`flex w-full items-start gap-3 rounded-xl p-3 text-left transition-all ${
+                      item.done ? "bg-primary/5 opacity-60" : "bg-muted/50 hover:bg-muted"
+                    }`}
+                  >
+                    <motion.div
+                      animate={item.done ? { scale: [1, 1.3, 1] } : {}}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <CheckCircle2
+                        className={`mt-0.5 h-5 w-5 shrink-0 transition-colors ${
+                          item.done ? "text-primary" : "text-muted-foreground/30"
+                        }`}
+                      />
+                    </motion.div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{item.time}</span>
+                      </div>
+                      <p className={`text-sm font-medium ${item.done ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                        {item.task}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground/70">{item.reason}</p>
+                    </div>
+                  </motion.button>
+                ))}
+              </div>
+            )}
+
+            {doneCount === plan.length && plan.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="mt-3 rounded-xl bg-primary/10 p-3 text-center"
+              >
+                <p className="text-sm font-bold text-primary">🎉 All tasks done! Great work today.</p>
+              </motion.div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+};
+
+export default DailyStudyPlan;
