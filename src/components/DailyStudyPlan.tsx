@@ -32,12 +32,20 @@ const DailyStudyPlan = ({ scores }: DailyStudyPlanProps) => {
     if (!user || !scores) return;
     setLoading(true);
     try {
+      // Fetch recent feedback to recalibrate
+      const { data: feedbackData } = await supabase
+        .from("user_feedback")
+        .select("feedback_type, reason, context")
+        .order("created_at", { ascending: false })
+        .limit(10) as any;
+
       const { data, error } = await supabase.functions.invoke("daily-plan", {
         body: {
           cognitiveReadiness: scores.cognitiveReadiness,
           burnoutRisk: scores.burnoutRisk,
           peakWindow: scores.peakWindow,
           studyCapacity: scores.studyCapacity,
+          pastFeedback: feedbackData || [],
         },
       });
       if (error) throw error;
