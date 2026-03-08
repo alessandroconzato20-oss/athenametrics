@@ -4,11 +4,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useNavigate } from "react-router-dom";
 import { LogOut, Activity, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 import ScoreCard from "@/components/ScoreCard";
 import ScoreDetailModal from "@/components/ScoreDetailModal";
 import StreakBadge from "@/components/StreakBadge";
 import WeeklyChallenges from "@/components/WeeklyChallenges";
+import BurnoutTrendChart from "@/components/BurnoutTrendChart";
 import { fetchHealthData, computeScores, requestHealthPermissions, isHealthAvailable, type HealthData } from "@/services/healthkit";
+import { format } from "date-fns";
 
 const getGreeting = () => {
   const hour = new Date().getHours();
@@ -87,6 +90,22 @@ const Index = () => {
   const scores = useMemo(() => healthData ? computeScores(healthData) : null, [healthData]);
   const scoresData = useMemo(() => scores ? buildScoresData(scores) : [], [scores]);
 
+  // Save daily burnout score
+  useEffect(() => {
+    if (!scores || !user) return;
+    const today = format(new Date(), "yyyy-MM-dd");
+    supabase
+      .from("daily_scores")
+      .upsert({
+        user_id: user.id,
+        score_date: today,
+        burnout_risk: scores.burnoutRisk,
+        cognitive_readiness: scores.cognitiveReadiness,
+        retention_outlook: scores.retentionOutlook,
+      }, { onConflict: "user_id,score_date" })
+      .then(({ error }) => { if (error) console.error("Failed to save daily score:", error); });
+  }, [scores, user]);
+
   if (authLoading) return null;
   if (!user) return <Navigate to="/login" replace />;
 
@@ -129,6 +148,11 @@ const Index = () => {
             ))}
           </div>
         )}
+
+        {/* Burnout Trend */}
+        <div className="mb-8">
+          <BurnoutTrendChart />
+        </div>
 
         <WeeklyChallenges />
       </div>

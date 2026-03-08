@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      daily_scores: {
+        Row: {
+          burnout_risk: number
+          cognitive_readiness: number | null
+          created_at: string
+          id: string
+          retention_outlook: number | null
+          score_date: string
+          user_id: string
+        }
+        Insert: {
+          burnout_risk: number
+          cognitive_readiness?: number | null
+          created_at?: string
+          id?: string
+          retention_outlook?: number | null
+          score_date?: string
+          user_id: string
+        }
+        Update: {
+          burnout_risk?: number
+          cognitive_readiness?: number | null
+          created_at?: string
+          id?: string
+          retention_outlook?: number | null
+          score_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       study_logs: {
         Row: {
           created_at: string
