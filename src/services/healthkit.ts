@@ -38,7 +38,7 @@ async function loadHealthKit() {
   if (!Capacitor.isNativePlatform()) return null;
   try {
     const mod = await import("@perfood/capacitor-healthkit");
-    return mod.HealthKit;
+    return mod.CapacitorHealthkit;
   } catch {
     return null;
   }
