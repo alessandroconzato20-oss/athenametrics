@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Lightbulb } from "lucide-react";
+import DisagreeButton from "@/components/DisagreeButton";
 
 interface TodaysInsightProps {
   scores: {
