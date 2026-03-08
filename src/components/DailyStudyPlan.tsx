@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CalendarClock, Sparkles, ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import DisagreeButton from "@/components/DisagreeButton";
 
 interface PlanItem {
   time: string;
