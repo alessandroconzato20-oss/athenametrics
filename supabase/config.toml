@@ -1,1 +1,4 @@
 project_id = "rqihvaznphesanzvmdco"
+
+[functions.analyze-habits]
+verify_jwt = false
