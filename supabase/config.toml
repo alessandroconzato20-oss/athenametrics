@@ -2,3 +2,6 @@ project_id = "rqihvaznphesanzvmdco"
 
 [functions.analyze-habits]
 verify_jwt = false
+
+[functions.daily-plan]
+verify_jwt = false

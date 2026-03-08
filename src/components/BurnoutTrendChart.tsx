@@ -4,6 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { format, subDays } from "date-fns";
+import { TrendingDown, TrendingUp, Minus } from "lucide-react";
 
 interface DayScore {
   date: string;
@@ -38,7 +39,6 @@ const BurnoutTrendChart = () => {
       return;
     }
 
-    // Fill missing dates with null-ish gaps
     const filled: DayScore[] = [];
     const scoreMap = new Map((scores || []).map((s) => [s.score_date, s.burnout_risk]));
 
@@ -46,11 +46,7 @@ const BurnoutTrendChart = () => {
       const d = subDays(new Date(), i);
       const dateStr = format(d, "yyyy-MM-dd");
       const labelStr = range === 7 ? format(d, "EEE") : format(d, "MMM d");
-      filled.push({
-        date: dateStr,
-        label: labelStr,
-        burnout: scoreMap.get(dateStr) ?? -1,
-      });
+      filled.push({ date: dateStr, label: labelStr, burnout: scoreMap.get(dateStr) ?? -1 });
     }
 
     setData(filled);
@@ -65,6 +61,22 @@ const BurnoutTrendChart = () => {
     if (val <= 60) return { text: "Moderate", color: "text-score-peak" };
     return { text: "High Risk", color: "text-score-burnout" };
   };
+
+  // Trend analysis
+  const getTrend = () => {
+    if (validData.length < 2) return null;
+    const recent = validData.slice(-3);
+    const older = validData.slice(0, Math.max(1, validData.length - 3));
+    const recentAvg = recent.reduce((s, d) => s + d.burnout, 0) / recent.length;
+    const olderAvg = older.reduce((s, d) => s + d.burnout, 0) / older.length;
+    const diff = recentAvg - olderAvg;
+    
+    if (diff < -5) return { icon: <TrendingDown className="h-3.5 w-3.5 text-score-cognitive" />, text: "Your burnout risk is trending down. Keep up the recovery habits." };
+    if (diff > 5) return { icon: <TrendingUp className="h-3.5 w-3.5 text-score-burnout" />, text: "Burnout risk is climbing. Consider adding more breaks and sleep." };
+    return { icon: <Minus className="h-3.5 w-3.5 text-muted-foreground" />, text: "Burnout risk is stable. Maintain your current routine." };
+  };
+
+  const trend = getTrend();
 
   return (
     <motion.div
@@ -113,18 +125,8 @@ const BurnoutTrendChart = () => {
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data.filter((d) => d.burnout >= 0)} margin={{ top: 5, right: 5, bottom: 5, left: -20 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis
-                dataKey="label"
-                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                domain={[0, 100]}
-                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                axisLine={false}
-                tickLine={false}
-              />
+              <XAxis dataKey="label" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+              <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
               <Tooltip
                 contentStyle={{
                   background: "hsl(var(--card))",
@@ -148,6 +150,19 @@ const BurnoutTrendChart = () => {
             </LineChart>
           </ResponsiveContainer>
         </div>
+      )}
+
+      {/* Interpretation sentence */}
+      {trend && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+          className="mt-3 flex items-start gap-2 rounded-xl bg-muted/50 p-2.5"
+        >
+          {trend.icon}
+          <p className="text-xs leading-relaxed text-muted-foreground">{trend.text}</p>
+        </motion.div>
       )}
 
       <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">

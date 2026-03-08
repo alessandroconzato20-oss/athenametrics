@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useNavigate } from "react-router-dom";
-import { LogOut, Activity, BookOpen, Trophy } from "lucide-react";
+import { LogOut, Activity, BookOpen, Trophy, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import ScoreCard from "@/components/ScoreCard";
@@ -10,61 +10,37 @@ import ScoreDetailModal from "@/components/ScoreDetailModal";
 import StreakBadge from "@/components/StreakBadge";
 import WeeklyChallenges from "@/components/WeeklyChallenges";
 import BurnoutTrendChart from "@/components/BurnoutTrendChart";
+import HeroAction from "@/components/HeroAction";
+import TodaysInsight from "@/components/TodaysInsight";
+import DailyStudyPlan from "@/components/DailyStudyPlan";
+import MicroReward from "@/components/MicroReward";
 import { fetchHealthData, computeScores, requestHealthPermissions, isHealthAvailable, type HealthData } from "@/services/healthkit";
 import { format } from "date-fns";
 
-const getTimeMessage = (name: string) => {
-  const hour = new Date().getHours();
-  const pick = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
-
-  if (hour >= 5 && hour < 11) {
-    return pick([
-      `Good morning, ${name}! Let's make today count. ☀️`,
-      `Morning, ${name}. A fresh day, a fresh brain—let's get started. 🧠`,
-      `Good morning! Small steps today build tomorrow's confidence. 💪`,
-      `Rise and shine, ${name}. Your future patients are counting on you. 🩺`,
-      `Morning! Let's turn today's effort into tomorrow's mastery. 📚`,
-      `Good morning. Your focus window is opening—perfect time to begin. 🎯`,
-      `Hey ${name}! A little progress today goes a long way. 🚀`,
-    ]);
+function getActionText(icon: string, numValue: number): string {
+  if (icon === "brain") {
+    if (numValue > 70) return "Your brain is primed. Tackle complex topics now.";
+    if (numValue > 40) return "Moderate readiness. Stick to familiar material.";
+    return "Low readiness. Light review only today.";
   }
-  if (hour >= 11 && hour < 13) {
-    return pick([
-      `You're in a strong focus window, ${name}. This is prime time for deep studying. 🔥`,
-      `Momentum looks good. Keep pushing while your focus is high. 💪`,
-      `Locked in yet? This is a great time for your toughest material. 🧠`,
-      `Your cognitive energy is rising. Perfect time for active recall. ⚡`,
-      `Focus looks strong right now. Try tackling your hardest topic. 🎯`,
-      `Nice rhythm today. Keep the streak going. 🏃`,
-    ]);
+  if (icon === "clock") {
+    return "Block this time for your hardest subject.";
   }
-  if (hour >= 13 && hour < 19) {
-    return pick([
-      `Still going strong, ${name}. Remember: progress over perfection. 💫`,
-      `Quick check-in: a short break now could boost your next study block. ☕`,
-      `Afternoon grind. One more focused session can make a big difference. 📖`,
-      `Energy dipping slightly. Try a short walk or stretch. 🚶`,
-      `Good work today. Keep stacking small wins. 🏆`,
-      `You're building momentum. Stay consistent. 🔥`,
-    ]);
+  if (icon === "alert") {
+    if (numValue > 60) return "Take a break. Rest protects tomorrow's performance.";
+    if (numValue > 30) return "Manageable. Keep sessions under 60 min.";
+    return "Low risk — you're recovering well. Push a bit more.";
   }
-  if (hour >= 19 && hour < 22) {
-    return pick([
-      `Good evening, ${name}. You've put in solid work today. 🌅`,
-      `Nice effort today. Your brain might benefit from slowing down soon. 🧘`,
-      `Evening check-in: studying late works best when tomorrow's rest is protected. 🛡️`,
-      `You've pushed a good amount today. Consider wrapping up soon. 🌙`,
-      `Consistency beats exhaustion. Don't burn tomorrow's energy tonight. ⚖️`,
-    ]);
+  if (icon === "book") {
+    if (numValue > 70) return "Great retention window. Learn new concepts today.";
+    if (numValue > 40) return "Decent retention. Mix new and review material.";
+    return "Focus on revision over new material today.";
   }
-  return pick([
-    `Still studying, ${name}? Your brain consolidates memories during sleep. 😴`,
-    `Late night alert. Rest now might improve retention tomorrow. 🌙`,
-    `You've done enough for today. Recovery is part of learning. 💤`,
-    `Closing the books soon could help tomorrow's focus. 📕`,
-    `Time to recharge. Your future self will thank you. 🔋`,
-  ]);
-};
+  if (icon === "sun") {
+    return "Schedule your hardest topic during this window.";
+  }
+  return "";
+}
 
 function buildScoresData(scores: ReturnType<typeof computeScores>) {
   return [
@@ -108,8 +84,7 @@ const Index = () => {
   const [healthConnected, setHealthConnected] = useState(false);
   const [healthData, setHealthData] = useState<HealthData | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const timeMessage = useMemo(() => getTimeMessage(displayName), [displayName]);
+  const [reward, setReward] = useState<{ show: boolean; message: string; emoji: string }>({ show: false, message: "", emoji: "" });
 
   useEffect(() => {
     async function init() {
@@ -124,6 +99,16 @@ const Index = () => {
     }
     init();
   }, []);
+
+  // Check for micro reward triggers
+  useEffect(() => {
+    if (!scores) return;
+    if (scores.burnoutRisk < 25) {
+      setReward({ show: true, message: "Healthy recovery! Keep it up.", emoji: "💚" });
+    } else if (scores.cognitiveReadiness > 80) {
+      setReward({ show: true, message: "Peak brain power today!", emoji: "🧠" });
+    }
+  }, [healthData]);
 
   const scores = useMemo(() => healthData ? computeScores(healthData) : null, [healthData]);
   const scoresData = useMemo(() => scores ? buildScoresData(scores) : [], [scores]);
@@ -150,29 +135,53 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-lg px-5 pb-10 pt-8">
-        <div className="mb-6 flex items-start justify-between">
+        {/* Header */}
+        <div className="mb-5 flex items-start justify-between">
           <StreakBadge streak={7} studySessions={23} />
-          <button onClick={signOut} className="rounded-xl p-2 text-muted-foreground hover:bg-muted">
+          <button onClick={signOut} className="rounded-xl p-2 text-muted-foreground hover:bg-muted transition-colors">
             <LogOut className="h-5 w-5" />
           </button>
         </div>
 
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="mb-8">
-          <p className="font-display text-xl font-semibold leading-snug text-foreground">{timeMessage}</p>
+        {/* Hero action sentence */}
+        <HeroAction
+          displayName={displayName}
+          scores={scores ? {
+            cognitiveReadiness: scores.cognitiveReadiness,
+            burnoutRisk: scores.burnoutRisk,
+            peakWindow: scores.peakWindow,
+            studyCapacity: scores.studyCapacity,
+          } : null}
+        />
+
+        {/* Quick actions - primary CTA first */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="mb-5 grid grid-cols-3 gap-2">
+          <Button onClick={() => navigate("/study-logs/new")} className="w-full rounded-xl h-11 gap-1.5 bg-gradient-primary text-primary-foreground font-semibold text-xs">
+            <Plus className="h-3.5 w-3.5" /> Log Session
+          </Button>
+          <Button onClick={() => navigate("/study-logs")} variant="outline" className="w-full rounded-xl h-11 gap-1.5 border-primary/20 text-primary text-xs">
+            <BookOpen className="h-3.5 w-3.5" /> Logs
+          </Button>
+          <Button onClick={() => navigate("/leaderboard")} variant="outline" className="w-full rounded-xl h-11 gap-1.5 border-accent/30 text-accent-foreground text-xs">
+            <Trophy className="h-3.5 w-3.5" /> Rank
+          </Button>
         </motion.div>
 
-        {/* Study Logs shortcut */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="mb-4 grid grid-cols-2 gap-3">
-          <Button onClick={() => navigate("/study-logs")} variant="outline" className="w-full rounded-xl h-12 gap-2 border-primary/20 text-primary hover:bg-primary/5">
-            <BookOpen className="h-4 w-4" /> Study Logs
-          </Button>
-          <Button onClick={() => navigate("/leaderboard")} variant="outline" className="w-full rounded-xl h-12 gap-2 border-accent/30 text-accent-foreground hover:bg-accent/10">
-            <Trophy className="h-4 w-4" /> Leaderboard
-          </Button>
-        </motion.div>
+        {/* Today's Insight */}
+        {!loading && scores && (
+          <div className="mb-5">
+            <TodaysInsight scores={{
+              cognitiveReadiness: scores.cognitiveReadiness,
+              burnoutRisk: scores.burnoutRisk,
+              retentionOutlook: scores.retentionOutlook,
+              studyCapacity: scores.studyCapacity,
+            }} />
+          </div>
+        )}
 
+        {/* Score cards */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Today's Insights</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Your Metrics</h2>
           <div className="flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1">
             <Activity className="h-3 w-3 text-primary" />
             <span className="text-xs font-medium text-primary">{healthConnected ? "Apple Health" : "Preview Data"}</span>
@@ -180,17 +189,39 @@ const Index = () => {
         </motion.div>
 
         {loading ? (
-          <div className="space-y-3">{[...Array(5)].map((_, i) => <div key={i} className="h-[72px] animate-pulse rounded-2xl bg-muted" />)}</div>
+          <div className="space-y-3">{[...Array(5)].map((_, i) => <div key={i} className="h-[88px] animate-pulse rounded-2xl bg-muted" />)}</div>
         ) : (
-          <div className="mb-8 grid grid-cols-1 gap-3">
+          <div className="mb-6 grid grid-cols-1 gap-2.5">
             {scoresData.map((score, i) => (
-              <ScoreCard key={score.label} label={score.label} value={score.value} icon={score.icon} colorClass={score.color} index={i} onClick={() => setSelectedScore(score)} />
+              <ScoreCard
+                key={score.label}
+                label={score.label}
+                value={score.value}
+                icon={score.icon}
+                colorClass={score.color}
+                index={i}
+                numValue={score.numValue}
+                actionText={getActionText(score.icon, score.numValue)}
+                onClick={() => setSelectedScore(score)}
+              />
             ))}
           </div>
         )}
 
+        {/* AI Daily Plan */}
+        {!loading && (
+          <div className="mb-6">
+            <DailyStudyPlan scores={scores ? {
+              cognitiveReadiness: scores.cognitiveReadiness,
+              burnoutRisk: scores.burnoutRisk,
+              peakWindow: scores.peakWindow,
+              studyCapacity: scores.studyCapacity,
+            } : null} />
+          </div>
+        )}
+
         {/* Burnout Trend */}
-        <div className="mb-8">
+        <div className="mb-6">
           <BurnoutTrendChart />
         </div>
 
@@ -198,6 +229,13 @@ const Index = () => {
       </div>
 
       {selectedScore && <ScoreDetailModal score={selectedScore} onClose={() => setSelectedScore(null)} />}
+      
+      <MicroReward
+        show={reward.show}
+        message={reward.message}
+        emoji={reward.emoji}
+        onComplete={() => setReward(prev => ({ ...prev, show: false }))}
+      />
     </div>
   );
 };
