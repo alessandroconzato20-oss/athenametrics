@@ -13,6 +13,10 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        display: ['Space Grotesk', 'sans-serif'],
+        body: ['DM Sans', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -56,6 +60,13 @@ export default {
           "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
+        },
+        score: {
+          cognitive: "hsl(var(--score-cognitive))",
+          study: "hsl(var(--score-study))",
+          burnout: "hsl(var(--score-burnout))",
+          retention: "hsl(var(--score-retention))",
+          peak: "hsl(var(--score-peak))",
         },
       },
       borderRadius: {
