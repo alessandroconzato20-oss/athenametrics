@@ -4,11 +4,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useNavigate } from "react-router-dom";
 import { LogOut, Activity, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 import ScoreCard from "@/components/ScoreCard";
 import ScoreDetailModal from "@/components/ScoreDetailModal";
 import StreakBadge from "@/components/StreakBadge";
 import WeeklyChallenges from "@/components/WeeklyChallenges";
+import BurnoutTrendChart from "@/components/BurnoutTrendChart";
 import { fetchHealthData, computeScores, requestHealthPermissions, isHealthAvailable, type HealthData } from "@/services/healthkit";
+import { format } from "date-fns";
 
 const getGreeting = () => {
   const hour = new Date().getHours();
