@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import StudyLogs from "./pages/StudyLogs";
 import StudyLogForm from "./pages/StudyLogForm";
+import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/signup" element={<Signup />} />
             <Route path="/study-logs" element={<StudyLogs />} />
             <Route path="/study-logs/new" element={<StudyLogForm />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

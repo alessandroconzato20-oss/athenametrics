@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useNavigate } from "react-router-dom";
-import { LogOut, Activity, BookOpen } from "lucide-react";
+import { LogOut, Activity, BookOpen, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import ScoreCard from "@/components/ScoreCard";
@@ -162,9 +162,12 @@ const Index = () => {
         </motion.div>
 
         {/* Study Logs shortcut */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="mb-6">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="mb-4 grid grid-cols-2 gap-3">
           <Button onClick={() => navigate("/study-logs")} variant="outline" className="w-full rounded-xl h-12 gap-2 border-primary/20 text-primary hover:bg-primary/5">
-            <BookOpen className="h-4 w-4" /> Study Logs & AI Insights
+            <BookOpen className="h-4 w-4" /> Study Logs
+          </Button>
+          <Button onClick={() => navigate("/leaderboard")} variant="outline" className="w-full rounded-xl h-12 gap-2 border-accent/30 text-accent-foreground hover:bg-accent/10">
+            <Trophy className="h-4 w-4" /> Leaderboard
           </Button>
         </motion.div>
 
