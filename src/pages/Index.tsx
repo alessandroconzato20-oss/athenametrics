@@ -158,8 +158,7 @@ const Index = () => {
         </div>
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="mb-8">
-          <h1 className="font-display text-3xl font-bold text-foreground">{greeting}, {displayName} 👋</h1>
-          <p className="mt-1 text-lg text-muted-foreground">{motivation}</p>
+          <p className="font-display text-xl font-semibold leading-snug text-foreground">{timeMessage}</p>
         </motion.div>
 
         {/* Study Logs shortcut */}
