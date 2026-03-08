@@ -109,8 +109,7 @@ const Index = () => {
   const [healthData, setHealthData] = useState<HealthData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const greeting = useMemo(() => getGreeting(), []);
-  const motivation = useMemo(() => getMotivation(), []);
+  const timeMessage = useMemo(() => getTimeMessage(displayName), [displayName]);
 
   useEffect(() => {
     async function init() {
