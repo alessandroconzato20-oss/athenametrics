@@ -13,18 +13,57 @@ import BurnoutTrendChart from "@/components/BurnoutTrendChart";
 import { fetchHealthData, computeScores, requestHealthPermissions, isHealthAvailable, type HealthData } from "@/services/healthkit";
 import { format } from "date-fns";
 
-const getGreeting = () => {
+const getTimeMessage = (name: string) => {
   const hour = new Date().getHours();
-  if (hour < 12) return "Good Morning";
-  if (hour < 17) return "Good Afternoon";
-  return "Good Evening";
-};
+  const pick = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
 
-const getMotivation = () => {
-  const hour = new Date().getHours();
-  if (hour < 12) return "let's get after it 💪";
-  if (hour < 17) return "keep the momentum going 🔥";
-  return "time to wind down smart 🌙";
+  if (hour >= 5 && hour < 11) {
+    return pick([
+      `Good morning, ${name}! Let's make today count. ☀️`,
+      `Morning, ${name}. A fresh day, a fresh brain—let's get started. 🧠`,
+      `Good morning! Small steps today build tomorrow's confidence. 💪`,
+      `Rise and shine, ${name}. Your future patients are counting on you. 🩺`,
+      `Morning! Let's turn today's effort into tomorrow's mastery. 📚`,
+      `Good morning. Your focus window is opening—perfect time to begin. 🎯`,
+      `Hey ${name}! A little progress today goes a long way. 🚀`,
+    ]);
+  }
+  if (hour >= 11 && hour < 13) {
+    return pick([
+      `You're in a strong focus window, ${name}. This is prime time for deep studying. 🔥`,
+      `Momentum looks good. Keep pushing while your focus is high. 💪`,
+      `Locked in yet? This is a great time for your toughest material. 🧠`,
+      `Your cognitive energy is rising. Perfect time for active recall. ⚡`,
+      `Focus looks strong right now. Try tackling your hardest topic. 🎯`,
+      `Nice rhythm today. Keep the streak going. 🏃`,
+    ]);
+  }
+  if (hour >= 13 && hour < 19) {
+    return pick([
+      `Still going strong, ${name}. Remember: progress over perfection. 💫`,
+      `Quick check-in: a short break now could boost your next study block. ☕`,
+      `Afternoon grind. One more focused session can make a big difference. 📖`,
+      `Energy dipping slightly. Try a short walk or stretch. 🚶`,
+      `Good work today. Keep stacking small wins. 🏆`,
+      `You're building momentum. Stay consistent. 🔥`,
+    ]);
+  }
+  if (hour >= 19 && hour < 22) {
+    return pick([
+      `Good evening, ${name}. You've put in solid work today. 🌅`,
+      `Nice effort today. Your brain might benefit from slowing down soon. 🧘`,
+      `Evening check-in: studying late works best when tomorrow's rest is protected. 🛡️`,
+      `You've pushed a good amount today. Consider wrapping up soon. 🌙`,
+      `Consistency beats exhaustion. Don't burn tomorrow's energy tonight. ⚖️`,
+    ]);
+  }
+  return pick([
+    `Still studying, ${name}? Your brain consolidates memories during sleep. 😴`,
+    `Late night alert. Rest now might improve retention tomorrow. 🌙`,
+    `You've done enough for today. Recovery is part of learning. 💤`,
+    `Closing the books soon could help tomorrow's focus. 📕`,
+    `Time to recharge. Your future self will thank you. 🔋`,
+  ]);
 };
 
 function buildScoresData(scores: ReturnType<typeof computeScores>) {
@@ -70,8 +109,7 @@ const Index = () => {
   const [healthData, setHealthData] = useState<HealthData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const greeting = useMemo(() => getGreeting(), []);
-  const motivation = useMemo(() => getMotivation(), []);
+  const timeMessage = useMemo(() => getTimeMessage(displayName), [displayName]);
 
   useEffect(() => {
     async function init() {
@@ -120,8 +158,7 @@ const Index = () => {
         </div>
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="mb-8">
-          <h1 className="font-display text-3xl font-bold text-foreground">{greeting}, {displayName} 👋</h1>
-          <p className="mt-1 text-lg text-muted-foreground">{motivation}</p>
+          <p className="font-display text-xl font-semibold leading-snug text-foreground">{timeMessage}</p>
         </motion.div>
 
         {/* Study Logs shortcut */}
