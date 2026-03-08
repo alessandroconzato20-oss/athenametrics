@@ -1,0 +1,9 @@
+{
+  "appId": "app.lovable.1d7f96196e844bc69f65279f0f143863",
+  "appName": "CoFactor Student",
+  "webDir": "dist",
+  "server": {
+    "url": "https://1d7f9619-6e84-4bc6-9f65-279f0f143863.lovableproject.com?forceHideBadge=true",
+    "cleartext": true
+  }
+}
