@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import PersonaQuiz from "./pages/PersonaQuiz";
 import StudyLogs from "./pages/StudyLogs";
 import StudyLogForm from "./pages/StudyLogForm";
 import Leaderboard from "./pages/Leaderboard";
