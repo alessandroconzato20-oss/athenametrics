@@ -62,6 +62,57 @@ export type Database = {
         }
         Relationships: []
       }
+      student_personas: {
+        Row: {
+          additional_notes: string | null
+          biggest_challenge: string | null
+          created_at: string
+          goals: string[]
+          id: string
+          learning_method: string | null
+          motivation_type: string | null
+          preferred_session_length: string | null
+          social_preference: string | null
+          stress_management: string | null
+          study_style: string | null
+          updated_at: string
+          user_id: string
+          weekly_study_hours: string | null
+        }
+        Insert: {
+          additional_notes?: string | null
+          biggest_challenge?: string | null
+          created_at?: string
+          goals?: string[]
+          id?: string
+          learning_method?: string | null
+          motivation_type?: string | null
+          preferred_session_length?: string | null
+          social_preference?: string | null
+          stress_management?: string | null
+          study_style?: string | null
+          updated_at?: string
+          user_id: string
+          weekly_study_hours?: string | null
+        }
+        Update: {
+          additional_notes?: string | null
+          biggest_challenge?: string | null
+          created_at?: string
+          goals?: string[]
+          id?: string
+          learning_method?: string | null
+          motivation_type?: string | null
+          preferred_session_length?: string | null
+          social_preference?: string | null
+          stress_management?: string | null
+          study_style?: string | null
+          updated_at?: string
+          user_id?: string
+          weekly_study_hours?: string | null
+        }
+        Relationships: []
+      }
       study_logs: {
         Row: {
           created_at: string

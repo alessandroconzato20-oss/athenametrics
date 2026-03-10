@@ -27,7 +27,7 @@ const Signup = () => {
     try {
       await signUp(email, password, name, parseInt(year), parseInt(semester));
       toast.success("Account created! Check your email to confirm.");
-      navigate("/");
+      navigate("/persona-quiz");
     } catch (err: any) {
       toast.error(err.message || "Failed to sign up");
     } finally {

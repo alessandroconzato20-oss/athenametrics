@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,15 +8,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, BookOpen, Brain, Zap, AlertTriangle, Eye } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, Brain, Zap, AlertTriangle, Eye, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
+import { getCoursesForStudent, type Course } from "@/data/curriculum";
 
 const levelLabels: Record<number, string> = { 1: "Very Low", 2: "Low", 3: "Medium", 4: "High", 5: "Very High" };
 
 const StudyLogForm = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [subject, setSubject] = useState("");
+
+  const userYear = user?.user_metadata?.year || 1;
+  const userSemester = user?.user_metadata?.semester || 1;
+  const availableCourses = useMemo(() => getCoursesForStudent(userYear, userSemester), [userYear, userSemester]);
+
+  const [selectedCourse, setSelectedCourse] = useState("");
   const [topic, setTopic] = useState("");
   const [hours, setHours] = useState("");
   const [minutes, setMinutes] = useState("");
@@ -27,9 +34,12 @@ const StudyLogForm = () => {
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
 
+  const courseObj = availableCourses.find(c => c.name === selectedCourse);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) { toast.error("Please sign in first"); return; }
+    if (!selectedCourse) { toast.error("Please select a course"); return; }
     const totalMins = (parseInt(hours) || 0) * 60 + (parseInt(minutes) || 0);
     if (totalMins <= 0) { toast.error("Please enter a valid duration"); return; }
 
@@ -37,8 +47,8 @@ const StudyLogForm = () => {
     try {
       const { error } = await supabase.from("study_logs").insert({
         user_id: user.id,
-        subject: subject.trim(),
-        topic: topic.trim(),
+        subject: selectedCourse,
+        topic: topic.trim() || selectedCourse,
         duration_minutes: totalMins,
         difficulty: difficulty[0],
         stress_level: stress[0],
@@ -47,7 +57,7 @@ const StudyLogForm = () => {
         notes: notes.trim() || null,
       });
       if (error) throw error;
-      toast.success("Study session logged!");
+      toast.success("Study session logged! 🎉");
       navigate("/study-logs");
     } catch (err: any) {
       toast.error(err.message || "Failed to save log");
@@ -82,15 +92,38 @@ const StudyLogForm = () => {
           <h1 className="font-display text-2xl font-bold text-foreground mb-6">Log Study Session</h1>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>Subject</Label>
-                <Input placeholder="e.g. Biology" value={subject} onChange={(e) => setSubject(e.target.value)} required className="h-11 rounded-xl" />
-              </div>
-              <div className="space-y-2">
-                <Label>Topic</Label>
-                <Input placeholder="e.g. Cell Division" value={topic} onChange={(e) => setTopic(e.target.value)} required className="h-11 rounded-xl" />
-              </div>
+            {/* Course Selection */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <GraduationCap className="h-4 w-4 text-primary" />
+                Course
+              </Label>
+              <Select value={selectedCourse} onValueChange={setSelectedCourse}>
+                <SelectTrigger className="h-12 rounded-xl">
+                  <SelectValue placeholder="Select your course" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableCourses.map((course) => (
+                    <SelectItem key={course.name} value={course.name}>
+                      <span className="flex items-center justify-between gap-3 w-full">
+                        <span>{course.name}</span>
+                        <span className="text-xs text-muted-foreground ml-2">{course.credits} cr</span>
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {courseObj && (
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-xs text-muted-foreground">
+                  {courseObj.credits} credits · Year {userYear}, Semester {userSemester}
+                </motion.p>
+              )}
+            </div>
+
+            {/* Topic within the course */}
+            <div className="space-y-2">
+              <Label>Topic / Chapter (optional)</Label>
+              <Input placeholder="e.g. Cell Division, Chapter 5" value={topic} onChange={(e) => setTopic(e.target.value)} className="h-11 rounded-xl" />
             </div>
 
             <div className="space-y-2">
