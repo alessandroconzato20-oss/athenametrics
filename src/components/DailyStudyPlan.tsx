@@ -4,6 +4,7 @@ import { CalendarClock, Sparkles, ChevronDown, ChevronUp, CheckCircle2 } from "l
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import DisagreeButton from "@/components/DisagreeButton";
+import { getCoursesForStudent, curriculum } from "@/data/curriculum";
 
 interface PlanItem {
   time: string;
@@ -33,12 +34,42 @@ const DailyStudyPlan = ({ scores }: DailyStudyPlanProps) => {
     if (!user || !scores) return;
     setLoading(true);
     try {
-      // Fetch recent feedback to recalibrate
-      const { data: feedbackData } = await supabase
-        .from("user_feedback")
-        .select("feedback_type, reason, context")
-        .order("created_at", { ascending: false })
-        .limit(10) as any;
+      // Fetch persona, feedback, and recent study logs in parallel
+      const [feedbackRes, personaRes, logsRes] = await Promise.all([
+        supabase
+          .from("user_feedback")
+          .select("feedback_type, reason, context")
+          .order("created_at", { ascending: false })
+          .limit(10) as any,
+        supabase
+          .from("student_personas")
+          .select("study_style, goals, biggest_challenge, motivation_type, preferred_session_length, learning_method, weekly_study_hours, stress_management")
+          .eq("user_id", user.id)
+          .maybeSingle(),
+        supabase
+          .from("study_logs")
+          .select("subject, topic, duration_minutes, difficulty")
+          .eq("user_id", user.id)
+          .order("studied_at", { ascending: false })
+          .limit(20),
+      ]);
+
+      // Get student year/semester from metadata
+      const year = user.user_metadata?.year || 1;
+      const semester = user.user_metadata?.semester || 1;
+
+      // Current semester courses + any courses they've recently logged (cross-semester)
+      const currentCourses = getCoursesForStudent(year, semester);
+      const recentSubjects = [...new Set((logsRes.data || []).map((l: any) => l.subject))];
+      const crossSemesterSubjects = recentSubjects.filter(
+        (s: string) => !currentCourses.some(c => c.name === s)
+      );
+      // Find credits for cross-semester subjects
+      const allCourses = curriculum.flatMap(s => s.courses);
+      const crossSemesterCourses = crossSemesterSubjects.map((name: string) => {
+        const found = allCourses.find(c => c.name === name);
+        return { name, credits: found?.credits || 0 };
+      });
 
       const { data, error } = await supabase.functions.invoke("daily-plan", {
         body: {
@@ -47,7 +78,13 @@ const DailyStudyPlan = ({ scores }: DailyStudyPlanProps) => {
           peakWindow: scores.peakWindow,
           studyCapacity: scores.studyCapacity,
           studyBlock: scores.studyBlockRecommendation,
-          pastFeedback: feedbackData || [],
+          pastFeedback: feedbackRes.data || [],
+          persona: personaRes.data || null,
+          currentCourses: currentCourses.map(c => ({ name: c.name, credits: c.credits })),
+          crossSemesterCourses,
+          recentStudyLogs: (logsRes.data || []).slice(0, 10),
+          year,
+          semester,
         },
       });
       if (error) throw error;
