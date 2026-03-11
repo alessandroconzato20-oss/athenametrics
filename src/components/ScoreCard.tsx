@@ -10,6 +10,7 @@ interface ScoreCardProps {
   index: number;
   actionText: string;
   numValue: number;
+  subtitle?: string;
   onClick: () => void;
 }
 
