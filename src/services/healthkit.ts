@@ -202,6 +202,7 @@ export function computeScores(data: HealthData) {
   return {
     cognitiveReadiness,
     studyCapacity: `${studyHours}h ${studyMins}m`,
+    studyBlockRecommendation,
     burnoutRisk,
     retentionOutlook,
     peakWindow: `${formatTime(peakStart)} – ${formatTime(peakEnd)}`,
