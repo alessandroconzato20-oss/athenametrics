@@ -10,7 +10,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { cognitiveReadiness, burnoutRisk, peakWindow, studyCapacity, studyBlock, pastFeedback } = await req.json();
+    const { cognitiveReadiness, burnoutRisk, peakWindow, studyCapacity, studyBlock, pastFeedback, persona, currentCourses, crossSemesterCourses, recentStudyLogs, year, semester } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not set");
 
@@ -22,14 +22,50 @@ serve(async (req) => {
       ? `\n\nSTUDY BLOCK STRUCTURE (MUST follow): Each study session must be exactly ${studyBlock.blockMinutes} minutes long${studyBlock.breakMinutes > 0 ? `, followed by a ${studyBlock.breakMinutes}-minute break` : " (no break needed between sessions)"}. The student's readiness tier is "${studyBlock.tier}". Structure ALL tasks to fit this block pattern.`
       : "";
 
-    const systemPrompt = `You are a medical student study coach. Based on the student's daily health metrics, create a personalized daily study plan.
+    // Build persona context
+    const personaContext = persona
+      ? `\n\nSTUDENT PERSONA:
+- Study style: ${persona.study_style || "unknown"}
+- Preferred session length: ${persona.preferred_session_length || "unknown"}
+- Learning method: ${persona.learning_method || "unknown"}
+- Motivation type: ${persona.motivation_type || "unknown"}
+- Biggest challenge: ${persona.biggest_challenge || "unknown"}
+- Stress management: ${persona.stress_management || "unknown"}
+- Weekly study hours target: ${persona.weekly_study_hours || "unknown"}
+- Goals: ${(persona.goals || []).join(", ") || "none specified"}
+Tailor tasks, language, and scheduling to match their study style and preferences.`
+      : "";
+
+    // Build curriculum context
+    const coursesContext = currentCourses && currentCourses.length > 0
+      ? `\n\nCURRENT COURSES (Year ${year}, Semester ${semester}) — prioritize by credit weight:
+${currentCourses.map((c: any) => `- ${c.name} (${c.credits} credits)`).join("\n")}${
+        crossSemesterCourses && crossSemesterCourses.length > 0
+          ? `\n\nCROSS-SEMESTER COURSES (student is also studying/reviewing these for exams):\n${crossSemesterCourses.map((c: any) => `- ${c.name} (${c.credits} credits)`).join("\n")}`
+          : ""
+      }`
+      : "";
+
+    // Build recent activity context
+    const recentContext = recentStudyLogs && recentStudyLogs.length > 0
+      ? `\n\nRECENT STUDY ACTIVITY (last sessions):\n${recentStudyLogs.map((l: any) => `- ${l.subject}: ${l.topic} (${l.duration_minutes}min, difficulty ${l.difficulty}/5)`).join("\n")}\nAvoid repeating the same topics unless revision is needed. Prioritize courses not recently studied.`
+      : "";
+
+    const systemPrompt = `You are a medical student study coach at Humanitas University. Based on the student's daily health metrics, persona, and actual curriculum, create a personalized daily study plan.
 
 Return a JSON array of 3-5 plan items. Each item must have:
 - "time": time label (e.g. "9:00 AM", "Morning", "After lunch")
-- "task": concise task description including duration matching the block structure (max 15 words)
-- "reason": why this is recommended (max 12 words)
+- "task": concise task description referencing ACTUAL course names and including duration matching block structure (max 18 words)
+- "reason": why this is recommended based on their persona and metrics (max 15 words)
 
-Consider: high burnout = fewer/lighter sessions; high cognitive readiness = harder material first; peak window = schedule hardest work there. IMPORTANT: All study sessions MUST follow the prescribed block/break structure.${blockContext}${feedbackContext}`;
+Rules:
+- Reference real course names from their curriculum — never invent subjects
+- Higher-credit courses should get more study time proportionally
+- If the student has cross-semester courses (exam prep), include at least one session for those
+- Match the study approach to their persona (e.g. visual learner = diagrams, pomodoro fan = timed blocks)
+- High burnout = fewer/lighter sessions; high cognitive readiness = harder/heavier-credit material first
+- Peak window = schedule hardest work there
+- IMPORTANT: All study sessions MUST follow the prescribed block/break structure${blockContext}${personaContext}${coursesContext}${recentContext}${feedbackContext}`;
 
     const userPrompt = `Metrics:
 - Cognitive Readiness: ${cognitiveReadiness}/100
@@ -39,7 +75,7 @@ Consider: high burnout = fewer/lighter sessions; high cognitive readiness = hard
 - Study Block: ${studyBlock ? `${studyBlock.blockMinutes}min sessions${studyBlock.breakMinutes > 0 ? ` with ${studyBlock.breakMinutes}min breaks` : ", no breaks needed"}` : "flexible"}
 - Current time: ${new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
 
-Generate my personalized study plan for today following the block structure.`;
+Generate my personalized study plan for today, referencing my actual courses and matching my study style.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
