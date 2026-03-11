@@ -193,7 +193,7 @@ const Index = () => {
           <div className="space-y-3">{[...Array(5)].map((_, i) => <div key={i} className="h-[88px] animate-pulse rounded-2xl bg-muted" />)}</div>
         ) : (
           <div className="mb-6 grid grid-cols-1 gap-2.5">
-            {scoresData.map((score, i) => (
+             {scoresData.map((score, i) => (
               <ScoreCard
                 key={score.label}
                 label={score.label}
@@ -203,6 +203,7 @@ const Index = () => {
                 index={i}
                 numValue={score.numValue}
                 actionText={getActionText(score.icon, score.numValue)}
+                subtitle={(score as any).subtitle}
                 onClick={() => setSelectedScore(score)}
               />
             ))}
