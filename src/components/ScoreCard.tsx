@@ -28,7 +28,7 @@ const getScoreEmoji = (icon: string, numValue: number) => {
   return "";
 };
 
-const ScoreCard = ({ label, value, icon, colorClass, index, actionText, numValue, onClick }: ScoreCardProps) => {
+const ScoreCard = ({ label, value, icon, colorClass, index, actionText, numValue, subtitle, onClick }: ScoreCardProps) => {
   const isGood = icon === "alert" ? numValue < 30 : numValue > 70;
   
   return (
