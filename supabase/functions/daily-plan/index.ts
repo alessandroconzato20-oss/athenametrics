@@ -18,14 +18,18 @@ serve(async (req) => {
       ? `\n\nIMPORTANT - The student has previously disagreed with recommendations. Adapt the plan based on their feedback:\n${pastFeedback.map((f: any) => `- Disagreed with "${f.feedback_type}": "${f.reason}"`).join("\n")}`
       : "";
 
+    const blockContext = studyBlock
+      ? `\n\nSTUDY BLOCK STRUCTURE (MUST follow): Each study session must be exactly ${studyBlock.blockMinutes} minutes long${studyBlock.breakMinutes > 0 ? `, followed by a ${studyBlock.breakMinutes}-minute break` : " (no break needed between sessions)"}. The student's readiness tier is "${studyBlock.tier}". Structure ALL tasks to fit this block pattern.`
+      : "";
+
     const systemPrompt = `You are a medical student study coach. Based on the student's daily health metrics, create a personalized daily study plan.
 
 Return a JSON array of 3-5 plan items. Each item must have:
 - "time": time label (e.g. "9:00 AM", "Morning", "After lunch")
-- "task": concise task description (max 10 words)
+- "task": concise task description including duration matching the block structure (max 15 words)
 - "reason": why this is recommended (max 12 words)
 
-Consider: high burnout = fewer/lighter sessions; high cognitive readiness = harder material first; peak window = schedule hardest work there.${feedbackContext}`;
+Consider: high burnout = fewer/lighter sessions; high cognitive readiness = harder material first; peak window = schedule hardest work there. IMPORTANT: All study sessions MUST follow the prescribed block/break structure.${blockContext}${feedbackContext}`;
 
     const userPrompt = `Metrics:
 - Cognitive Readiness: ${cognitiveReadiness}/100
