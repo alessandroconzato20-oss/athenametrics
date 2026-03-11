@@ -53,8 +53,9 @@ function buildScoresData(scores: ReturnType<typeof computeScores>) {
     {
       label: "Study Capacity", value: scores.studyCapacity, numValue: scores.factors.study.sleepFactor,
       color: "bg-score-study/15 text-score-study", icon: "clock",
-      reasoning: [`Sleep factor: ${scores.factors.study.sleepFactor}%`, `Recovery factor: ${scores.factors.study.recoveryFactor}%`],
+      reasoning: [`Sleep factor: ${scores.factors.study.sleepFactor}%`, `Recovery factor: ${scores.factors.study.recoveryFactor}%`, `Recommended: ${scores.studyBlockRecommendation.label}`],
       factors: [{ label: "Sleep Factor", value: scores.factors.study.sleepFactor }, { label: "Recovery Factor", value: scores.factors.study.recoveryFactor }],
+      subtitle: scores.studyBlockRecommendation.label,
     },
     {
       label: "Burnout Risk", value: `${scores.burnoutRisk}/100`, numValue: scores.burnoutRisk,
