@@ -166,6 +166,14 @@ export function computeScores(data: HealthData) {
   const studyHours = Math.floor(totalMins / 60);
   const studyMins = totalMins % 60;
 
+  // Study block recommendation based on overall readiness
+  const overallReadiness = (sleepFactor + recoveryFactor) / 2;
+  const studyBlockRecommendation = overallReadiness >= 0.85
+    ? { blockMinutes: 120, breakMinutes: 0, label: "2-hour deep blocks", tier: "high" as const }
+    : overallReadiness >= 0.6
+    ? { blockMinutes: 60, breakMinutes: 15, label: "60 min blocks · 15 min breaks", tier: "medium" as const }
+    : { blockMinutes: 30, breakMinutes: 10, label: "30 min blocks · 10 min breaks", tier: "low" as const };
+
   // 3. Burnout Risk (0-100, lower is better)
   const sleepDebt = Math.max(0, 8 - data.sleepHours) * 12;
   const stressFromHR = Math.max(0, data.restingHR - 65) * 2;
@@ -194,6 +202,7 @@ export function computeScores(data: HealthData) {
   return {
     cognitiveReadiness,
     studyCapacity: `${studyHours}h ${studyMins}m`,
+    studyBlockRecommendation,
     burnoutRisk,
     retentionOutlook,
     peakWindow: `${formatTime(peakStart)} – ${formatTime(peakEnd)}`,

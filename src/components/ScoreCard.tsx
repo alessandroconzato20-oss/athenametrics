@@ -10,6 +10,7 @@ interface ScoreCardProps {
   index: number;
   actionText: string;
   numValue: number;
+  subtitle?: string;
   onClick: () => void;
 }
 
@@ -27,7 +28,7 @@ const getScoreEmoji = (icon: string, numValue: number) => {
   return "";
 };
 
-const ScoreCard = ({ label, value, icon, colorClass, index, actionText, numValue, onClick }: ScoreCardProps) => {
+const ScoreCard = ({ label, value, icon, colorClass, index, actionText, numValue, subtitle, onClick }: ScoreCardProps) => {
   const isGood = icon === "alert" ? numValue < 30 : numValue > 70;
   
   return (
@@ -68,6 +69,9 @@ const ScoreCard = ({ label, value, icon, colorClass, index, actionText, numValue
           <span className="text-xs">{getScoreEmoji(icon, numValue)}</span>
         </div>
         <p className="font-display text-lg font-bold text-foreground leading-tight">{value}</p>
+        {subtitle && (
+          <p className="mt-0.5 text-[11px] font-semibold text-primary/80">{subtitle}</p>
+        )}
         <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground/80 line-clamp-2">{actionText}</p>
       </div>
       
