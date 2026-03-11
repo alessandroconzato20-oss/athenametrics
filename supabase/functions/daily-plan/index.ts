@@ -36,9 +36,10 @@ Consider: high burnout = fewer/lighter sessions; high cognitive readiness = hard
 - Burnout Risk: ${burnoutRisk}/100  
 - Peak Study Window: ${peakWindow}
 - Study Capacity: ${studyCapacity}
+- Study Block: ${studyBlock ? `${studyBlock.blockMinutes}min sessions${studyBlock.breakMinutes > 0 ? ` with ${studyBlock.breakMinutes}min breaks` : ", no breaks needed"}` : "flexible"}
 - Current time: ${new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
 
-Generate my personalized study plan for today.`;
+Generate my personalized study plan for today following the block structure.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
