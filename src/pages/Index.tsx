@@ -218,6 +218,7 @@ const Index = () => {
               burnoutRisk: scores.burnoutRisk,
               peakWindow: scores.peakWindow,
               studyCapacity: scores.studyCapacity,
+              studyBlockRecommendation: scores.studyBlockRecommendation,
             } : null} />
           </div>
         )}

@@ -46,6 +46,7 @@ const DailyStudyPlan = ({ scores }: DailyStudyPlanProps) => {
           burnoutRisk: scores.burnoutRisk,
           peakWindow: scores.peakWindow,
           studyCapacity: scores.studyCapacity,
+          studyBlock: scores.studyBlockRecommendation,
           pastFeedback: feedbackData || [],
         },
       });
