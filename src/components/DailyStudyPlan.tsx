@@ -18,6 +18,7 @@ interface DailyStudyPlanProps {
     burnoutRisk: number;
     peakWindow: string;
     studyCapacity: string;
+    studyBlockRecommendation: { blockMinutes: number; breakMinutes: number; label: string; tier: string };
   } | null;
 }
 
