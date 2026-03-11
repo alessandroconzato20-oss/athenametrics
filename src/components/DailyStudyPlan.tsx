@@ -68,20 +68,22 @@ const DailyStudyPlan = ({ scores }: DailyStudyPlanProps) => {
   const getFallbackPlan = (s: DailyStudyPlanProps["scores"]): PlanItem[] => {
     if (!s) return [];
     const peak = s.peakWindow;
-    const isHighBurnout = s.burnoutRisk > 50;
+    const block = s.studyBlockRecommendation;
+    const b = `${block.blockMinutes} min`;
+    const brk = block.breakMinutes > 0 ? ` + ${block.breakMinutes} min break` : "";
     
-    if (isHighBurnout) {
+    if (s.burnoutRisk > 50) {
       return [
-        { time: "Morning", task: "Light flashcard review (30 min)", reason: "Ease into the day with low effort", done: false },
-        { time: "Midday", task: "Walk or rest (20 min)", reason: "Recovery reduces burnout risk", done: false },
-        { time: "Afternoon", task: "One focused session (45 min)", reason: "Keep it short to avoid overload", done: false },
+        { time: "Morning", task: `Light flashcard review (${b})`, reason: `Short block to ease in${brk}`, done: false },
+        { time: "Midday", task: "Walk or rest (15 min)", reason: "Recovery reduces burnout risk", done: false },
+        { time: "Afternoon", task: `One focused session (${b})`, reason: `Keep to single block${brk}`, done: false },
       ];
     }
     
     return [
-      { time: "Pre-peak", task: "Warm up with flashcards (20 min)", reason: "Prime your brain before peak window", done: false },
-      { time: peak, task: "Deep study — hardest topic (90 min)", reason: "Peak cognitive readiness window", done: false },
-      { time: "Post-peak", task: "Active recall practice (45 min)", reason: "Cement what you learned", done: false },
+      { time: "Pre-peak", task: `Warm up with flashcards (${b})`, reason: `Prime your brain${brk}`, done: false },
+      { time: peak, task: `Deep study — hardest topic (${b})`, reason: "Peak cognitive window", done: false },
+      { time: "Post-peak", task: `Active recall practice (${b})`, reason: `Cement what you learned${brk}`, done: false },
       { time: "Evening", task: "Light review + log session", reason: "Consolidate and track progress", done: false },
     ];
   };
