@@ -54,7 +54,7 @@ export async function isHealthAvailable(): Promise<boolean> {
   try {
     const result = await CapacitorHealthkit.isAvailable();
     console.log("HealthKit available:", result);
-    return result.available;
+    return (result as any).available ?? true;
   } catch (e) {
     console.error("HealthKit isAvailable failed:", e);
     return false;
