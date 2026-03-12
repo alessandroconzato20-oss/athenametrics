@@ -56,10 +56,10 @@ const StudyLogForm = () => {
   const [topic, setTopic] = useState("");
   const [hours, setHours] = useState("");
   const [minutes, setMinutes] = useState("");
-  const [difficulty, setDifficulty] = useState([3]);
-  const [stress, setStress] = useState([3]);
-  const [distraction, setDistraction] = useState([3]);
-  const [energy, setEnergy] = useState([3]);
+  const [difficulty, setDifficulty] = useState(3);
+  const [stress, setStress] = useState(3);
+  const [distraction, setDistraction] = useState(3);
+  const [energy, setEnergy] = useState(3);
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
 
