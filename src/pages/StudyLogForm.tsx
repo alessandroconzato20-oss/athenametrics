@@ -7,13 +7,42 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Slider } from "@/components/ui/slider";
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Brain, Zap, AlertTriangle, Eye, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
 import { getCoursesForStudent, type Course } from "@/data/curriculum";
 
 const levelLabels: Record<number, string> = { 1: "Very Low", 2: "Low", 3: "Medium", 4: "High", 5: "Very High" };
+
+const LevelPicker = ({ label, icon, value, onChange, color }: {
+  label: string; icon: React.ReactNode; value: number; onChange: (v: number) => void; color: string;
+}) => (
+  <div className="space-y-2">
+    <div className="flex items-center gap-2">
+      {icon}
+      <Label className="text-sm font-medium">{label}</Label>
+    </div>
+    <div className="flex gap-1.5">
+      {[1, 2, 3, 4, 5].map((level) => (
+        <motion.button
+          key={level}
+          type="button"
+          whileTap={{ scale: 0.9 }}
+          onClick={() => onChange(level)}
+          className={`flex-1 rounded-xl py-2.5 text-xs font-semibold transition-all ${
+            value === level
+              ? `${color} shadow-soft scale-105`
+              : "bg-muted text-muted-foreground hover:bg-muted/80"
+          }`}
+        >
+          {level}
+          <span className="block text-[9px] font-normal mt-0.5 leading-tight">{levelLabels[level]}</span>
+        </motion.button>
+      ))}
+    </div>
+  </div>
+);
 
 const StudyLogForm = () => {
   const { user } = useAuth();
@@ -27,10 +56,10 @@ const StudyLogForm = () => {
   const [topic, setTopic] = useState("");
   const [hours, setHours] = useState("");
   const [minutes, setMinutes] = useState("");
-  const [difficulty, setDifficulty] = useState([3]);
-  const [stress, setStress] = useState([3]);
-  const [distraction, setDistraction] = useState([3]);
-  const [energy, setEnergy] = useState([3]);
+  const [difficulty, setDifficulty] = useState(3);
+  const [stress, setStress] = useState(3);
+  const [distraction, setDistraction] = useState(3);
+  const [energy, setEnergy] = useState(3);
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -50,10 +79,10 @@ const StudyLogForm = () => {
         subject: selectedCourse,
         topic: topic.trim() || selectedCourse,
         duration_minutes: totalMins,
-        difficulty: difficulty[0],
-        stress_level: stress[0],
-        distraction_level: distraction[0],
-        energy_level: energy[0],
+        difficulty: difficulty,
+        stress_level: stress,
+        distraction_level: distraction,
+        energy_level: energy,
         notes: notes.trim() || null,
       });
       if (error) throw error;
@@ -65,21 +94,6 @@ const StudyLogForm = () => {
       setSaving(false);
     }
   };
-
-  const SliderField = ({ label, icon, value, onChange, color }: {
-    label: string; icon: React.ReactNode; value: number[]; onChange: (v: number[]) => void; color: string;
-  }) => (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {icon}
-          <Label className="text-sm font-medium">{label}</Label>
-        </div>
-        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${color}`}>{levelLabels[value[0]]}</span>
-      </div>
-      <Slider min={1} max={5} step={1} value={value} onValueChange={onChange} className="py-1" />
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -135,10 +149,10 @@ const StudyLogForm = () => {
             </div>
 
             <div className="rounded-2xl bg-card p-4 space-y-5 shadow-card">
-              <SliderField label="Difficulty" icon={<Brain className="h-4 w-4 text-score-cognitive" />} value={difficulty} onChange={setDifficulty} color="bg-score-cognitive/15 text-score-cognitive" />
-              <SliderField label="Stress Level" icon={<AlertTriangle className="h-4 w-4 text-score-burnout" />} value={stress} onChange={setStress} color="bg-score-burnout/15 text-score-burnout" />
-              <SliderField label="Distraction Level" icon={<Eye className="h-4 w-4 text-score-peak" />} value={distraction} onChange={setDistraction} color="bg-score-peak/15 text-score-peak" />
-              <SliderField label="Energy Level" icon={<Zap className="h-4 w-4 text-score-study" />} value={energy} onChange={setEnergy} color="bg-score-study/15 text-score-study" />
+              <LevelPicker label="Difficulty" icon={<Brain className="h-4 w-4 text-score-cognitive" />} value={difficulty} onChange={setDifficulty} color="bg-score-cognitive text-primary-foreground" />
+              <LevelPicker label="Stress Level" icon={<AlertTriangle className="h-4 w-4 text-score-burnout" />} value={stress} onChange={setStress} color="bg-score-burnout text-primary-foreground" />
+              <LevelPicker label="Distraction Level" icon={<Eye className="h-4 w-4 text-score-peak" />} value={distraction} onChange={setDistraction} color="bg-score-peak text-primary-foreground" />
+              <LevelPicker label="Energy Level" icon={<Zap className="h-4 w-4 text-score-study" />} value={energy} onChange={setEnergy} color="bg-score-study text-primary-foreground" />
             </div>
 
             <div className="space-y-2">
