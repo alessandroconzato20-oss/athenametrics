@@ -1,4 +1,5 @@
 import { Capacitor } from "@capacitor/core";
+import { CapacitorHealthkit } from "@perfood/capacitor-healthkit";
 
 // HealthKit types we read
 const READ_PERMISSIONS = [
@@ -11,38 +12,6 @@ const READ_PERMISSIONS = [
   "oxygenSaturation",
   "bodyTemperature",
 ];
-
-export interface HealthData {
-  steps: number;
-  restingHR: number;
-  hrv: number;
-  sleepHours: number;
-  deepSleepHours: number;
-  activeCalories: number;
-  oxygenSaturation: number;
-}
-
-const defaultHealthData: HealthData = {
-  steps: 6200,
-  restingHR: 62,
-  hrv: 48,
-  sleepHours: 7.2,
-  deepSleepHours: 2.1,
-  activeCalories: 320,
-  oxygenSaturation: 97,
-};
-
-let HealthKit: any = null;
-
-async function loadHealthKit() {
-  if (!Capacitor.isNativePlatform()) return null;
-  try {
-    const mod = await import("@perfood/capacitor-healthkit");
-    return mod.CapacitorHealthkit;
-  } catch {
-    return null;
-  }
-}
 
 export async function requestHealthPermissions(): Promise<boolean> {
   HealthKit = await loadHealthKit();
