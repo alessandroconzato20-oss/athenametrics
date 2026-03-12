@@ -79,10 +79,10 @@ const StudyLogForm = () => {
         subject: selectedCourse,
         topic: topic.trim() || selectedCourse,
         duration_minutes: totalMins,
-        difficulty: difficulty[0],
-        stress_level: stress[0],
-        distraction_level: distraction[0],
-        energy_level: energy[0],
+        difficulty: difficulty,
+        stress_level: stress,
+        distraction_level: distraction,
+        energy_level: energy,
         notes: notes.trim() || null,
       });
       if (error) throw error;
