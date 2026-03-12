@@ -15,6 +15,35 @@ import { getCoursesForStudent, type Course } from "@/data/curriculum";
 
 const levelLabels: Record<number, string> = { 1: "Very Low", 2: "Low", 3: "Medium", 4: "High", 5: "Very High" };
 
+const LevelPicker = ({ label, icon, value, onChange, color }: {
+  label: string; icon: React.ReactNode; value: number; onChange: (v: number) => void; color: string;
+}) => (
+  <div className="space-y-2">
+    <div className="flex items-center gap-2">
+      {icon}
+      <Label className="text-sm font-medium">{label}</Label>
+    </div>
+    <div className="flex gap-1.5">
+      {[1, 2, 3, 4, 5].map((level) => (
+        <motion.button
+          key={level}
+          type="button"
+          whileTap={{ scale: 0.9 }}
+          onClick={() => onChange(level)}
+          className={`flex-1 rounded-xl py-2.5 text-xs font-semibold transition-all ${
+            value === level
+              ? `${color} shadow-soft scale-105`
+              : "bg-muted text-muted-foreground hover:bg-muted/80"
+          }`}
+        >
+          {level}
+          <span className="block text-[9px] font-normal mt-0.5 leading-tight">{levelLabels[level]}</span>
+        </motion.button>
+      ))}
+    </div>
+  </div>
+);
+
 const StudyLogForm = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
