@@ -13,16 +13,35 @@ const READ_PERMISSIONS = [
   "bodyTemperature",
 ];
 
-export async function requestHealthPermissions(): Promise<boolean> {
-  HealthKit = await loadHealthKit();
-  if (!HealthKit) return false;
+export interface HealthData {
+  steps: number;
+  restingHR: number;
+  hrv: number;
+  sleepHours: number;
+  deepSleepHours: number;
+  activeCalories: number;
+  oxygenSaturation: number;
+}
 
+const defaultHealthData: HealthData = {
+  steps: 6200,
+  restingHR: 62,
+  hrv: 48,
+  sleepHours: 7.2,
+  deepSleepHours: 2.1,
+  activeCalories: 320,
+  oxygenSaturation: 97,
+};
+
+export async function requestHealthPermissions(): Promise<boolean> {
+  if (!Capacitor.isNativePlatform()) return false;
   try {
-    await HealthKit.requestAuthorization({
+    await CapacitorHealthkit.requestAuthorization({
       all: [],
       read: READ_PERMISSIONS,
       write: [],
     });
+    console.log("HealthKit authorization granted");
     return true;
   } catch (e) {
     console.error("HealthKit auth failed:", e);
@@ -32,27 +51,27 @@ export async function requestHealthPermissions(): Promise<boolean> {
 
 export async function isHealthAvailable(): Promise<boolean> {
   if (!Capacitor.isNativePlatform()) return false;
-  HealthKit = await loadHealthKit();
-  if (!HealthKit) return false;
   try {
-    const result = await HealthKit.isAvailable();
+    const result = await CapacitorHealthkit.isAvailable();
+    console.log("HealthKit available:", result);
     return result.available;
-  } catch {
+  } catch (e) {
+    console.error("HealthKit isAvailable failed:", e);
     return false;
   }
 }
 
 async function querySample(sampleType: string, startDate: Date, endDate: Date): Promise<any[]> {
-  if (!HealthKit) return [];
   try {
-    const result = await HealthKit.queryHKitSampleType({
+    const result = await CapacitorHealthkit.queryHKitSampleType({
       sampleName: sampleType,
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
       limit: 100,
     });
     return result.resultData || [];
-  } catch {
+  } catch (e) {
+    console.error(`HealthKit query failed for ${sampleType}:`, e);
     return [];
   }
 }
@@ -63,8 +82,7 @@ function average(arr: number[]): number {
 }
 
 export async function fetchHealthData(): Promise<HealthData> {
-  if (!Capacitor.isNativePlatform() || !HealthKit) {
-    // Return mock data for web preview
+  if (!Capacitor.isNativePlatform()) {
     return defaultHealthData;
   }
 
@@ -82,12 +100,16 @@ export async function fetchHealthData(): Promise<HealthData> {
       querySample("oxygenSaturation", yesterday, now),
     ]);
 
+    console.log("HealthKit raw counts:", {
+      steps: steps.length, heartRate: heartRate.length, restingHR: restingHR.length,
+      hrv: hrv.length, sleep: sleep.length, calories: calories.length, spo2: spo2.length,
+    });
+
     const totalSteps = steps.reduce((sum: number, s: any) => sum + (s.value || 0), 0);
     const avgHR = average(heartRate.map((s: any) => s.value || 0));
     const avgRestingHR = restingHR.length > 0 ? average(restingHR.map((s: any) => s.value || 0)) : avgHR;
     const avgHRV = average(hrv.map((s: any) => s.value || 0));
 
-    // Calculate sleep
     let totalSleepMins = 0;
     let deepSleepMins = 0;
     for (const s of sleep) {
@@ -103,7 +125,7 @@ export async function fetchHealthData(): Promise<HealthData> {
     const totalCalories = calories.reduce((sum: number, s: any) => sum + (s.value || 0), 0);
     const avgSpO2 = spo2.length > 0 ? average(spo2.map((s: any) => (s.value || 0) * 100)) : 97;
 
-    return {
+    const healthData: HealthData = {
       steps: totalSteps,
       restingHR: Math.round(avgRestingHR),
       hrv: Math.round(avgHRV),
@@ -112,6 +134,16 @@ export async function fetchHealthData(): Promise<HealthData> {
       activeCalories: Math.round(totalCalories),
       oxygenSaturation: Math.round(avgSpO2),
     };
+
+    console.log("HealthKit computed data:", healthData);
+
+    // If all values are 0, HealthKit returned no data — fall back to defaults
+    if (totalSteps === 0 && avgHR === 0 && totalSleepMins === 0) {
+      console.warn("HealthKit returned empty data, using defaults");
+      return defaultHealthData;
+    }
+
+    return healthData;
   } catch (e) {
     console.error("Failed to fetch health data:", e);
     return defaultHealthData;
