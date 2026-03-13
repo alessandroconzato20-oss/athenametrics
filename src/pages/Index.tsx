@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useNavigate } from "react-router-dom";
-import { LogOut, Activity, BookOpen, Trophy, Plus } from "lucide-react";
+import { LogOut, Activity, BookOpen, Trophy, Plus, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import ScoreCard from "@/components/ScoreCard";
@@ -14,7 +14,7 @@ import HeroAction from "@/components/HeroAction";
 import TodaysInsight from "@/components/TodaysInsight";
 import DailyStudyPlan from "@/components/DailyStudyPlan";
 import MicroReward from "@/components/MicroReward";
-import { fetchHealthData, computeScores, requestHealthPermissions, isHealthAvailable, type HealthData } from "@/services/healthkit";
+import { fetchHealthData, computeScores, requestHealthPermissions, isHealthAvailable, DEFAULT_HEALTH_DATA, type HealthData } from "@/services/healthkit";
 import { format } from "date-fns";
 
 function getActionText(icon: string, numValue: number): string {
