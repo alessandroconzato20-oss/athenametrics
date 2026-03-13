@@ -9,9 +9,20 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Brain, Zap, AlertTriangle, Eye, GraduationCap } from "lucide-react";
+import { ArrowLeft, Brain, Zap, AlertTriangle, Eye, GraduationCap, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 import { getCoursesForStudent, type Course } from "@/data/curriculum";
+import { Checkbox } from "@/components/ui/checkbox";
+
+const STUDY_METHODS = [
+  { id: "anki", label: "Anki Flashcards" },
+  { id: "notes", label: "Notes" },
+  { id: "pomodoro", label: "Pomodoro" },
+  { id: "active-recall", label: "Active Recall" },
+  { id: "practice-problems", label: "Practice Problems" },
+  { id: "group-study", label: "Group Study" },
+  { id: "lectures", label: "Lectures / Videos" },
+];
 
 const levelLabels: Record<number, string> = { 1: "Very Low", 2: "Low", 3: "Medium", 4: "High", 5: "Very High" };
 
@@ -61,9 +72,17 @@ const StudyLogForm = () => {
   const [distraction, setDistraction] = useState(3);
   const [energy, setEnergy] = useState(3);
   const [notes, setNotes] = useState("");
+  const [selectedMethods, setSelectedMethods] = useState<string[]>([]);
+  const [otherMethod, setOtherMethod] = useState("");
   const [saving, setSaving] = useState(false);
 
   const courseObj = availableCourses.find(c => c.name === selectedCourse);
+
+  const toggleMethod = (id: string) => {
+    setSelectedMethods(prev =>
+      prev.includes(id) ? prev.filter(m => m !== id) : [...prev, id]
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,6 +90,12 @@ const StudyLogForm = () => {
     if (!selectedCourse) { toast.error("Please select a course"); return; }
     const totalMins = (parseInt(hours) || 0) * 60 + (parseInt(minutes) || 0);
     if (totalMins <= 0) { toast.error("Please enter a valid duration"); return; }
+
+    // Build methods string to append to notes
+    const allMethods = [...selectedMethods.map(id => STUDY_METHODS.find(m => m.id === id)?.label || id)];
+    if (otherMethod.trim()) allMethods.push(otherMethod.trim());
+    const methodsNote = allMethods.length > 0 ? `[Methods: ${allMethods.join(", ")}]` : "";
+    const combinedNotes = [notes.trim(), methodsNote].filter(Boolean).join(" ") || null;
 
     setSaving(true);
     try {
@@ -83,7 +108,7 @@ const StudyLogForm = () => {
         stress_level: stress,
         distraction_level: distraction,
         energy_level: energy,
-        notes: notes.trim() || null,
+        notes: combinedNotes,
       });
       if (error) throw error;
       toast.success("Study session logged! 🎉");
@@ -153,6 +178,37 @@ const StudyLogForm = () => {
               <LevelPicker label="Stress Level" icon={<AlertTriangle className="h-4 w-4 text-score-burnout" />} value={stress} onChange={setStress} color="bg-score-burnout text-primary-foreground" />
               <LevelPicker label="Distraction Level" icon={<Eye className="h-4 w-4 text-score-peak" />} value={distraction} onChange={setDistraction} color="bg-score-peak text-primary-foreground" />
               <LevelPicker label="Energy Level" icon={<Zap className="h-4 w-4 text-score-study" />} value={energy} onChange={setEnergy} color="bg-score-study text-primary-foreground" />
+            </div>
+
+            {/* Study Method */}
+            <div className="space-y-3">
+              <Label className="flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-primary" />
+                Study Method
+              </Label>
+              <div className="grid grid-cols-2 gap-2">
+                {STUDY_METHODS.map((method) => (
+                  <motion.button
+                    key={method.id}
+                    type="button"
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => toggleMethod(method.id)}
+                    className={`rounded-xl px-3 py-2.5 text-xs font-medium transition-all text-left ${
+                      selectedMethods.includes(method.id)
+                        ? "bg-primary text-primary-foreground shadow-soft"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    }`}
+                  >
+                    {method.label}
+                  </motion.button>
+                ))}
+              </div>
+              <Input
+                placeholder="Other method (type here)"
+                value={otherMethod}
+                onChange={(e) => setOtherMethod(e.target.value)}
+                className="h-11 rounded-xl"
+              />
             </div>
 
             <div className="space-y-2">
