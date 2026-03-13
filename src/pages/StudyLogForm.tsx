@@ -78,12 +78,24 @@ const StudyLogForm = () => {
 
   const courseObj = availableCourses.find(c => c.name === selectedCourse);
 
+  const toggleMethod = (id: string) => {
+    setSelectedMethods(prev =>
+      prev.includes(id) ? prev.filter(m => m !== id) : [...prev, id]
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) { toast.error("Please sign in first"); return; }
     if (!selectedCourse) { toast.error("Please select a course"); return; }
     const totalMins = (parseInt(hours) || 0) * 60 + (parseInt(minutes) || 0);
     if (totalMins <= 0) { toast.error("Please enter a valid duration"); return; }
+
+    // Build methods string to append to notes
+    const allMethods = [...selectedMethods.map(id => STUDY_METHODS.find(m => m.id === id)?.label || id)];
+    if (otherMethod.trim()) allMethods.push(otherMethod.trim());
+    const methodsNote = allMethods.length > 0 ? `[Methods: ${allMethods.join(", ")}]` : "";
+    const combinedNotes = [notes.trim(), methodsNote].filter(Boolean).join(" ") || null;
 
     setSaving(true);
     try {
@@ -96,7 +108,7 @@ const StudyLogForm = () => {
         stress_level: stress,
         distraction_level: distraction,
         energy_level: energy,
-        notes: notes.trim() || null,
+        notes: combinedNotes,
       });
       if (error) throw error;
       toast.success("Study session logged! 🎉");
