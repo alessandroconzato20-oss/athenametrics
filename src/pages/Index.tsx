@@ -231,9 +231,27 @@ const Index = () => {
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Your Metrics</h2>
           <div className="flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1">
             <Activity className="h-3 w-3 text-primary" />
-            <span className="text-xs font-medium text-primary">{healthConnected ? "Apple Health" : "Preview Data"}</span>
+            <span className="text-xs font-medium text-primary">
+              {healthAvailable ? (healthConnected ? "Apple Health" : "Not Synced") : "Preview Data"}
+            </span>
           </div>
         </motion.div>
+
+        {healthAvailable && (
+          <div className="mb-3">
+            <Button
+              onClick={handleHealthSync}
+              disabled={syncingHealth}
+              variant={healthConnected ? "secondary" : "default"}
+              size="sm"
+              className="h-9 rounded-full px-3 text-xs"
+            >
+              <RefreshCcw className={`h-3.5 w-3.5 ${syncingHealth ? "animate-spin" : ""}`} />
+              {syncingHealth ? "Syncing..." : healthConnected ? "Sync Apple Health" : "Connect Apple Health"}
+            </Button>
+            {syncStatus && <p className="mt-1.5 text-xs text-muted-foreground">{syncStatus}</p>}
+          </div>
+        )}
 
         {loading ? (
           <div className="space-y-3">{[...Array(5)].map((_, i) => <div key={i} className="h-[88px] animate-pulse rounded-2xl bg-muted" />)}</div>
