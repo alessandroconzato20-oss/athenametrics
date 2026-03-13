@@ -12,6 +12,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Brain, Zap, AlertTriangle, Eye, GraduationCap, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 import { getCoursesForStudent, type Course } from "@/data/curriculum";
+import { Checkbox } from "@/components/ui/checkbox";
+
+const STUDY_METHODS = [
+  { id: "anki", label: "Anki Flashcards" },
+  { id: "notes", label: "Notes" },
+  { id: "pomodoro", label: "Pomodoro" },
+  { id: "active-recall", label: "Active Recall" },
+  { id: "practice-problems", label: "Practice Problems" },
+  { id: "group-study", label: "Group Study" },
+  { id: "lectures", label: "Lectures / Videos" },
+];
 
 const levelLabels: Record<number, string> = { 1: "Very Low", 2: "Low", 3: "Medium", 4: "High", 5: "Very High" };
 
