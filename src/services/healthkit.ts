@@ -1,17 +1,26 @@
 import { Capacitor } from "@capacitor/core";
 import { CapacitorHealthkit } from "@perfood/capacitor-healthkit";
 
-// HealthKit types we read
-const READ_PERMISSIONS = [
-  "stepCount",
+// HealthKit auth keys (used only for permission prompts)
+const AUTH_READ_PERMISSIONS = [
+  "steps",
+  "activity",
+  "calories",
   "heartRate",
   "restingHeartRate",
-  "heartRateVariabilitySDNN",
-  "sleepAnalysis",
-  "activeEnergyBurned",
   "oxygenSaturation",
   "bodyTemperature",
 ];
+
+// HealthKit sample names (used for querying actual data)
+const QUERY_SAMPLE_TYPES = {
+  steps: "stepCount",
+  heartRate: "heartRate",
+  restingHeartRate: "restingHeartRate",
+  sleep: "sleepAnalysis",
+  activeCalories: "activeEnergyBurned",
+  oxygenSaturation: "oxygenSaturation",
+} as const;
 
 export interface HealthData {
   steps: number;
@@ -23,7 +32,7 @@ export interface HealthData {
   oxygenSaturation: number;
 }
 
-const defaultHealthData: HealthData = {
+export const DEFAULT_HEALTH_DATA: HealthData = {
   steps: 6200,
   restingHR: 62,
   hrv: 48,
