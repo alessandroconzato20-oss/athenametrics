@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useNavigate } from "react-router-dom";
-import { LogOut, Activity, BookOpen, Trophy, Plus } from "lucide-react";
+import { LogOut, Activity, BookOpen, Trophy, Plus, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import ScoreCard from "@/components/ScoreCard";
@@ -14,7 +14,7 @@ import HeroAction from "@/components/HeroAction";
 import TodaysInsight from "@/components/TodaysInsight";
 import DailyStudyPlan from "@/components/DailyStudyPlan";
 import MicroReward from "@/components/MicroReward";
-import { fetchHealthData, computeScores, requestHealthPermissions, isHealthAvailable, type HealthData } from "@/services/healthkit";
+import { fetchHealthData, computeScores, requestHealthPermissions, isHealthAvailable, DEFAULT_HEALTH_DATA, type HealthData } from "@/services/healthkit";
 import { format } from "date-fns";
 
 function getActionText(icon: string, numValue: number): string {
@@ -83,23 +83,69 @@ const Index = () => {
   const navigate = useNavigate();
   const [selectedScore, setSelectedScore] = useState<any>(null);
   const [healthConnected, setHealthConnected] = useState(false);
+  const [healthAvailable, setHealthAvailable] = useState(false);
   const [healthData, setHealthData] = useState<HealthData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [syncingHealth, setSyncingHealth] = useState(false);
+  const [syncStatus, setSyncStatus] = useState("");
   const [reward, setReward] = useState<{ show: boolean; message: string; emoji: string }>({ show: false, message: "", emoji: "" });
 
   useEffect(() => {
     async function init() {
       const available = await isHealthAvailable();
-      if (available) {
-        const granted = await requestHealthPermissions();
-        setHealthConnected(granted);
-      }
+      setHealthAvailable(available);
+
       const data = await fetchHealthData();
       setHealthData(data);
+
+      if (available) {
+        const isFallbackData = JSON.stringify(data) === JSON.stringify(DEFAULT_HEALTH_DATA);
+        setHealthConnected(!isFallbackData);
+      }
+
       setLoading(false);
     }
     init();
   }, []);
+
+  const handleHealthSync = async () => {
+    setSyncingHealth(true);
+    setSyncStatus("");
+
+    try {
+      const available = await isHealthAvailable();
+      setHealthAvailable(available);
+
+      if (!available) {
+        setHealthConnected(false);
+        setSyncStatus("Apple Health is not available on this device.");
+        return;
+      }
+
+      const granted = await requestHealthPermissions();
+      setHealthConnected(granted);
+
+      if (!granted) {
+        setSyncStatus("Apple Health access was not granted. Enable it in iPhone Settings > Health.");
+        return;
+      }
+
+      const data = await fetchHealthData();
+      setHealthData(data);
+
+      const isFallbackData = JSON.stringify(data) === JSON.stringify(DEFAULT_HEALTH_DATA);
+      setSyncStatus(
+        isFallbackData
+          ? "No Health samples found yet. Open Apple Health once, then tap sync again."
+          : "Apple Health synced successfully."
+      );
+    } catch (error) {
+      console.error("Apple Health manual sync failed:", error);
+      setSyncStatus("Sync failed. Please try again.");
+    } finally {
+      setSyncingHealth(false);
+    }
+  };
 
   // Check for micro reward triggers
   useEffect(() => {
@@ -185,9 +231,27 @@ const Index = () => {
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Your Metrics</h2>
           <div className="flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1">
             <Activity className="h-3 w-3 text-primary" />
-            <span className="text-xs font-medium text-primary">{healthConnected ? "Apple Health" : "Preview Data"}</span>
+            <span className="text-xs font-medium text-primary">
+              {healthAvailable ? (healthConnected ? "Apple Health" : "Not Synced") : "Preview Data"}
+            </span>
           </div>
         </motion.div>
+
+        {healthAvailable && (
+          <div className="mb-3">
+            <Button
+              onClick={handleHealthSync}
+              disabled={syncingHealth}
+              variant={healthConnected ? "secondary" : "default"}
+              size="sm"
+              className="h-9 rounded-full px-3 text-xs"
+            >
+              <RefreshCcw className={`h-3.5 w-3.5 ${syncingHealth ? "animate-spin" : ""}`} />
+              {syncingHealth ? "Syncing..." : healthConnected ? "Sync Apple Health" : "Connect Apple Health"}
+            </Button>
+            {syncStatus && <p className="mt-1.5 text-xs text-muted-foreground">{syncStatus}</p>}
+          </div>
+        )}
 
         {loading ? (
           <div className="space-y-3">{[...Array(5)].map((_, i) => <div key={i} className="h-[88px] animate-pulse rounded-2xl bg-muted" />)}</div>
