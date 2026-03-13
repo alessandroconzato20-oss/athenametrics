@@ -83,23 +83,69 @@ const Index = () => {
   const navigate = useNavigate();
   const [selectedScore, setSelectedScore] = useState<any>(null);
   const [healthConnected, setHealthConnected] = useState(false);
+  const [healthAvailable, setHealthAvailable] = useState(false);
   const [healthData, setHealthData] = useState<HealthData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [syncingHealth, setSyncingHealth] = useState(false);
+  const [syncStatus, setSyncStatus] = useState("");
   const [reward, setReward] = useState<{ show: boolean; message: string; emoji: string }>({ show: false, message: "", emoji: "" });
 
   useEffect(() => {
     async function init() {
       const available = await isHealthAvailable();
-      if (available) {
-        const granted = await requestHealthPermissions();
-        setHealthConnected(granted);
-      }
+      setHealthAvailable(available);
+
       const data = await fetchHealthData();
       setHealthData(data);
+
+      if (available) {
+        const isFallbackData = JSON.stringify(data) === JSON.stringify(DEFAULT_HEALTH_DATA);
+        setHealthConnected(!isFallbackData);
+      }
+
       setLoading(false);
     }
     init();
   }, []);
+
+  const handleHealthSync = async () => {
+    setSyncingHealth(true);
+    setSyncStatus("");
+
+    try {
+      const available = await isHealthAvailable();
+      setHealthAvailable(available);
+
+      if (!available) {
+        setHealthConnected(false);
+        setSyncStatus("Apple Health is not available on this device.");
+        return;
+      }
+
+      const granted = await requestHealthPermissions();
+      setHealthConnected(granted);
+
+      if (!granted) {
+        setSyncStatus("Apple Health access was not granted. Enable it in iPhone Settings > Health.");
+        return;
+      }
+
+      const data = await fetchHealthData();
+      setHealthData(data);
+
+      const isFallbackData = JSON.stringify(data) === JSON.stringify(DEFAULT_HEALTH_DATA);
+      setSyncStatus(
+        isFallbackData
+          ? "No Health samples found yet. Open Apple Health once, then tap sync again."
+          : "Apple Health synced successfully."
+      );
+    } catch (error) {
+      console.error("Apple Health manual sync failed:", error);
+      setSyncStatus("Sync failed. Please try again.");
+    } finally {
+      setSyncingHealth(false);
+    }
+  };
 
   // Check for micro reward triggers
   useEffect(() => {
