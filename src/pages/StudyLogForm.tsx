@@ -72,6 +72,8 @@ const StudyLogForm = () => {
   const [distraction, setDistraction] = useState(3);
   const [energy, setEnergy] = useState(3);
   const [notes, setNotes] = useState("");
+  const [selectedMethods, setSelectedMethods] = useState<string[]>([]);
+  const [otherMethod, setOtherMethod] = useState("");
   const [saving, setSaving] = useState(false);
 
   const courseObj = availableCourses.find(c => c.name === selectedCourse);
