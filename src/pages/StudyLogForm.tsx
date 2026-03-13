@@ -180,6 +180,37 @@ const StudyLogForm = () => {
               <LevelPicker label="Energy Level" icon={<Zap className="h-4 w-4 text-score-study" />} value={energy} onChange={setEnergy} color="bg-score-study text-primary-foreground" />
             </div>
 
+            {/* Study Method */}
+            <div className="space-y-3">
+              <Label className="flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-primary" />
+                Study Method
+              </Label>
+              <div className="grid grid-cols-2 gap-2">
+                {STUDY_METHODS.map((method) => (
+                  <motion.button
+                    key={method.id}
+                    type="button"
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => toggleMethod(method.id)}
+                    className={`rounded-xl px-3 py-2.5 text-xs font-medium transition-all text-left ${
+                      selectedMethods.includes(method.id)
+                        ? "bg-primary text-primary-foreground shadow-soft"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    }`}
+                  >
+                    {method.label}
+                  </motion.button>
+                ))}
+              </div>
+              <Input
+                placeholder="Other method (type here)"
+                value={otherMethod}
+                onChange={(e) => setOtherMethod(e.target.value)}
+                className="h-11 rounded-xl"
+              />
+            </div>
+
             <div className="space-y-2">
               <Label>Notes (optional)</Label>
               <Textarea placeholder="How did the session go?" value={notes} onChange={(e) => setNotes(e.target.value)} className="rounded-xl min-h-[80px]" />
