@@ -1,5 +1,11 @@
 import { Capacitor } from "@capacitor/core";
 import { CapacitorHealthkit } from "@perfood/capacitor-healthkit";
+import type { AppleHealthData } from "@/algorithms/apexScores";
+
+// Re-export the algorithm types for convenience
+export type { AppleHealthData } from "@/algorithms/apexScores";
+export { calculateApexScores } from "@/algorithms/apexScores";
+export type { ApexScores, StudyCapacity, PeakWindow } from "@/algorithms/apexScores";
 
 // HealthKit auth keys (used only for permission prompts)
 const AUTH_READ_PERMISSIONS = [
@@ -10,6 +16,7 @@ const AUTH_READ_PERMISSIONS = [
   "restingHeartRate",
   "oxygenSaturation",
   "bodyTemperature",
+  "sleepAnalysis",
 ];
 
 // HealthKit sample names (used for querying actual data)
@@ -20,31 +27,35 @@ const QUERY_SAMPLE_TYPES = {
   sleep: "sleepAnalysis",
   activeCalories: "activeEnergyBurned",
   oxygenSaturation: "oxygenSaturation",
+  vo2Max: "vo2Max",
+  respiratoryRate: "respiratoryRate",
 } as const;
 
-export interface HealthData {
-  steps: number;
-  restingHR: number;
-  hrv: number;
-  sleepHours: number;
-  deepSleepHours: number;
-  activeCalories: number;
-  oxygenSaturation: number;
-}
-
-export const DEFAULT_HEALTH_DATA: HealthData = {
-  steps: 6200,
-  restingHR: 62,
-  hrv: 48,
-  sleepHours: 7.2,
-  deepSleepHours: 2.1,
-  activeCalories: 320,
-  oxygenSaturation: 97,
+// Default preview / fallback data matching the new AppleHealthData interface
+export const DEFAULT_HEALTH_DATA: AppleHealthData = {
+  hrv_today: 48,
+  hrv_baseline_30d: 45,
+  resting_hr_today: 62,
+  resting_hr_baseline_30d: 64,
+  sleep_duration_hours: 7.2,
+  sleep_rem_percent: 22,
+  sleep_deep_percent: 17,
+  sleep_efficiency: 0.88,
+  sleep_end_time_minutes: 420, // 7:00 AM
+  sleep_timing_variance_7d: 25,
+  spo2_percent: 97,
+  active_energy_kcal: 320,
+  exercise_minutes: 35,
+  vo2_max: 42,
+  respiratory_rate_bpm: 14,
+  respiratory_rate_baseline_30d: 14,
+  hrv_7d: [44, 46, 43, 47, 45, 49, 48],
+  resting_hr_7d: [65, 64, 63, 64, 63, 62, 62],
+  sleep_quality_7d: [72, 68, 75, 70, 74, 71, 76],
 };
 
 export async function requestHealthPermissions(): Promise<boolean> {
   if (!Capacitor.isNativePlatform()) return false;
-
   try {
     await CapacitorHealthkit.requestAuthorization({
       all: [],
@@ -90,80 +101,188 @@ function average(arr: number[]): number {
   return arr.reduce((a, b) => a + b, 0) / arr.length;
 }
 
-export async function fetchHealthData(): Promise<HealthData> {
+// Query the last N days and return daily averages / totals for trend arrays
+async function queryDailyValues(
+  sampleType: string,
+  days: number,
+  aggregation: "avg" | "sum"
+): Promise<number[]> {
+  const now = new Date();
+  const results: number[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const dayEnd = new Date(now);
+    dayEnd.setHours(0, 0, 0, 0);
+    dayEnd.setDate(dayEnd.getDate() - i);
+    const dayStart = new Date(dayEnd);
+    dayStart.setDate(dayStart.getDate() - 1);
+    const samples = await querySample(sampleType, dayStart, dayEnd);
+    const values = samples.map((s: any) => s.value || 0).filter((v: number) => v > 0);
+    if (values.length === 0) {
+      results.push(0);
+    } else if (aggregation === "avg") {
+      results.push(average(values));
+    } else {
+      results.push(values.reduce((a: number, b: number) => a + b, 0));
+    }
+  }
+  return results;
+}
+
+export async function fetchHealthData(): Promise<AppleHealthData> {
   if (!Capacitor.isNativePlatform()) {
     return DEFAULT_HEALTH_DATA;
   }
 
   const now = new Date();
   const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
   try {
-    const [steps, heartRate, restingHR, sleep, calories, spo2] = await Promise.all([
-      querySample(QUERY_SAMPLE_TYPES.steps, yesterday, now),
+    // Parallel fetch: today's data + 30-day baselines + 7-day trends
+    const [
+      heartRateToday,
+      restingHRToday,
+      sleepToday,
+      caloriesToday,
+      spo2Today,
+      vo2MaxSamples,
+      respRateToday,
+      // 30-day baselines
+      hrv30d,
+      restingHR30d,
+      respRate30d,
+      // 7-day trends
+      hrv7d,
+      restingHR7d,
+    ] = await Promise.all([
       querySample(QUERY_SAMPLE_TYPES.heartRate, yesterday, now),
       querySample(QUERY_SAMPLE_TYPES.restingHeartRate, yesterday, now),
       querySample(QUERY_SAMPLE_TYPES.sleep, yesterday, now),
       querySample(QUERY_SAMPLE_TYPES.activeCalories, yesterday, now),
       querySample(QUERY_SAMPLE_TYPES.oxygenSaturation, yesterday, now),
+      querySample(QUERY_SAMPLE_TYPES.vo2Max, thirtyDaysAgo, now),
+      querySample("respiratoryRate", yesterday, now),
+      // 30-day baselines
+      querySample(QUERY_SAMPLE_TYPES.restingHeartRate, thirtyDaysAgo, now),
+      querySample(QUERY_SAMPLE_TYPES.restingHeartRate, thirtyDaysAgo, now),
+      querySample("respiratoryRate", thirtyDaysAgo, now),
+      // 7-day trends
+      queryDailyValues(QUERY_SAMPLE_TYPES.restingHeartRate, 7, "avg"),
+      queryDailyValues(QUERY_SAMPLE_TYPES.restingHeartRate, 7, "avg"),
     ]);
 
-    console.log("HealthKit raw counts:", {
-      steps: steps.length,
-      heartRate: heartRate.length,
-      restingHR: restingHR.length,
-      sleep: sleep.length,
-      calories: calories.length,
-      spo2: spo2.length,
-    });
+    // HRV — use resting HR as rough proxy since plugin doesn't support SDNN
+    const avgRestingHRToday = restingHRToday.length > 0
+      ? average(restingHRToday.map((s: any) => s.value || 0))
+      : DEFAULT_HEALTH_DATA.resting_hr_today;
+    const estimatedHRVToday = Math.max(20, Math.min(80, Math.round(120 - avgRestingHRToday * 1.2)));
 
-    const totalSteps = steps.reduce((sum: number, s: any) => sum + (s.value || 0), 0);
-    const avgHR = average(heartRate.map((s: any) => s.value || 0));
-    const avgRestingHR = restingHR.length > 0 ? average(restingHR.map((s: any) => s.value || 0)) : avgHR;
+    const avgRestingHR30d = restingHR30d.length > 0
+      ? average(restingHR30d.map((s: any) => s.value || 0))
+      : DEFAULT_HEALTH_DATA.resting_hr_baseline_30d;
+    const estimatedHRVBaseline = Math.max(20, Math.min(80, Math.round(120 - avgRestingHR30d * 1.2)));
 
+    // Sleep analysis
     let totalSleepMins = 0;
-    let deepSleepMins = 0;
+    let remMins = 0;
+    let deepMins = 0;
+    let timeInBedMins = 0;
+    let latestWakeTime = 0;
+    const wakeTimes: number[] = [];
 
-    for (const s of sleep) {
+    for (const s of sleepToday) {
       const start = new Date(s.startDate).getTime();
       const end = new Date(s.endDate).getTime();
       if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) continue;
-
       const mins = (end - start) / 60000;
+      timeInBedMins += mins;
       totalSleepMins += mins;
 
       const sleepState = String(s.sleepState ?? s.value ?? "").toLowerCase();
-      if (sleepState.includes("deep")) {
-        deepSleepMins += mins;
-      }
+      if (sleepState.includes("rem")) remMins += mins;
+      else if (sleepState.includes("deep")) deepMins += mins;
+
+      const wakeDate = new Date(s.endDate);
+      const wakeMins = wakeDate.getHours() * 60 + wakeDate.getMinutes();
+      if (wakeMins > latestWakeTime) latestWakeTime = wakeMins;
+      wakeTimes.push(wakeMins);
     }
 
-    // Plugin doesn't reliably return sleep stages, so estimate deep sleep when unavailable
-    if (deepSleepMins === 0 && totalSleepMins > 0) {
-      deepSleepMins = totalSleepMins * 0.28;
-    }
+    // Estimate sleep stages if plugin doesn't return them
+    if (remMins === 0 && totalSleepMins > 0) remMins = totalSleepMins * 0.22;
+    if (deepMins === 0 && totalSleepMins > 0) deepMins = totalSleepMins * 0.17;
 
-    const totalCalories = calories.reduce((sum: number, s: any) => sum + (s.value || 0), 0);
-    const avgSpO2 = spo2.length > 0 ? average(spo2.map((s: any) => (s.value || 0) * 100)) : DEFAULT_HEALTH_DATA.oxygenSaturation;
+    const sleepHours = totalSleepMins / 60;
+    const remPercent = totalSleepMins > 0 ? (remMins / totalSleepMins) * 100 : DEFAULT_HEALTH_DATA.sleep_rem_percent;
+    const deepPercent = totalSleepMins > 0 ? (deepMins / totalSleepMins) * 100 : DEFAULT_HEALTH_DATA.sleep_deep_percent;
+    const sleepEfficiency = timeInBedMins > 0 ? Math.min(1, totalSleepMins / timeInBedMins) : DEFAULT_HEALTH_DATA.sleep_efficiency;
+    const wakeTimeMins = latestWakeTime > 0 ? latestWakeTime : DEFAULT_HEALTH_DATA.sleep_end_time_minutes;
 
-    // heartRateVariabilitySDNN is not supported by this plugin release, so use a stable estimate from resting HR
-    const baselineRestingHR = avgRestingHR > 0 ? avgRestingHR : DEFAULT_HEALTH_DATA.restingHR;
-    const estimatedHRV = Math.max(25, Math.min(65, Math.round(120 - baselineRestingHR * 1.2)));
+    // Sleep timing variance (use default if not enough data)
+    const sleepTimingVariance = wakeTimes.length >= 3
+      ? Math.round(Math.sqrt(wakeTimes.reduce((sum, t) => sum + (t - average(wakeTimes)) ** 2, 0) / wakeTimes.length))
+      : DEFAULT_HEALTH_DATA.sleep_timing_variance_7d;
 
-    const healthData: HealthData = {
-      steps: Math.round(totalSteps),
-      restingHR: Math.round(avgRestingHR || DEFAULT_HEALTH_DATA.restingHR),
-      hrv: estimatedHRV,
-      sleepHours: parseFloat((totalSleepMins / 60).toFixed(1)),
-      deepSleepHours: parseFloat((deepSleepMins / 60).toFixed(1)),
-      activeCalories: Math.round(totalCalories),
-      oxygenSaturation: Math.round(avgSpO2),
+    // Calories
+    const totalCalories = caloriesToday.reduce((sum: number, s: any) => sum + (s.value || 0), 0);
+
+    // SpO2
+    const avgSpO2 = spo2Today.length > 0
+      ? average(spo2Today.map((s: any) => (s.value || 0) * 100))
+      : DEFAULT_HEALTH_DATA.spo2_percent;
+
+    // VO2 Max — take latest sample
+    const latestVO2 = vo2MaxSamples.length > 0
+      ? vo2MaxSamples[vo2MaxSamples.length - 1].value || DEFAULT_HEALTH_DATA.vo2_max
+      : DEFAULT_HEALTH_DATA.vo2_max;
+
+    // Respiratory rate
+    const avgRespRate = respRateToday.length > 0
+      ? average(respRateToday.map((s: any) => s.value || 0))
+      : DEFAULT_HEALTH_DATA.respiratory_rate_bpm;
+    const avgRespRate30d = respRate30d.length > 0
+      ? average(respRate30d.map((s: any) => s.value || 0))
+      : DEFAULT_HEALTH_DATA.respiratory_rate_baseline_30d;
+
+    // 7-day HRV trend (estimated from resting HR)
+    const hrv7dValues = restingHR7d.map((rhr: number) =>
+      rhr > 0 ? Math.max(20, Math.min(80, Math.round(120 - rhr * 1.2))) : estimatedHRVBaseline
+    );
+
+    // 7-day sleep quality (simplified composite)
+    const sleepQuality7d = hrv7dValues.map((hrv: number, i: number) => {
+      const rhr = restingHR7d[i] || avgRestingHR30d;
+      return Math.round(Math.min(100, (hrv / 60) * 50 + (1 - Math.abs(rhr - 60) / 40) * 50));
+    });
+
+    const healthData: AppleHealthData = {
+      hrv_today: estimatedHRVToday,
+      hrv_baseline_30d: estimatedHRVBaseline,
+      resting_hr_today: Math.round(avgRestingHRToday),
+      resting_hr_baseline_30d: Math.round(avgRestingHR30d),
+      sleep_duration_hours: parseFloat(sleepHours.toFixed(1)),
+      sleep_rem_percent: parseFloat(remPercent.toFixed(1)),
+      sleep_deep_percent: parseFloat(deepPercent.toFixed(1)),
+      sleep_efficiency: parseFloat(sleepEfficiency.toFixed(2)),
+      sleep_end_time_minutes: wakeTimeMins,
+      sleep_timing_variance_7d: sleepTimingVariance,
+      spo2_percent: Math.round(avgSpO2 * 10) / 10,
+      active_energy_kcal: Math.round(totalCalories),
+      exercise_minutes: Math.round(totalCalories / 8), // rough estimate
+      vo2_max: Math.round(latestVO2 * 10) / 10,
+      respiratory_rate_bpm: Math.round(avgRespRate * 10) / 10,
+      respiratory_rate_baseline_30d: Math.round(avgRespRate30d * 10) / 10,
+      hrv_7d: hrv7dValues,
+      resting_hr_7d: restingHR7d.map((v: number) => Math.round(v || avgRestingHR30d)),
+      sleep_quality_7d: sleepQuality7d,
     };
 
-    console.log("HealthKit computed data:", healthData);
+    console.log("HealthKit computed AppleHealthData:", healthData);
 
-    // If data is still empty, return safe defaults
-    if (totalSteps === 0 && avgHR === 0 && totalSleepMins === 0 && totalCalories === 0) {
+    // If everything is empty, return defaults
+    const hasData = avgRestingHRToday !== DEFAULT_HEALTH_DATA.resting_hr_today ||
+      totalSleepMins > 0 || totalCalories > 0;
+    if (!hasData) {
       console.warn("HealthKit returned empty data, using defaults");
       return DEFAULT_HEALTH_DATA;
     }
@@ -173,88 +292,4 @@ export async function fetchHealthData(): Promise<HealthData> {
     console.error("Failed to fetch health data:", e);
     return DEFAULT_HEALTH_DATA;
   }
-}
-
-// Algorithm: Convert raw health data into the 5 CoFactor scores
-export function computeScores(data: HealthData) {
-  // 1. Cognitive Readiness (0-100)
-  const sleepScore = Math.min(100, (data.sleepHours / 8) * 100);
-  const hrvScore = Math.min(100, (data.hrv / 60) * 100);
-  const hrScore = Math.min(100, Math.max(0, 100 - Math.abs(data.restingHR - 60) * 2));
-  const deepSleepScore = Math.min(100, (data.deepSleepHours / 2) * 100);
-  const cognitiveReadiness = Math.round(sleepScore * 0.3 + hrvScore * 0.3 + hrScore * 0.2 + deepSleepScore * 0.2);
-
-  // 2. Study Capacity (hours)
-  const baseCapacity = 6;
-  const sleepFactor = data.sleepHours >= 7 ? 1 : data.sleepHours / 7;
-  const recoveryFactor = data.hrv >= 40 ? 1 : data.hrv / 40;
-  const totalMins = Math.round(baseCapacity * 60 * sleepFactor * recoveryFactor);
-  const studyHours = Math.floor(totalMins / 60);
-  const studyMins = totalMins % 60;
-
-  // Study block recommendation based on overall readiness
-  const overallReadiness = (sleepFactor + recoveryFactor) / 2;
-  const studyBlockRecommendation = overallReadiness >= 0.85
-    ? { blockMinutes: 120, breakMinutes: 0, label: "2-hour deep blocks", tier: "high" as const }
-    : overallReadiness >= 0.6
-    ? { blockMinutes: 60, breakMinutes: 15, label: "60 min blocks · 15 min breaks", tier: "medium" as const }
-    : { blockMinutes: 30, breakMinutes: 10, label: "30 min blocks · 10 min breaks", tier: "low" as const };
-
-  // 3. Burnout Risk (0-100, lower is better)
-  const sleepDebt = Math.max(0, 8 - data.sleepHours) * 12;
-  const stressFromHR = Math.max(0, data.restingHR - 65) * 2;
-  const lowHRV = Math.max(0, 40 - data.hrv) * 2;
-  const burnoutRisk = Math.min(100, Math.round(sleepDebt + stressFromHR + lowHRV));
-
-  // 4. Retention Outlook (0-100%)
-  const deepSleepRetention = Math.min(100, (data.deepSleepHours / 2) * 100);
-  const restRetention = Math.min(100, (data.sleepHours / 7.5) * 100);
-  const hrvRetention = Math.min(100, (data.hrv / 50) * 100);
-  const retentionOutlook = Math.round(deepSleepRetention * 0.4 + restRetention * 0.3 + hrvRetention * 0.3);
-
-  // 5. Peak Study Window
-  const hour = new Date().getHours();
-  const wakeEstimate = data.sleepHours >= 7 ? 7 : 8;
-  const peakStart = wakeEstimate + 2;
-  const peakEnd = peakStart + 2.5;
-  const formatTime = (h: number) => {
-    const hr = Math.floor(h);
-    const min = Math.round((h - hr) * 60);
-    const period = hr >= 12 ? "PM" : "AM";
-    const displayHr = hr > 12 ? hr - 12 : hr;
-    return `${displayHr}:${min.toString().padStart(2, "0")} ${period}`;
-  };
-
-  return {
-    cognitiveReadiness,
-    studyCapacity: `${studyHours}h ${studyMins}m`,
-    studyBlockRecommendation,
-    burnoutRisk,
-    retentionOutlook,
-    peakWindow: `${formatTime(peakStart)} – ${formatTime(peakEnd)}`,
-    // Raw factors for detail modals
-    factors: {
-      cognitive: {
-        sleepQuality: Math.round(sleepScore),
-        hrvRecovery: Math.round(hrvScore),
-        restingHR: Math.round(hrScore),
-        deepSleep: Math.round(deepSleepScore),
-      },
-      study: {
-        sleepFactor: Math.round(sleepFactor * 100),
-        recoveryFactor: Math.round(recoveryFactor * 100),
-      },
-      burnout: {
-        sleepDebt: Math.round(Math.min(100, sleepDebt)),
-        stressMarkers: Math.round(Math.min(100, stressFromHR)),
-        hrvStress: Math.round(Math.min(100, lowHRV)),
-      },
-      retention: {
-        deepSleep: Math.round(deepSleepRetention),
-        restQuality: Math.round(restRetention),
-        hrvConsolidation: Math.round(hrvRetention),
-      },
-    },
-    rawData: data,
-  };
 }
