@@ -101,3 +101,40 @@
     box-shadow: var(--shadow-elevated);
   }
 }
+
+/* Patient character animations */
+@keyframes apexBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+@keyframes apexJump {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  25% { transform: translateY(-18px) rotate(-5deg); }
+  75% { transform: translateY(-16px) rotate(5deg); }
+}
+@keyframes apexRay {
+  0% { stroke-dasharray: 0 27; opacity: 1; }
+  65% { stroke-dasharray: 27 0; opacity: 1; }
+  100% { stroke-dasharray: 27 0; opacity: 0; }
+}
+@keyframes apexRing {
+  0% { opacity: 0.88; }
+  100% { opacity: 0; }
+}
+@keyframes apexCrown {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+@keyframes apexCheck {
+  0% { transform: scale(0) rotate(-20deg); opacity: 0; }
+  65% { transform: scale(1.25); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes apexSlide {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes apexPulse {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(162 63% 41% / 0); }
+  50% { box-shadow: 0 0 0 7px hsl(162 63% 41% / 0.15); }
+}

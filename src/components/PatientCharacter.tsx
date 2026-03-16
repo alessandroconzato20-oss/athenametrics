@@ -1,291 +1,225 @@
-import { motion, AnimatePresence } from "framer-motion";
+import React from "react";
 
 interface PatientCharacterProps {
   completedCount: number;
-  totalChallenges: number;
+  healingIdx: number | null;
 }
 
-/**
- * Animated SVG patient that visually heals as challenges are completed.
- * Ailments (in order of healing):
- *   0 completed → all 4 ailments visible
- *   1 completed → headache gone
- *   2 completed → arm sling gone
- *   3 completed → leg cast gone
- *   4 completed → bandage gone, fully healed + celebration
- */
-const PatientCharacter = ({ completedCount, totalChallenges }: PatientCharacterProps) => {
-  const showHeadache = completedCount < 1;
-  const showArmSling = completedCount < 2;
-  const showLegCast = completedCount < 3;
-  const showBandage = completedCount < 4;
-  const fullyHealed = completedCount >= totalChallenges;
+const SPARKLE_POS = [
+  { x: 121, y: 267 },
+  { x: 28, y: 156 },
+  { x: 90, y: 51 },
+  { x: 106, y: 57 },
+  { x: 116, y: 233 },
+  { x: 61, y: 76 },
+];
 
-  // Mood based on healing progress
-  const mouthPath = fullyHealed
-    ? "M 85 135 Q 100 155 115 135" // big smile
+function HealSparkle({ x, y }: { x: number; y: number }) {
+  const angles = [0, 45, 90, 135, 180, 225, 270, 315];
+  return (
+    <g>
+      {angles.map((deg, i) => {
+        const r = (deg * Math.PI) / 180;
+        const x2 = x + Math.cos(r) * 27;
+        const y2 = y + Math.sin(r) * 27;
+        return (
+          <line
+            key={i}
+            x1={x} y1={y} x2={x2} y2={y2}
+            stroke={i % 2 === 0 ? "#FFD700" : "hsl(162, 63%, 41%)"}
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeDasharray="0 27"
+            style={{ animation: `apexRay 0.7s ease-out ${i * 0.04}s forwards` }}
+          />
+        );
+      })}
+      <circle cx={x} cy={y} r="7" fill="#FFD700"
+        style={{ animation: "apexRay 0.7s ease-out forwards" }} />
+      <circle cx={x} cy={y} r="18" fill="none" stroke="hsl(162, 63%, 41%)" strokeWidth="2.5"
+        style={{ animation: "apexRing 0.85s ease-out forwards", transformOrigin: `${x}px ${y}px` }} />
+    </g>
+  );
+}
+
+const PatientCharacter = ({ completedCount, healingIdx }: PatientCharacterProps) => {
+  const all = completedCount >= 6;
+  const isHealed = (i: number) => completedCount > i;
+  const isHealing = (i: number) => healingIdx === i;
+
+  const mouth = all
+    ? "M 72 80 Q 90 96 108 80"
+    : completedCount >= 4
+    ? "M 74 80 Q 90 92 106 80"
     : completedCount >= 2
-    ? "M 88 135 Q 100 148 112 135" // small smile
-    : completedCount >= 1
-    ? "M 88 138 L 112 138" // neutral
-    : "M 85 145 Q 100 130 115 145"; // frown
+    ? "M 77 82 L 103 82"
+    : "M 75 76 Q 90 65 105 76";
+
+  const lBrow = completedCount < 3
+    ? "M 63 41 Q 75 35 82 41"
+    : "M 63 43 Q 75 43 82 43";
+  const rBrow = completedCount < 3
+    ? "M 98 41 Q 105 35 117 41"
+    : "M 98 43 Q 105 43 117 43";
+
+  const charAnim = all
+    ? "apexJump 0.75s ease-in-out 3, apexBob 3.5s ease-in-out infinite 2.3s"
+    : "apexBob 3.5s ease-in-out infinite";
+
+  const injStyle = (i: number): React.CSSProperties => ({
+    opacity: isHealing(i) ? 0 : 1,
+    transition: isHealing(i) ? "opacity 0.45s ease" : "none",
+  });
 
   return (
-    <div className="relative flex items-center justify-center py-2">
-      {/* Celebration particles */}
-      <AnimatePresence>
-        {fullyHealed && (
-          <>
-            {["🎉", "✨", "💚", "⭐"].map((emoji, i) => (
-              <motion.span
-                key={emoji}
-                initial={{ opacity: 0, y: 0, scale: 0 }}
-                animate={{
-                  opacity: [0, 1, 1, 0],
-                  y: [-10, -50 - i * 12],
-                  x: [0, (i % 2 === 0 ? 1 : -1) * (20 + i * 10)],
-                  scale: [0, 1.2, 1, 0.5],
-                }}
-                transition={{ duration: 1.8, delay: i * 0.15, repeat: Infinity, repeatDelay: 2.5 }}
-                className="absolute text-lg"
-                style={{ top: "20%", left: "50%" }}
-              >
-                {emoji}
-              </motion.span>
-            ))}
-          </>
-        )}
-      </AnimatePresence>
+    <svg viewBox="0 0 180 286" width={155} height={233} style={{ overflow: "visible", display: "block" }}>
+      <g style={{ animation: charAnim }}>
+        {/* Pants / legs */}
+        <path d="M 72,184 L 64,268" stroke="#1B3968" strokeWidth="26" strokeLinecap="round" fill="none" />
+        <path d="M 108,184 L 116,268" stroke="#1B3968" strokeWidth="22" strokeLinecap="round" fill="none" />
 
-      <motion.svg
-        viewBox="0 0 200 220"
-        className="h-40 w-40"
-        animate={fullyHealed ? { y: [0, -4, 0] } : { y: [0, 2, 0] }}
-        transition={{ repeat: Infinity, duration: fullyHealed ? 1.2 : 3, ease: "easeInOut" }}
-      >
-        {/* Body */}
-        <motion.ellipse
-          cx="100" cy="185" rx="35" ry="25"
-          className="fill-primary/20"
-          animate={fullyHealed ? { fill: "hsl(162, 63%, 41%, 0.3)" } : {}}
-        />
-        <rect x="80" y="145" width="40" height="45" rx="8"
-          className="fill-primary/15 stroke-primary/30" strokeWidth="1.5"
-        />
+        {/* Shoes */}
+        <ellipse cx="59" cy="272" rx="22" ry="10" fill="#0D1020" />
+        <ellipse cx="120" cy="272" rx="22" ry="10" fill="#0D1020" />
+        <ellipse cx="55" cy="269" rx="10" ry="4" fill="#1A2040" opacity={0.5} />
+        <ellipse cx="116" cy="269" rx="10" ry="4" fill="#1A2040" opacity={0.5} />
 
-        {/* Head */}
-        <motion.circle
-          cx="100" cy="110" r="35"
-          className="stroke-foreground/20"
-          strokeWidth="1.5"
-          fill="hsl(33, 50%, 88%)"
-          animate={fullyHealed ? { scale: [1, 1.02, 1] } : {}}
-          transition={{ repeat: Infinity, duration: 1.5 }}
-        />
-
-        {/* Eyes */}
-        <motion.circle
-          cx="88" cy="108" r="3.5"
-          className="fill-foreground/70"
-          animate={fullyHealed
-            ? { scaleY: [1, 0.1, 1], cy: [108, 108, 108] }
-            : showHeadache
-            ? { cy: [108, 109, 108] }
-            : {}
-          }
-          transition={{ repeat: Infinity, duration: fullyHealed ? 2.5 : 4, ease: "easeInOut" }}
-        />
-        <motion.circle
-          cx="112" cy="108" r="3.5"
-          className="fill-foreground/70"
-          animate={fullyHealed
-            ? { scaleY: [1, 0.1, 1] }
-            : showHeadache
-            ? { cy: [108, 109, 108] }
-            : {}
-          }
-          transition={{ repeat: Infinity, duration: fullyHealed ? 2.5 : 4, ease: "easeInOut" }}
-        />
-
-        {/* Eyebrows — worried when hurt, happy when healed */}
-        {showHeadache ? (
-          <>
-            <line x1="82" y1="97" x2="93" y2="100" className="stroke-foreground/40" strokeWidth="1.5" strokeLinecap="round" />
-            <line x1="107" y1="100" x2="118" y2="97" className="stroke-foreground/40" strokeWidth="1.5" strokeLinecap="round" />
-          </>
-        ) : (
-          <>
-            <line x1="82" y1="100" x2="93" y2="98" className="stroke-foreground/30" strokeWidth="1.5" strokeLinecap="round" />
-            <line x1="107" y1="98" x2="118" y2="100" className="stroke-foreground/30" strokeWidth="1.5" strokeLinecap="round" />
-          </>
-        )}
-
-        {/* Mouth */}
-        <motion.path
-          d={mouthPath}
-          fill="none"
-          className="stroke-foreground/50"
-          strokeWidth="2"
-          strokeLinecap="round"
-          initial={false}
-          animate={{ d: mouthPath }}
-          transition={{ duration: 0.5 }}
-        />
-
-        {/* Blush when healing */}
-        {completedCount >= 2 && (
-          <>
-            <circle cx="78" cy="125" r="6" fill="hsl(0, 70%, 80%)" opacity="0.3" />
-            <circle cx="122" cy="125" r="6" fill="hsl(0, 70%, 80%)" opacity="0.3" />
-          </>
-        )}
+        {/* White coat (torso) */}
+        <rect x="46" y="106" width="88" height="82" rx="24" fill="#DDE6F0" />
+        <path d="M 90,108 L 73,124 L 90,140 L 107,124 Z" fill="#4A82C8" />
+        <rect x="56" y="143" width="18" height="14" rx="3" fill="none" stroke="#B8C8D8" strokeWidth="1.2" />
+        <circle cx="90" cy="163" r="2.5" fill="#A8B8C8" />
+        <circle cx="90" cy="178" r="2.5" fill="#A8B8C8" />
 
         {/* Arms */}
-        <line x1="80" y1="155" x2="55" y2="175" className="stroke-foreground/20" strokeWidth="3" strokeLinecap="round" />
-        <line x1="120" y1="155" x2="145" y2="175" className="stroke-foreground/20" strokeWidth="3" strokeLinecap="round" />
-
-        {/* Legs */}
-        <line x1="90" y1="188" x2="80" y2="215" className="stroke-foreground/20" strokeWidth="3" strokeLinecap="round" />
-        <line x1="110" y1="188" x2="120" y2="215" className="stroke-foreground/20" strokeWidth="3" strokeLinecap="round" />
-
-        {/* ===== AILMENTS ===== */}
-
-        {/* 1. Headache — spinning stars */}
-        <AnimatePresence>
-          {showHeadache && (
-            <motion.g
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0, scale: 0.5, y: -10 }}
-              transition={{ duration: 0.5 }}
-            >
-              <motion.text
-                x="70" y="82" fontSize="14"
-                animate={{ rotate: [0, 20, -20, 0], y: [0, -2, 0] }}
-                transition={{ repeat: Infinity, duration: 1.5 }}
-                style={{ transformOrigin: "70px 82px" }}
-              >💫</motion.text>
-              <motion.text
-                x="118" y="78" fontSize="12"
-                animate={{ rotate: [0, -15, 15, 0], y: [0, -3, 0] }}
-                transition={{ repeat: Infinity, duration: 1.8, delay: 0.3 }}
-                style={{ transformOrigin: "118px 78px" }}
-              >⭐</motion.text>
-              <motion.text
-                x="95" y="70" fontSize="10"
-                animate={{ opacity: [0.4, 1, 0.4] }}
-                transition={{ repeat: Infinity, duration: 1.2 }}
-              >😵</motion.text>
-            </motion.g>
-          )}
-        </AnimatePresence>
-
-        {/* 2. Arm sling */}
-        <AnimatePresence>
-          {showArmSling && (
-            <motion.g
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0, x: -15 }}
-              transition={{ duration: 0.5 }}
-            >
-              {/* Sling triangle */}
-              <path
-                d="M 60 150 L 55 175 L 80 170 Z"
-                fill="hsl(200, 20%, 90%)"
-                stroke="hsl(200, 15%, 75%)"
-                strokeWidth="1"
-              />
-              {/* Sling strap */}
-              <path
-                d="M 68 148 Q 85 135 100 145"
-                fill="none"
-                stroke="hsl(200, 15%, 70%)"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              />
-              <motion.text
-                x="48" y="168" fontSize="10"
-                animate={{ rotate: [0, 5, -5, 0] }}
-                transition={{ repeat: Infinity, duration: 2 }}
-                style={{ transformOrigin: "48px 168px" }}
-              >🤕</motion.text>
-            </motion.g>
-          )}
-        </AnimatePresence>
-
-        {/* 3. Leg cast */}
-        <AnimatePresence>
-          {showLegCast && (
-            <motion.g
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ duration: 0.5 }}
-            >
-              <rect x="112" y="198" width="18" height="20" rx="3"
-                fill="hsl(0, 0%, 95%)" stroke="hsl(0, 0%, 80%)" strokeWidth="1.5"
-              />
-              {/* Cross mark on cast */}
-              <line x1="117" y1="204" x2="125" y2="212" stroke="hsl(0, 60%, 65%)" strokeWidth="1" />
-              <line x1="125" y1="204" x2="117" y2="212" stroke="hsl(0, 60%, 65%)" strokeWidth="1" />
-            </motion.g>
-          )}
-        </AnimatePresence>
-
-        {/* 4. Bandage on torso */}
-        <AnimatePresence>
-          {showBandage && (
-            <motion.g
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0, scale: 0 }}
-              transition={{ duration: 0.4 }}
-            >
-              <rect x="88" y="155" width="24" height="14" rx="2"
-                fill="hsl(40, 80%, 92%)" stroke="hsl(40, 50%, 75%)" strokeWidth="1"
-              />
-              {/* Bandage cross */}
-              <line x1="95" y1="158" x2="107" y2="166" stroke="hsl(0, 55%, 60%)" strokeWidth="1.2" />
-              <line x1="107" y1="158" x2="95" y2="166" stroke="hsl(0, 55%, 60%)" strokeWidth="1.2" />
-            </motion.g>
-          )}
-        </AnimatePresence>
-
-        {/* Healed sparkle on body when fully healed */}
-        {fullyHealed && (
-          <motion.text
-            x="130" y="155" fontSize="16"
-            animate={{ opacity: [0, 1, 0], scale: [0.8, 1.2, 0.8] }}
-            transition={{ repeat: Infinity, duration: 2 }}
-          >✨</motion.text>
+        {isHealed(1) && (
+          <>
+            <path d="M 48,122 Q 30,155 34,186" stroke="#FFD0BC" strokeWidth="22" strokeLinecap="round" fill="none" />
+            <circle cx="34" cy="186" r="12" fill="#FFD0BC" />
+          </>
         )}
-      </motion.svg>
+        <path d="M 132,122 Q 150,155 146,186" stroke="#FFD0BC" strokeWidth="22" strokeLinecap="round" fill="none" />
+        <circle cx="146" cy="186" r="12" fill="#FFD0BC" />
 
-      {/* Status label */}
-      <motion.div
-        className="absolute bottom-0 left-1/2 -translate-x-1/2"
-        key={completedCount}
-        initial={{ opacity: 0, y: 5 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-          fullyHealed
-            ? "bg-primary/15 text-primary"
-            : completedCount >= 2
-            ? "bg-accent/15 text-accent-foreground"
-            : "bg-destructive/10 text-destructive"
-        }`}>
-          {fullyHealed
-            ? "Fully Healed! 🎉"
-            : completedCount >= 2
-            ? "Recovering..."
-            : completedCount >= 1
-            ? "Needs Care"
-            : "Critical Condition"}
-        </span>
-      </motion.div>
-    </div>
+        {/* Neck */}
+        <rect x="80" y="99" width="24" height="13" rx="6" fill="#FFD0BC" />
+
+        {/* Head */}
+        <circle cx="90" cy="62" r="42" fill="#FFD0BC" />
+        <circle cx="49" cy="64" r="11" fill="#FFD0BC" />
+        <circle cx="49" cy="64" r="6.5" fill="#F2A88E" />
+        <circle cx="131" cy="64" r="11" fill="#FFD0BC" />
+        <circle cx="131" cy="64" r="6.5" fill="#F2A88E" />
+
+        {/* Hair */}
+        <path d="M 48,56 Q 50,4 90,2 Q 130,4 132,56 Q 119,22 90,20 Q 61,22 48,56" fill="#3E2410" />
+        <path d="M 48,56 Q 44,46 47,36" fill="none" stroke="#3E2410" strokeWidth="3.5" strokeLinecap="round" />
+        <path d="M 132,56 Q 136,46 133,36" fill="none" stroke="#3E2410" strokeWidth="3.5" strokeLinecap="round" />
+
+        {/* Eyes */}
+        <circle cx="74" cy="60" r="9" fill="white" />
+        <circle cx="106" cy="60" r="9" fill="white" />
+        <circle cx="76" cy="61" r="5.5" fill="#2A1808" />
+        <circle cx="108" cy="61" r="5.5" fill="#2A1808" />
+        <circle cx="78" cy="58" r="2" fill="white" />
+        <circle cx="110" cy="58" r="2" fill="white" />
+
+        {/* Eyebrows */}
+        <path d={lBrow} fill="none" stroke="#331A08" strokeWidth="2.8" strokeLinecap="round" />
+        <path d={rBrow} fill="none" stroke="#331A08" strokeWidth="2.8" strokeLinecap="round" />
+
+        {/* Nose */}
+        <ellipse cx="90" cy="71" rx="4" ry="3" fill="#E89A78" />
+
+        {/* Mouth */}
+        <path d={mouth} fill="none" stroke="#C05848" strokeWidth="2.8" strokeLinecap="round" />
+
+        {/* Blush */}
+        <ellipse cx="62" cy="76" rx="9" ry="6" fill="#FF9090" opacity={all ? 0.38 : 0.1} />
+        <ellipse cx="118" cy="76" rx="9" ry="6" fill="#FF9090" opacity={all ? 0.38 : 0.1} />
+
+        {/* ── INJURIES ── */}
+
+        {/* 1 · Crutch + ankle cast */}
+        {!isHealed(0) && (
+          <g style={injStyle(0)}>
+            <rect x="136" y="126" width="22" height="9" rx="4" fill="#B89650" />
+            <line x1="147" y1="134" x2="153" y2="274" stroke="#7A5C10" strokeWidth="5" strokeLinecap="round" />
+            <line x1="140" y1="152" x2="160" y2="152" stroke="#7A5C10" strokeWidth="5" strokeLinecap="round" />
+            <line x1="149" y1="274" x2="161" y2="274" stroke="#7A5C10" strokeWidth="5" strokeLinecap="round" />
+            <rect x="109" y="264" width="25" height="14" rx="4" fill="white" stroke="#DDDDDD" strokeWidth="0.8" />
+          </g>
+        )}
+
+        {/* 2 · Arm sling */}
+        {!isHealed(1) && (
+          <g style={injStyle(1)}>
+            <path d="M 48,122 Q 30,150 40,170" stroke="#FFD0BC" strokeWidth="22" strokeLinecap="round" fill="none" />
+            <path d="M 88,110 L 25,154 L 44,172 Z" fill="#6EC0DD" opacity={0.9} />
+            <path d="M 88,110 L 25,154 L 44,172 Z" fill="none" stroke="#4AAAC8" strokeWidth="1.5" />
+            <path d="M 30,152 Q 26,162 36,170" stroke="#EBEBEB" strokeWidth="18" strokeLinecap="round" fill="none" />
+          </g>
+        )}
+
+        {/* 3 · Head bandage */}
+        {!isHealed(2) && (
+          <g style={injStyle(2)}>
+            <rect x="46" y="46" width="88" height="15" rx="5" fill="white" stroke="#DDDDDD" strokeWidth="0.8" />
+            <circle cx="72" cy="53" r="5.5" fill="#E84444" />
+            <circle cx="72" cy="53" r="3" fill="#C02222" />
+            <line x1="54" y1="46" x2="54" y2="61" stroke="#E4E4E4" strokeWidth="1" />
+            <line x1="70" y1="46" x2="70" y2="61" stroke="#E4E4E4" strokeWidth="1" />
+            <line x1="94" y1="46" x2="94" y2="61" stroke="#E4E4E4" strokeWidth="1" />
+            <line x1="118" y1="46" x2="118" y2="61" stroke="#E4E4E4" strokeWidth="1" />
+          </g>
+        )}
+
+        {/* 4 · Black eye */}
+        {!isHealed(3) && (
+          <ellipse cx="107" cy="59" rx="14" ry="11" fill="#7040A0"
+            style={{
+              opacity: isHealing(3) ? 0 : 0.46,
+              transition: isHealing(3) ? "opacity 0.45s ease" : "none",
+            }}
+          />
+        )}
+
+        {/* 5 · Knee bandage */}
+        {!isHealed(4) && (
+          <g style={injStyle(4)}>
+            <rect x="106" y="225" width="25" height="27" rx="5" fill="white" stroke="#DDDDDD" strokeWidth="0.8" />
+            <line x1="106" y1="233" x2="131" y2="233" stroke="#E4E4E4" strokeWidth="1" />
+            <line x1="106" y1="240" x2="131" y2="240" stroke="#E4E4E4" strokeWidth="1" />
+            <line x1="106" y1="247" x2="131" y2="247" stroke="#E4E4E4" strokeWidth="1" />
+          </g>
+        )}
+
+        {/* 6 · Cheek plaster */}
+        {!isHealed(5) && (
+          <g style={injStyle(5)}>
+            <rect x="53" y="72" width="26" height="13" rx="3" fill="#F2C8A0" />
+            <rect x="63" y="72" width="10" height="13" rx="1" fill="white" opacity={0.8} />
+            <line x1="55" y1="72" x2="55" y2="85" stroke="#E0B888" strokeWidth="0.8" />
+            <line x1="77" y1="72" x2="77" y2="85" stroke="#E0B888" strokeWidth="0.8" />
+          </g>
+        )}
+
+        {/* Healing sparkle burst */}
+        {healingIdx !== null && (
+          <HealSparkle x={SPARKLE_POS[healingIdx].x} y={SPARKLE_POS[healingIdx].y} />
+        )}
+
+        {/* Victory crown */}
+        {all && (
+          <path
+            d="M 64,13 L 70,2 L 80,11 L 90,0 L 100,11 L 110,2 L 116,13"
+            fill="none" stroke="#FFD700" strokeWidth="3.2"
+            strokeLinejoin="round" strokeLinecap="round"
+            style={{ animation: "apexCrown 2s ease-in-out infinite" }}
+          />
+        )}
+      </g>
+    </svg>
   );
 };
 
