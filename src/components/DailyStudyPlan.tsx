@@ -35,7 +35,7 @@ const DailyStudyPlan = ({ scores }: DailyStudyPlanProps) => {
     setLoading(true);
     try {
       // Fetch persona, feedback, and recent study logs in parallel
-      const [feedbackRes, personaRes, logsRes] = await Promise.all([
+      const [feedbackRes, personaRes, logsRes, masteryRes] = await Promise.all([
         supabase
           .from("user_feedback")
           .select("feedback_type, reason, context")
@@ -52,7 +52,19 @@ const DailyStudyPlan = ({ scores }: DailyStudyPlanProps) => {
           .eq("user_id", user.id)
           .order("studied_at", { ascending: false })
           .limit(20),
+        supabase
+          .from("topic_mastery")
+          .select("course_name, topic_name, status")
+          .eq("user_id", user.id) as any,
       ]);
+
+      // Build topic mastery summary for AI
+      const masteryData = (masteryRes.data || []) as Array<{ course_name: string; topic_name: string; status: string }>;
+      const topicMastery = masteryData.reduce((acc: Record<string, Array<{ topic: string; status: string }>>, m) => {
+        if (!acc[m.course_name]) acc[m.course_name] = [];
+        acc[m.course_name].push({ topic: m.topic_name, status: m.status });
+        return acc;
+      }, {});
 
       // Get student year/semester from metadata
       const year = user.user_metadata?.year || 1;
@@ -83,6 +95,7 @@ const DailyStudyPlan = ({ scores }: DailyStudyPlanProps) => {
           currentCourses: currentCourses.map(c => ({ name: c.name, credits: c.credits })),
           crossSemesterCourses,
           recentStudyLogs: (logsRes.data || []).slice(0, 10),
+          topicMastery,
           year,
           semester,
         },

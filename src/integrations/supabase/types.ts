@@ -158,6 +158,36 @@ export type Database = {
         }
         Relationships: []
       }
+      topic_mastery: {
+        Row: {
+          course_name: string
+          created_at: string
+          id: string
+          status: string
+          topic_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          course_name: string
+          created_at?: string
+          id?: string
+          status?: string
+          topic_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          course_name?: string
+          created_at?: string
+          id?: string
+          status?: string
+          topic_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_feedback: {
         Row: {
           context: Json

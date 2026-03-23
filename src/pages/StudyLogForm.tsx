@@ -13,6 +13,7 @@ import { ArrowLeft, Brain, Zap, AlertTriangle, Eye, GraduationCap, BookOpen } fr
 import { toast } from "sonner";
 import { getCoursesForStudent, type Course } from "@/data/curriculum";
 import { Checkbox } from "@/components/ui/checkbox";
+import TopicMasteryChecklist from "@/components/TopicMasteryChecklist";
 
 const STUDY_METHODS = [
   { id: "anki", label: "Anki Flashcards" },
@@ -179,6 +180,9 @@ const StudyLogForm = () => {
               <LevelPicker label="Distraction Level" icon={<Eye className="h-4 w-4 text-score-peak" />} value={distraction} onChange={setDistraction} color="bg-score-peak text-primary-foreground" />
               <LevelPicker label="Energy Level" icon={<Zap className="h-4 w-4 text-score-study" />} value={energy} onChange={setEnergy} color="bg-score-study text-primary-foreground" />
             </div>
+
+            {/* Topic Mastery Checklist */}
+            {selectedCourse && <TopicMasteryChecklist courseName={selectedCourse} />}
 
             {/* Study Method */}
             <div className="space-y-3">
