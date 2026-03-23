@@ -77,7 +77,7 @@ Rules:
 - Match the study approach to their persona (e.g. visual learner = diagrams, pomodoro fan = timed blocks)
 - High burnout = fewer/lighter sessions; high cognitive readiness = harder/heavier-credit material first
 - Peak window = schedule hardest work there
-- IMPORTANT: All study sessions MUST follow the prescribed block/break structure${blockContext}${personaContext}${coursesContext}${recentContext}${feedbackContext}`;
+- IMPORTANT: All study sessions MUST follow the prescribed block/break structure${blockContext}${personaContext}${coursesContext}${masteryContext}${recentContext}${feedbackContext}`;
 
     const userPrompt = `Metrics:
 - Cognitive Readiness: ${cognitiveReadiness}/100

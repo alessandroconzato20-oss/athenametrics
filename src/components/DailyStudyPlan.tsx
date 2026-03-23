@@ -95,6 +95,7 @@ const DailyStudyPlan = ({ scores }: DailyStudyPlanProps) => {
           currentCourses: currentCourses.map(c => ({ name: c.name, credits: c.credits })),
           crossSemesterCourses,
           recentStudyLogs: (logsRes.data || []).slice(0, 10),
+          topicMastery,
           year,
           semester,
         },
