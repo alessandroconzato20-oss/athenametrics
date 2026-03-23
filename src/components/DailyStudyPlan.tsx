@@ -35,7 +35,7 @@ const DailyStudyPlan = ({ scores }: DailyStudyPlanProps) => {
     setLoading(true);
     try {
       // Fetch persona, feedback, and recent study logs in parallel
-      const [feedbackRes, personaRes, logsRes] = await Promise.all([
+      const [feedbackRes, personaRes, logsRes, masteryRes] = await Promise.all([
         supabase
           .from("user_feedback")
           .select("feedback_type, reason, context")
