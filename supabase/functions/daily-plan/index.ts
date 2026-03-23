@@ -46,6 +46,18 @@ ${currentCourses.map((c: any) => `- ${c.name} (${c.credits} credits)`).join("\n"
       }`
       : "";
 
+    // Build topic mastery context
+    const masteryContext = topicMastery && Object.keys(topicMastery).length > 0
+      ? `\n\nTOPIC MASTERY STATUS (red = needs heavy focus, orange = moderate effort, green = revise later):
+${Object.entries(topicMastery).map(([course, topics]: [string, any]) => {
+  const redTopics = topics.filter((t: any) => t.status === "red").map((t: any) => t.topic);
+  const orangeTopics = topics.filter((t: any) => t.status === "orange").map((t: any) => t.topic);
+  const greenTopics = topics.filter((t: any) => t.status === "green").map((t: any) => t.topic);
+  return `${course}:\n  🔴 Needs Focus: ${redTopics.join(", ") || "none"}\n  🟠 In Progress: ${orangeTopics.join(", ") || "none"}\n  🟢 Confident: ${greenTopics.join(", ") || "none"}`;
+}).join("\n")}
+CRITICAL: Prioritize RED topics in today's plan — schedule them during peak study windows with longer blocks. ORANGE topics get moderate time. GREEN topics should only appear as quick revision if time permits.`
+      : "";
+
     // Build recent activity context
     const recentContext = recentStudyLogs && recentStudyLogs.length > 0
       ? `\n\nRECENT STUDY ACTIVITY (last sessions):\n${recentStudyLogs.map((l: any) => `- ${l.subject}: ${l.topic} (${l.duration_minutes}min, difficulty ${l.difficulty}/5)`).join("\n")}\nAvoid repeating the same topics unless revision is needed. Prioritize courses not recently studied.`
