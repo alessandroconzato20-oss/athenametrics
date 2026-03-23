@@ -13,6 +13,7 @@ import { ArrowLeft, Brain, Zap, AlertTriangle, Eye, GraduationCap, BookOpen } fr
 import { toast } from "sonner";
 import { getCoursesForStudent, type Course } from "@/data/curriculum";
 import { Checkbox } from "@/components/ui/checkbox";
+import TopicMasteryChecklist from "@/components/TopicMasteryChecklist";
 
 const STUDY_METHODS = [
   { id: "anki", label: "Anki Flashcards" },
