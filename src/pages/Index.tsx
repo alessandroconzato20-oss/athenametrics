@@ -162,6 +162,29 @@ const Index = () => {
   const [syncingHealth, setSyncingHealth] = useState(false);
   const [syncStatus, setSyncStatus] = useState("");
   const [reward, setReward] = useState<{ show: boolean; message: string; emoji: string }>({ show: false, message: "", emoji: "" });
+  const [showWeeklyGoals, setShowWeeklyGoals] = useState(false);
+  const [weeklyDailyBreakdown, setWeeklyDailyBreakdown] = useState<Record<string, string[]> | null>(null);
+
+  // Check if weekly goals popup should show (Monday or first visit this week)
+  useEffect(() => {
+    if (!user) return;
+    const checkWeeklyGoals = async () => {
+      const weekStart = format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd");
+      const { data } = await (supabase.from("weekly_goals" as any)
+        .select("id, daily_breakdown")
+        .eq("user_id", user.id)
+        .eq("week_start", weekStart)
+        .maybeSingle() as any);
+      if (!data) {
+        // No goals set for this week — show popup
+        setShowWeeklyGoals(true);
+      } else {
+        // Goals already set — load breakdown for today's plan
+        setWeeklyDailyBreakdown(data.daily_breakdown as Record<string, string[]>);
+      }
+    };
+    checkWeeklyGoals();
+  }, [user]);
 
   useEffect(() => {
     async function init() {
