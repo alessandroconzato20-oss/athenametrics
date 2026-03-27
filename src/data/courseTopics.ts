@@ -83,11 +83,35 @@ export const courseTopics: Record<string, string[]> = {
     "OCH T12: Introduction to Lipids",
   ],
   "The Cell: Molecules and Processes": [
-    "Cell Membrane Structure",
-    "Intracellular Transport",
-    "Cell Signaling Pathways",
-    "DNA Replication",
-    "Transcription & Translation",
+    // Part 1 – The Chemistry of Life
+    "CMP T1: Protein Structure",
+    "CMP T2: Protein Folding",
+    "CMP T3: Structural & Functional Properties of DNA",
+    // Part 2 – Evolution, Biodiversity & Planetary Health
+    "CMP T4: The Diversity of Life",
+    "CMP T5: Viruses",
+    "CMP T6: Evolution, Selective Pressures & One Health",
+    // Part 3 – Organization & Flow of Genetic Information
+    "CMP T7: Chromatin & Chromosomes",
+    "CMP T8: Cytogenetics & Clinical Cytogenetics",
+    "CMP T9: DNA Replication",
+    "CMP T10: RNA Transcription & the Transcriptome",
+    "CMP T11: RNA Processing & Gene Expression Regulation",
+    "CMP T12: Genetic Code & Protein Synthesis",
+    "CMP T13: Protein Sorting & Secretory Pathway",
+    // Part 4 – Cell Communication, Cell Cycle & Cancer
+    "CMP T14: Cell Signaling",
+    "CMP T15: Mitosis",
+    "CMP T16: Cell Cycle Regulation",
+    "CMP T17: Apoptosis",
+    "CMP T18: Oncogenes & Cancer",
+    // Part 5 – Principles of Mendelian Genetics
+    "CMP T19: Meiosis",
+    "CMP T20: How Genes Are Inherited",
+    "CMP T21: Data Handling for Genetics",
+    // Part 6 – Biomedical Research & Medical Humanities
+    "CMP T22: Stem Cells & Disease Models",
+    "CMP T23: CRISPR/Cas9 Genome Editing",
   ],
   "The Cell: Functions and Control": [
     // Biochemistry
