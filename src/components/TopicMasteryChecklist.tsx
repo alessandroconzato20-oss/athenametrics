@@ -167,7 +167,7 @@ const TopicMasteryChecklist = ({ courseName }: Props) => {
   const getStatus = (topicName: string): MasteryStatus =>
     topics.find(t => t.topic === topicName)?.status || "red";
 
-  if (!courseName || courseTopics.length === 0) return null;
+  if (!courseName || actualTopics.length === 0) return null;
 
   const redCount = topics.filter(t => t.status === "red").length;
   const orangeCount = topics.filter(t => t.status === "orange").length;
