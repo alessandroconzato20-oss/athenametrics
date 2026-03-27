@@ -30,8 +30,13 @@ const DailyStudyPlan = ({ scores, weeklyGoalsTasks }: DailyStudyPlanProps) => {
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(true);
   const [generated, setGenerated] = useState(false);
+  const getTodayGoalTasks = (): string[] => {
+    if (!weeklyGoalsTasks) return [];
+    const today = new Date().toLocaleDateString("en-US", { weekday: "long" });
+    return weeklyGoalsTasks[today] || [];
+  };
 
-  const generatePlan = async () => {
+
     if (!user || !scores) return;
     setLoading(true);
     try {
