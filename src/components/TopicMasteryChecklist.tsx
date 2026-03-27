@@ -109,7 +109,7 @@ const TopicMasteryChecklist = ({ courseName }: Props) => {
 
   // Load existing mastery from DB
   useEffect(() => {
-    if (!user || !courseName || courseTopics.length === 0) {
+    if (!user || !courseName || actualTopics.length === 0) {
       setTopics([]);
       return;
     }
