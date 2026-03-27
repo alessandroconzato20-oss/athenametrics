@@ -15,7 +15,7 @@ import TodaysInsight from "@/components/TodaysInsight";
 import DailyStudyPlan from "@/components/DailyStudyPlan";
 import MicroReward from "@/components/MicroReward";
 import WeeklyGoalsPopup from "@/components/WeeklyGoalsPopup";
-import { startOfWeek, format } from "date-fns";
+import { startOfWeek } from "date-fns";
 import {
   fetchHealthData,
   calculateApexScores,
