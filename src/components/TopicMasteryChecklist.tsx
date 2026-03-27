@@ -3,13 +3,18 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { getTopicsForCourse } from "@/data/courseTopics";
-import { ListChecks } from "lucide-react";
+import { ListChecks, ChevronDown } from "lucide-react";
 
 type MasteryStatus = "red" | "orange" | "green";
 
 interface TopicStatus {
   topic: string;
   status: MasteryStatus;
+}
+
+interface TopicGroup {
+  parent: string;
+  children: string[];
 }
 
 const STATUS_CONFIG: Record<MasteryStatus, { label: string; bg: string; ring: string; dot: string }> = {
@@ -20,6 +25,40 @@ const STATUS_CONFIG: Record<MasteryStatus, { label: string; bg: string; ring: st
 
 const STATUSES: MasteryStatus[] = ["red", "orange", "green"];
 
+/** Detect parent/child structure: e.g. "PHY T2:" is parent of "PHY T2.1:", "PHY T2.2:" etc. */
+function groupTopics(topics: string[]): (string | TopicGroup)[] {
+  const result: (string | TopicGroup)[] = [];
+  let i = 0;
+  while (i < topics.length) {
+    const current = topics[i];
+    // Check if next topics are subtopics of current
+    // Pattern: current has "TX:" and next ones have "TX.Y:"
+    const prefixMatch = current.match(/^(\w+\s+T\d+):/);
+    if (prefixMatch) {
+      const prefix = prefixMatch[1]; // e.g. "PHY T2"
+      const children: string[] = [];
+      let j = i + 1;
+      while (j < topics.length) {
+        const subMatch = topics[j].match(/^(\w+\s+T\d+)\.(\d+):/);
+        if (subMatch && subMatch[1] === prefix) {
+          children.push(topics[j]);
+          j++;
+        } else {
+          break;
+        }
+      }
+      if (children.length > 0) {
+        result.push({ parent: current, children });
+        i = j;
+        continue;
+      }
+    }
+    result.push(current);
+    i++;
+  }
+  return result;
+}
+
 interface Props {
   courseName: string;
 }
@@ -28,8 +67,10 @@ const TopicMasteryChecklist = ({ courseName }: Props) => {
   const { user } = useAuth();
   const [topics, setTopics] = useState<TopicStatus[]>([]);
   const [saving, setSaving] = useState<string | null>(null);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   const courseTopics = getTopicsForCourse(courseName);
+  const grouped = groupTopics(courseTopics);
 
   // Load existing mastery from DB
   useEffect(() => {
@@ -64,7 +105,6 @@ const TopicMasteryChecklist = ({ courseName }: Props) => {
     const currentIdx = STATUSES.indexOf(current?.status || "red");
     const next = STATUSES[(currentIdx + 1) % 3];
 
-    // Optimistic update
     setTopics(prev => prev.map(t => t.topic === topicName ? { ...t, status: next } : t));
 
     await supabase.from("topic_mastery").upsert(
@@ -81,11 +121,54 @@ const TopicMasteryChecklist = ({ courseName }: Props) => {
     setSaving(null);
   };
 
+  const toggleGroup = (parent: string) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      next.has(parent) ? next.delete(parent) : next.add(parent);
+      return next;
+    });
+  };
+
+  const getStatus = (topicName: string): MasteryStatus =>
+    topics.find(t => t.topic === topicName)?.status || "red";
+
   if (!courseName || courseTopics.length === 0) return null;
 
   const redCount = topics.filter(t => t.status === "red").length;
   const orangeCount = topics.filter(t => t.status === "orange").length;
   const greenCount = topics.filter(t => t.status === "green").length;
+
+  const renderTopicButton = (topicName: string, indent = false) => {
+    const status = getStatus(topicName);
+    const cfg = STATUS_CONFIG[status];
+    return (
+      <motion.button
+        key={topicName}
+        type="button"
+        initial={{ opacity: 0, x: -8 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, height: 0 }}
+        onClick={() => cycleStatus(topicName)}
+        className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all ring-1 ${cfg.bg} ${cfg.ring} ${indent ? "ml-4" : ""}`}
+      >
+        <motion.div
+          key={status}
+          initial={{ scale: 0.5 }}
+          animate={{ scale: 1 }}
+          className={`h-3.5 w-3.5 shrink-0 rounded-full ${cfg.dot} shadow-sm`}
+        />
+        <div className="flex-1 min-w-0">
+          <p className={`font-medium text-foreground truncate ${indent ? "text-xs" : "text-sm"}`}>{topicName}</p>
+        </div>
+        <span className={`text-[10px] font-semibold shrink-0 ${
+          status === "red" ? "text-destructive" :
+          status === "orange" ? "text-amber-500" : "text-emerald-500"
+        }`}>
+          {cfg.label}
+        </span>
+      </motion.button>
+    );
+  };
 
   return (
     <motion.div
@@ -117,34 +200,50 @@ const TopicMasteryChecklist = ({ courseName }: Props) => {
 
       <div className="rounded-2xl bg-card p-3 shadow-card space-y-1.5">
         <AnimatePresence mode="popLayout">
-          {topics.map((t, i) => {
-            const cfg = STATUS_CONFIG[t.status];
+          {grouped.map((item) => {
+            if (typeof item === "string") {
+              return renderTopicButton(item);
+            }
+            // Collapsible group
+            const isExpanded = expandedGroups.has(item.parent);
+            const parentStatus = getStatus(item.parent);
+            const parentCfg = STATUS_CONFIG[parentStatus];
             return (
-              <motion.button
-                key={t.topic}
-                type="button"
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.03 }}
-                onClick={() => cycleStatus(t.topic)}
-                className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all ring-1 ${cfg.bg} ${cfg.ring}`}
-              >
-                <motion.div
-                  key={t.status}
-                  initial={{ scale: 0.5 }}
-                  animate={{ scale: 1 }}
-                  className={`h-3.5 w-3.5 shrink-0 rounded-full ${cfg.dot} shadow-sm`}
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{t.topic}</p>
+              <div key={item.parent} className="space-y-1.5">
+                <div className={`flex w-full items-center gap-2 rounded-xl px-3 py-2.5 ring-1 ${parentCfg.bg} ${parentCfg.ring}`}>
+                  <motion.button
+                    type="button"
+                    onClick={() => cycleStatus(item.parent)}
+                    className="flex flex-1 items-center gap-3 text-left min-w-0"
+                  >
+                    <motion.div
+                      key={parentStatus}
+                      initial={{ scale: 0.5 }}
+                      animate={{ scale: 1 }}
+                      className={`h-3.5 w-3.5 shrink-0 rounded-full ${parentCfg.dot} shadow-sm`}
+                    />
+                    <p className="text-sm font-medium text-foreground truncate flex-1">{item.parent}</p>
+                    <span className={`text-[10px] font-semibold shrink-0 ${
+                      parentStatus === "red" ? "text-destructive" :
+                      parentStatus === "orange" ? "text-amber-500" : "text-emerald-500"
+                    }`}>
+                      {parentCfg.label}
+                    </span>
+                  </motion.button>
+                  <button
+                    type="button"
+                    onClick={() => toggleGroup(item.parent)}
+                    className="shrink-0 p-1 rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    </motion.div>
+                  </button>
                 </div>
-                <span className={`text-[10px] font-semibold shrink-0 ${
-                  t.status === "red" ? "text-destructive" :
-                  t.status === "orange" ? "text-amber-500" : "text-emerald-500"
-                }`}>
-                  {cfg.label}
-                </span>
-              </motion.button>
+                <AnimatePresence>
+                  {isExpanded && item.children.map((child) => renderTopicButton(child, true))}
+                </AnimatePresence>
+              </div>
             );
           })}
         </AnimatePresence>
