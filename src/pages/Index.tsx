@@ -370,13 +370,16 @@ const Index = () => {
         {/* AI Daily Plan */}
         {!loading && (
           <div className="mb-6">
-            <DailyStudyPlan scores={scores ? {
-              cognitiveReadiness: scores.cognitiveReadiness,
-              burnoutRisk: scores.burnoutRisk,
-              peakWindow: peakLabel,
-              studyCapacity: scores.studyCapacity.label,
-              studyBlockRecommendation: blockRec!,
-            } : null} />
+            <DailyStudyPlan
+              scores={scores ? {
+                cognitiveReadiness: scores.cognitiveReadiness,
+                burnoutRisk: scores.burnoutRisk,
+                peakWindow: peakLabel,
+                studyCapacity: scores.studyCapacity.label,
+                studyBlockRecommendation: blockRec!,
+              } : null}
+              weeklyGoalsTasks={weeklyDailyBreakdown}
+            />
           </div>
         )}
 
