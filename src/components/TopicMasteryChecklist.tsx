@@ -103,8 +103,9 @@ const TopicMasteryChecklist = ({ courseName }: Props) => {
   const [saving, setSaving] = useState<string | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
-  const courseTopics = getTopicsForCourse(courseName);
-  const grouped = groupTopics(courseTopics);
+  const allCourseTopics = getTopicsForCourse(courseName);
+  const actualTopics = allCourseTopics.filter(t => !t.startsWith("## "));
+  const grouped = groupTopics(allCourseTopics);
 
   // Load existing mastery from DB
   useEffect(() => {
