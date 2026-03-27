@@ -2,13 +2,13 @@
 export const courseTopics: Record<string, string[]> = {
   // Year 1
   "Building Bodies": [
-    // Cytology
+    "## Cytology",
     "CYT T1: Cell Membrane & Inner Membranes",
     "CYT T2: Vesicle Trafficking & Cytoplasmic Organelles",
     "CYT T3: The Cellular Cytoskeleton",
     "CYT T4: The Nucleus & Cell Cycle",
     "CYT T5: Apical & Basolateral Specializations",
-    // Histology
+    "## Histology",
     "HIS T1: Introduction to Histological Methods",
     "HIS T2: Instruments for Morphological Analysis",
     "HIS T3: Lining Epithelia",
@@ -24,19 +24,19 @@ export const courseTopics: Record<string, string[]> = {
     "HIS T13: Smooth Muscle",
     "HIS T14: Neurons & Nerve Fibers",
     "HIS T15: Synapses, Neuroglia & Peripheral Nerve Terminals",
-    // Embryology
+    "## Embryology",
     "EMB T1: Introduction & Gametogenesis",
     "EMB T2: Fertilization & Early Development (Week 1–2)",
     "EMB T3: Gastrulation – Becoming Trilaminar",
     "EMB T4: Establishing the Body Plan (4th Week)",
     "EMB T5: Embryonic Adnexa & Maternal-Fetal Relationship",
-    // Organogenesis
+    "## Organogenesis",
     "ORG T1: Development of the Digestive System",
     "ORG T2: Pharyngeal Apparatus",
     "ORG T3: Development of the Lower Respiratory Tract",
     "ORG T4: Development of the Urogenital System",
     "ORG T5: Development of the Cardiovascular System & Fetal Circulation",
-    // Organ Structure
+    "## Organ Structure",
     "OS T0: Principles of Organ Architecture",
     "OS T1: Blood & Lymphatic Vessels",
     "OS T2: Esophagus & Gastrointestinal Tract",
@@ -48,7 +48,7 @@ export const courseTopics: Record<string, string[]> = {
     "OS T8: From Normality to Pathology – Metaplasia & Dysplasia",
   ],
   "Principles of Living Matter": [
-    // Physics
+    "## Physics",
     "PHY T1: Physical Quantities & Dimensional Analysis",
     "PHY T2: Temperature & Heat",
     "PHY T3: Thermodynamic Systems & First Law",
@@ -58,7 +58,7 @@ export const courseTopics: Record<string, string[]> = {
     "PHY T7: Dynamics of a Material Point",
     "PHY T8: Friction",
     "PHY T9: Electricity & Cellular Bioelectricity",
-    // General Chemistry
+    "## General Chemistry",
     "GCH T1: Structure of Matter – Atoms & Molecules",
     "GCH T2: Structure of Matter – Condensed Matter",
     "GCH T3: Stoichiometry",
@@ -68,7 +68,7 @@ export const courseTopics: Record<string, string[]> = {
     "GCH T7: Chemistry of Solutions",
     "GCH T8: Acids & Bases",
     "GCH T9: Redox Chemistry",
-    // Organic Chemistry
+    "## Organic Chemistry",
     "OCH T1: Introduction to Organic Chemistry & Alkanes",
     "OCH T2: Unsaturated Hydrocarbons & Reaction Mechanisms",
     "OCH T3: Chemistry of Haloalkanes",
@@ -83,15 +83,15 @@ export const courseTopics: Record<string, string[]> = {
     "OCH T12: Introduction to Lipids",
   ],
   "The Cell: Molecules and Processes": [
-    // Part 1 – The Chemistry of Life
+    "## The Chemistry of Life",
     "CMP T1: Protein Structure",
     "CMP T2: Protein Folding",
     "CMP T3: Structural & Functional Properties of DNA",
-    // Part 2 – Evolution, Biodiversity & Planetary Health
+    "## Evolution & Biodiversity",
     "CMP T4: The Diversity of Life",
     "CMP T5: Viruses",
     "CMP T6: Evolution, Selective Pressures & One Health",
-    // Part 3 – Organization & Flow of Genetic Information
+    "## Genetic Information",
     "CMP T7: Chromatin & Chromosomes",
     "CMP T8: Cytogenetics & Clinical Cytogenetics",
     "CMP T9: DNA Replication",
@@ -99,22 +99,22 @@ export const courseTopics: Record<string, string[]> = {
     "CMP T11: RNA Processing & Gene Expression Regulation",
     "CMP T12: Genetic Code & Protein Synthesis",
     "CMP T13: Protein Sorting & Secretory Pathway",
-    // Part 4 – Cell Communication, Cell Cycle & Cancer
+    "## Cell Communication & Cancer",
     "CMP T14: Cell Signaling",
     "CMP T15: Mitosis",
     "CMP T16: Cell Cycle Regulation",
     "CMP T17: Apoptosis",
     "CMP T18: Oncogenes & Cancer",
-    // Part 5 – Principles of Mendelian Genetics
+    "## Mendelian Genetics",
     "CMP T19: Meiosis",
     "CMP T20: How Genes Are Inherited",
     "CMP T21: Data Handling for Genetics",
-    // Part 6 – Biomedical Research & Medical Humanities
+    "## Biomedical Research",
     "CMP T22: Stem Cells & Disease Models",
     "CMP T23: CRISPR/Cas9 Genome Editing",
   ],
   "The Cell: Functions and Control": [
-    // Biochemistry
+    "## Biochemistry",
     "BIO T1: Introduction to Biochemistry",
     "BIO T2: Carbohydrate Metabolism",
     "BIO T3: Mitochondrial ATP Production",
@@ -123,7 +123,7 @@ export const courseTopics: Record<string, string[]> = {
     "BIO T6: Nucleotide Metabolism",
     "BIO T7: Integrated Metabolism",
     "BIO T8: Planetary Health Pathway",
-    // Physiology
+    "## Physiology",
     "PHY T1: Introduction to Data Handling",
     "PHY T2: Introduction to Cell Physiology",
     "PHY T3: Control & Signal Transduction",
@@ -131,12 +131,12 @@ export const courseTopics: Record<string, string[]> = {
     "PHY T5: Cellular Bioelectricity",
   ],
   "Body Architecture": [
-    // General Anatomy
+    "## General Anatomy",
     "GA T1: Introduction and Generalities",
     "GA T2: Musculoskeletal System – Bones, Joints & Skeletal Muscles",
     "GA T3: The Integumentary System",
     "GA T4: The Vascular Layout",
-    // Regional / Clinical Anatomy
+    "## Regional / Clinical Anatomy",
     "RCA T1: Head and Neck",
     "RCA T2: Back",
     "RCA T3: Thorax",
@@ -144,7 +144,7 @@ export const courseTopics: Record<string, string[]> = {
     "RCA T5: Pelvis and Perineum",
     "RCA T6: Upper Limb",
     "RCA T7: Lower Limb",
-    // Neuroanatomy
+    "## Neuroanatomy",
     "NA T1: Phylogenesis & General Organization of the Nervous System",
     "NA T2: Development of the Nervous System",
     "NA T3: Spinal Cord and Spinal Roots",
@@ -152,7 +152,7 @@ export const courseTopics: Record<string, string[]> = {
     "NA T5: Autonomic Nervous System",
     "NA T6: Telencephalon and Diencephalon",
     "NA T7: Peripheral Nervous System – Spinal Plexuses",
-    // Radiology
+    "## Radiology",
     "RAD T1: Introduction to Radiology",
     "RAD T2: Radiology of the Brain",
     "RAD T3: Radiology of the Back",
@@ -170,18 +170,18 @@ export const courseTopics: Record<string, string[]> = {
   ],
   // Year 2
   "Body At Work 1": [
-    // Biochemistry
+    "## Biochemistry",
     "BIO T1: Vitamin A & Retinal in Visual Transduction",
     "BIO T2: Blood-Brain Barrier & Brain Metabolism",
     "BIO T3: Energy Balance & Oxidative Stress",
     "BIO T4: Cancer Metabolism & Metabolic Reprogramming",
     "BIO T5: ECM, Connective Tissue & Bone Biochemistry",
     "BIO T6: Muscle Biochemistry & Energetics",
-    // Physics
+    "## Physics",
     "PHY T1: Optics, Lenses & the Physics of Vision",
     "PHY T2: Acoustics, Waves & Sound Propagation",
     "PHY T3: Ultrasounds & Doppler Effect in Medicine",
-    // Physiology
+    "## Physiology",
     "PHY-P T1: Somatosensory Systems – Touch, Pain & Proprioception",
     "PHY-P T2: Visual Processing & Retinal Circuits",
     "PHY-P T3: Auditory Processing & Frequency Analysis",
@@ -192,7 +192,7 @@ export const courseTopics: Record<string, string[]> = {
     "PHY-P T8: Basal Ganglia – Movement Selection & Dopamine",
     "PHY-P T9: Cortical Circuits & Excitation/Inhibition Balance",
     "PHY-P T10: Muscle Physiology & Motor Units",
-    // Anatomy
+    "## Anatomy",
     "ANA T1: Sensory Receptors & Ascending Pathways",
     "ANA T2: Eye Organization & Visual Pathways",
     "ANA T3: Ear Structure & Auditory/Vestibular Pathways",
@@ -202,11 +202,11 @@ export const courseTopics: Record<string, string[]> = {
     "ANA T7: Cerebral Vascularization & Circle of Willis",
   ],
   "Mechanism Of Diseases 1": [
-    // Cellular Pathology
+    "## Cellular Pathology",
     "CP T1: Mechanisms of Cellular Adaptation",
     "CP T2: Cell Injury & Cell Death",
     "CP T3: Programmed Cell Death",
-    // Innate Immunity & Inflammation
+    "## Innate Immunity & Inflammation",
     "INF T1: Hematopoiesis & Innate Immune Cells",
     "INF T2: Cells & Mediators of Inflammation",
     "INF T3: Soluble Mediators of Inflammation",
@@ -217,17 +217,17 @@ export const courseTopics: Record<string, string[]> = {
     "INF T8: Resolution of Inflammatory Response",
     "INF T9: Chronic Inflammation, Fibrosis & Tissue Renewal",
     "INF T10: Acute Phase Reaction & Systemic Inflammation",
-    // Tumor Cell Biology
+    "## Tumor Cell Biology",
     "TUM T1: Introduction to Tumors & Nomenclature",
     "TUM T2: Characteristics of Benign & Malignant Tumors",
     "TUM T3: Molecular Basis of Cancer – Oncogenes",
     "TUM T4: Molecular Basis of Cancer – Tumor Suppressors",
     "TUM T5: Clinical Aspects of Patients with Tumors",
-    // Vascular Pathology
+    "## Vascular Pathology",
     "VAS T1: Angiogenesis & Tumor Angiogenesis",
     "VAS T2: Hemostasis & Coagulation",
     "VAS T3: Thrombotic Diseases & Atherosclerosis",
-    // Microbiology
+    "## Microbiology",
     "MIC T1: History of Microbiology & Cell Structure",
     "MIC T2: Microscopy, Classification & Microbial Growth",
     "MIC T3: Control of Microbial Growth & Antimicrobials",
@@ -235,7 +235,7 @@ export const courseTopics: Record<string, string[]> = {
     "MIC T5: Classification of Eukaryotes (Protozoa, Fungi, Helminths)",
     "MIC T6: Viruses, Viroids & Prions",
     "MIC T7: Mechanisms of Infection & Epidemiology",
-    // Medical Bacteriology
+    "## Medical Bacteriology",
     "BAC T1: Gram-Positive Bacteria – Staphylococcus & Streptococcus",
     "BAC T2: Gram-Positive Bacteria – Enterococcus, Bacillus, Clostridium & Others",
     "BAC T3: Gram-Positive Bacteria – Corynebacterium, Mycobacterium & Others",
@@ -253,7 +253,7 @@ export const courseTopics: Record<string, string[]> = {
     "Statistical Methods in Medicine",
   ],
   "Body At Work 2": [
-    // Physiology
+    "## Physiology",
     "PHY T1: Endocrine System",
     "PHY T2: Cardiovascular System",
     "PHY T2.1: Fluid Mechanics (Physics Applied)",
@@ -287,7 +287,7 @@ export const courseTopics: Record<string, string[]> = {
     "PHY T8: Multidisciplinary / Clinical Integration",
   ],
   "Mechanism Of Diseases 2": [
-    // Clinical Microbiology II
+    "## Clinical Microbiology II",
     "VIR T1: Introduction to Virology & Viral Structure",
     "VIR T2: Host-Virus Interaction & Pathogenesis",
     "VIR T3: Herpesviridae",
@@ -300,7 +300,7 @@ export const courseTopics: Record<string, string[]> = {
     "VIR T10: Viral Evolution & Drug Resistance",
     "MYC T1: Medical Mycology – Yeasts, Molds & Invasive Infections",
     "PAR T1: Parasitology – Protozoa & Helminths",
-    // Adaptive Immunity
+    "## Adaptive Immunity",
     "ADI T1: Introduction to Adaptive Immunity",
     "ADI T2: MHC, Antigen Processing & Presentation",
     "ADI T3: Dendritic Cells & Antigen-Presenting Cells",
@@ -311,7 +311,7 @@ export const courseTopics: Record<string, string[]> = {
     "ADI T8: Polarization & Memory – Th1/Th2/Th17 & Vaccines",
     "ADI T9: Tolerance & Negative Regulation",
     "ADI T10: Immunology of Pregnancy",
-    // Mucosal Immune System & Microbiota
+    "## Mucosal Immune System & Microbiota",
     "MUC T1: Mucosal Lymphoid Tissue & IgA",
     "MUC T2: Epithelial Cells & Antigen Uptake",
     "MUC T3: Mucosal Lymphocytes & Innate Lymphoid Cells",
@@ -319,7 +319,7 @@ export const courseTopics: Record<string, string[]> = {
     "MUC T5: Gut–Skin–Lung–Liver–Brain Axis",
     "MUC T6: Microbiota & Immune Responses",
     "MUC T7: Microbiota & Cancer",
-    // Immunopathology
+    "## Immunopathology",
     "IMP T1: Hypersensitivity Reactions I – Type I",
     "IMP T2: Hypersensitivity II–IV & Autoimmune Diseases",
     "IMP T3: Transplant Rejection & Immunodeficiency Syndromes",
