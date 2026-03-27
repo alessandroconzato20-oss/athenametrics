@@ -96,7 +96,7 @@ const DailyStudyPlan = ({ scores }: DailyStudyPlanProps) => {
           recentStudyLogs: (logsRes.data || []).slice(0, 10),
           topicMastery,
           year,
-          semester,
+          year,
         },
       });
       if (error) throw error;
