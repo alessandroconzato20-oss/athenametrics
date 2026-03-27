@@ -217,6 +217,7 @@ export type Database = {
       }
       weekly_goals: {
         Row: {
+          completed_goals: Json
           created_at: string
           daily_breakdown: Json
           goals: Json
@@ -227,6 +228,7 @@ export type Database = {
           week_start: string
         }
         Insert: {
+          completed_goals?: Json
           created_at?: string
           daily_breakdown?: Json
           goals?: Json
@@ -237,6 +239,7 @@ export type Database = {
           week_start: string
         }
         Update: {
+          completed_goals?: Json
           created_at?: string
           daily_breakdown?: Json
           goals?: Json

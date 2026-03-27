@@ -1,0 +1,1 @@
+ALTER TABLE public.weekly_goals ADD COLUMN IF NOT EXISTS completed_goals jsonb NOT NULL DEFAULT '[]'::jsonb;
