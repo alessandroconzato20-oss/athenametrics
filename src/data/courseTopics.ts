@@ -170,13 +170,36 @@ export const courseTopics: Record<string, string[]> = {
   ],
   // Year 2
   "Body At Work 1": [
-    "Cardiovascular Physiology",
-    "Respiratory Physiology",
-    "Renal Physiology",
-    "Acid-Base Balance",
-    "Autonomic Nervous System",
-    "Blood & Hemostasis",
-    "Endocrine Physiology Intro",
+    // Biochemistry
+    "BIO T1: Vitamin A & Retinal in Visual Transduction",
+    "BIO T2: Blood-Brain Barrier & Brain Metabolism",
+    "BIO T3: Energy Balance & Oxidative Stress",
+    "BIO T4: Cancer Metabolism & Metabolic Reprogramming",
+    "BIO T5: ECM, Connective Tissue & Bone Biochemistry",
+    "BIO T6: Muscle Biochemistry & Energetics",
+    // Physics
+    "PHY T1: Optics, Lenses & the Physics of Vision",
+    "PHY T2: Acoustics, Waves & Sound Propagation",
+    "PHY T3: Ultrasounds & Doppler Effect in Medicine",
+    // Physiology
+    "PHY-P T1: Somatosensory Systems – Touch, Pain & Proprioception",
+    "PHY-P T2: Visual Processing & Retinal Circuits",
+    "PHY-P T3: Auditory Processing & Frequency Analysis",
+    "PHY-P T4: Vestibular Function & Gaze Control",
+    "PHY-P T5: Chemoreception – Smell & Taste",
+    "PHY-P T6: Motor Control – Spinal Reflexes & CPGs",
+    "PHY-P T7: Cerebellum – Motor Learning & Coordination",
+    "PHY-P T8: Basal Ganglia – Movement Selection & Dopamine",
+    "PHY-P T9: Cortical Circuits & Excitation/Inhibition Balance",
+    "PHY-P T10: Muscle Physiology & Motor Units",
+    // Anatomy
+    "ANA T1: Sensory Receptors & Ascending Pathways",
+    "ANA T2: Eye Organization & Visual Pathways",
+    "ANA T3: Ear Structure & Auditory/Vestibular Pathways",
+    "ANA T4: Neuroanatomy of Taste & Olfaction",
+    "ANA T5: Descending Motor Pathways & Motor Cortex",
+    "ANA T6: Cerebellum & Basal Ganglia Circuitry",
+    "ANA T7: Cerebral Vascularization & Circle of Willis",
   ],
   "Mechanism Of Diseases 1": [
     // Cellular Pathology
