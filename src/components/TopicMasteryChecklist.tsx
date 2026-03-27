@@ -17,6 +17,11 @@ interface TopicGroup {
   children: string[];
 }
 
+interface SectionGroup {
+  section: string;
+  children: (string | TopicGroup)[];
+}
+
 const STATUS_CONFIG: Record<MasteryStatus, { label: string; bg: string; ring: string; dot: string }> = {
   red:    { label: "Needs Focus", bg: "bg-destructive/15", ring: "ring-destructive/40", dot: "bg-destructive" },
   orange: { label: "In Progress", bg: "bg-amber-500/15",   ring: "ring-amber-400/40",   dot: "bg-amber-500" },
@@ -25,21 +30,19 @@ const STATUS_CONFIG: Record<MasteryStatus, { label: string; bg: string; ring: st
 
 const STATUSES: MasteryStatus[] = ["red", "orange", "green"];
 
-/** Detect parent/child structure: e.g. "PHY T2:" is parent of "PHY T2.1:", "PHY T2.2:" etc. */
-function groupTopics(topics: string[]): (string | TopicGroup)[] {
+/** Group topics with T2/T2.1 parent-child pattern */
+function groupSubtopics(topics: string[]): (string | TopicGroup)[] {
   const result: (string | TopicGroup)[] = [];
   let i = 0;
   while (i < topics.length) {
     const current = topics[i];
-    // Check if next topics are subtopics of current
-    // Pattern: current has "TX:" and next ones have "TX.Y:"
-    const prefixMatch = current.match(/^(\w+\s+T\d+):/);
+    const prefixMatch = current.match(/^(\w[\w-]*\s+T\d+):/);
     if (prefixMatch) {
-      const prefix = prefixMatch[1]; // e.g. "PHY T2"
+      const prefix = prefixMatch[1];
       const children: string[] = [];
       let j = i + 1;
       while (j < topics.length) {
-        const subMatch = topics[j].match(/^(\w+\s+T\d+)\.(\d+):/);
+        const subMatch = topics[j].match(/^(\w[\w-]*\s+T\d+)\.(\d+):/);
         if (subMatch && subMatch[1] === prefix) {
           children.push(topics[j]);
           j++;
@@ -56,6 +59,37 @@ function groupTopics(topics: string[]): (string | TopicGroup)[] {
     result.push(current);
     i++;
   }
+  return result;
+}
+
+/** Detect "## Section" markers and group following topics into collapsible sections */
+function groupTopics(topics: string[]): (string | TopicGroup | SectionGroup)[] {
+  const hasSection = topics.some(t => t.startsWith("## "));
+  if (!hasSection) {
+    // No sections — just do subtopic grouping
+    return groupSubtopics(topics);
+  }
+
+  const result: (string | TopicGroup | SectionGroup)[] = [];
+  let currentSection: string | null = null;
+  let currentChildren: string[] = [];
+
+  const flushSection = () => {
+    if (currentSection && currentChildren.length > 0) {
+      result.push({ section: currentSection, children: groupSubtopics(currentChildren) });
+    }
+    currentChildren = [];
+  };
+
+  for (const t of topics) {
+    if (t.startsWith("## ")) {
+      flushSection();
+      currentSection = t.slice(3);
+    } else {
+      currentChildren.push(t);
+    }
+  }
+  flushSection();
   return result;
 }
 
