@@ -21,10 +21,10 @@ const Signup = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!year || !semester) { toast.error("Please select year and semester"); return; }
+    if (!year) { toast.error("Please select your year"); return; }
     setIsLoading(true);
     try {
-      await signUp(email, password, name, parseInt(year), parseInt(semester));
+      await signUp(email, password, name, parseInt(year));
       toast.success("Account created! Check your email to verify, then sign in.");
       navigate("/login");
     } catch (err: any) {
