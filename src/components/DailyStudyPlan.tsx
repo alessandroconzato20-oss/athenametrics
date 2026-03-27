@@ -36,7 +36,7 @@ const DailyStudyPlan = ({ scores, weeklyGoalsTasks }: DailyStudyPlanProps) => {
     return weeklyGoalsTasks[today] || [];
   };
 
-
+  const generatePlan = async () => {
     if (!user || !scores) return;
     setLoading(true);
     try {
