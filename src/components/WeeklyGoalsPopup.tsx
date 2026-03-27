@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Target, Sparkles, Plus, X, ChevronRight, Check } from "lucide-react";
+import { Target, Sparkles, Plus, X, ChevronRight, Check, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { startOfWeek, format } from "date-fns";
+import { getCoursesForYear } from "@/data/curriculum";
 
 interface WeeklyGoalsPopupProps {
   open: boolean;
@@ -22,15 +23,141 @@ function getGreeting(name: string): string {
   return `Good evening, ${name}! 🌙`;
 }
 
+function getMotivationalSubtext(): string {
+  const lines = [
+    "Let's set you up for a productive week 💪",
+    "A new week — a fresh start to crush it 🚀",
+    "Plan smart, study smarter this week ✨",
+    "What will you conquer this week? 🎯",
+  ];
+  return lines[Math.floor(Math.random() * lines.length)];
+}
+
 const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupProps) => {
   const { user, displayName } = useAuth();
-  const [step, setStep] = useState<"goals" | "breakdown" | "saving">("goals");
-  const [goals, setGoals] = useState<string[]>([""]);
+  const [step, setStep] = useState<"loading" | "goals" | "breakdown" | "saving">("loading");
+  const [goals, setGoals] = useState<string[]>([]);
   const [dailyBreakdown, setDailyBreakdown] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(false);
+  const [suggestedGoals, setSuggestedGoals] = useState<string[]>([]);
+
+  // Generate smart suggestions on open
+  useEffect(() => {
+    if (!open || !user) return;
+    setStep("loading");
+    generateSuggestions();
+  }, [open, user]);
+
+  const generateSuggestions = async () => {
+    if (!user) return;
+    try {
+      const year = user.user_metadata?.year || 1;
+      const courses = getCoursesForYear(year);
+
+      // Fetch mastery & persona in parallel
+      const [masteryRes, personaRes, logsRes] = await Promise.all([
+        supabase
+          .from("topic_mastery")
+          .select("course_name, topic_name, status")
+          .eq("user_id", user.id) as any,
+        supabase
+          .from("student_personas")
+          .select("biggest_challenge, goals, stress_management, preferred_session_length")
+          .eq("user_id", user.id)
+          .maybeSingle(),
+        supabase
+          .from("study_logs")
+          .select("subject, duration_minutes")
+          .eq("user_id", user.id)
+          .order("studied_at", { ascending: false })
+          .limit(30),
+      ]);
+
+      const mastery = (masteryRes.data || []) as Array<{ course_name: string; topic_name: string; status: string }>;
+      const persona = personaRes.data;
+      const logs = logsRes.data || [];
+
+      // Find weak topics (red status)
+      const redTopics = mastery.filter(m => m.status === "red");
+      const orangeTopics = mastery.filter(m => m.status === "orange");
+
+      // Find under-studied courses
+      const studiedMinutes: Record<string, number> = {};
+      logs.forEach((l: any) => {
+        studiedMinutes[l.subject] = (studiedMinutes[l.subject] || 0) + l.duration_minutes;
+      });
+      const leastStudied = courses
+        .sort((a, b) => (studiedMinutes[a.name] || 0) - (studiedMinutes[b.name] || 0))
+        .slice(0, 2);
+
+      // Build smart suggestions
+      const suggestions: string[] = [];
+
+      // 1. Red topic focus
+      if (redTopics.length > 0) {
+        const grouped: Record<string, string[]> = {};
+        redTopics.slice(0, 6).forEach(t => {
+          if (!grouped[t.course_name]) grouped[t.course_name] = [];
+          grouped[t.course_name].push(t.topic_name);
+        });
+        for (const [course, topics] of Object.entries(grouped).slice(0, 2)) {
+          suggestions.push(`Master weak topics in ${course} (${topics.slice(0, 2).join(", ")})`);
+        }
+      }
+
+      // 2. Orange topic revision
+      if (orangeTopics.length > 0) {
+        const course = orangeTopics[0].course_name;
+        suggestions.push(`Revise and solidify ${course} orange topics`);
+      }
+
+      // 3. Under-studied course catch-up
+      if (leastStudied.length > 0 && !suggestions.some(s => s.includes(leastStudied[0].name))) {
+        suggestions.push(`Catch up on ${leastStudied[0].name} (${leastStudied[0].credits} credits)`);
+      }
+
+      // 4. Active recall / practice
+      suggestions.push("Complete 3 active recall sessions on hardest material");
+
+      // 5. Wellness goals
+      suggestions.push("Exercise or walk for 30 min at least 4 days this week 🏃");
+      suggestions.push("Take a 10-min walk between every study block 🌳");
+
+      // 6. Stress / balance based on persona
+      if (persona?.stress_management === "exercise") {
+        suggestions.push("Hit the gym or do a workout 3 times this week 💪");
+      } else if (persona?.stress_management === "meditation") {
+        suggestions.push("10-min mindfulness session before studying each day 🧘");
+      } else {
+        suggestions.push("Stay hydrated — drink 2L of water daily 💧");
+      }
+
+      // 7. Sleep & recovery
+      suggestions.push("Get 7+ hours of sleep every night this week 😴");
+
+      // Trim to 7 max
+      const finalSuggestions = suggestions.slice(0, 7);
+      setSuggestedGoals(finalSuggestions);
+      setGoals(finalSuggestions);
+      setStep("goals");
+    } catch (e) {
+      console.error("Failed to generate suggestions:", e);
+      // Fallback suggestions
+      const fallback = [
+        "Review weakest subject topics",
+        "Complete 3 active recall sessions",
+        "Exercise 30 min × 4 days 🏃",
+        "Walk between study blocks 🌳",
+        "Sleep 7+ hours nightly 😴",
+      ];
+      setSuggestedGoals(fallback);
+      setGoals(fallback);
+      setStep("goals");
+    }
+  };
 
   const addGoal = () => {
-    if (goals.length < 7) setGoals([...goals, ""]);
+    if (goals.length < 10) setGoals([...goals, ""]);
   };
 
   const updateGoal = (idx: number, val: string) => {
@@ -47,27 +174,59 @@ const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupP
 
     setLoading(true);
     try {
-      // Simple even distribution as fallback / default
+      // Smart distribution: study goals on weekdays, lighter on weekends
       const breakdown: Record<string, string[]> = {};
       DAYS.forEach(day => { breakdown[day] = []; });
 
-      // Distribute goals across the week
-      validGoals.forEach((goal, i) => {
-        // Spread each goal across ~3 days
-        const startDay = i % 7;
-        const daysForGoal = Math.min(3, 7 - startDay);
-        for (let d = 0; d < daysForGoal; d++) {
-          const dayIdx = (startDay + d) % 7;
-          breakdown[DAYS[dayIdx]].push(goal);
+      const studyGoals = validGoals.filter(g =>
+        !g.match(/exercise|walk|gym|workout|sleep|hydrat|water|mindful|meditat/i)
+      );
+      const wellnessGoals = validGoals.filter(g =>
+        g.match(/exercise|walk|gym|workout|sleep|hydrat|water|mindful|meditat/i)
+      );
+
+      // Distribute study goals across weekdays with spaced repetition
+      const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+      studyGoals.forEach((goal, i) => {
+        // Each study goal on 2-3 weekdays, spaced out
+        const start = i % 5;
+        const spread = Math.min(3, studyGoals.length <= 3 ? 3 : 2);
+        for (let d = 0; d < spread; d++) {
+          const dayIdx = (start + d * 2) % 5;
+          if (!breakdown[weekdays[dayIdx]].includes(goal)) {
+            breakdown[weekdays[dayIdx]].push(goal);
+          }
         }
       });
 
-      // Remove days with no tasks
-      DAYS.forEach(day => {
-        if (breakdown[day].length === 0) {
-          breakdown[day] = ["Rest & recover 🌿"];
+      // Wellness goals spread across all days
+      wellnessGoals.forEach(goal => {
+        if (goal.match(/sleep|hydrat|water/i)) {
+          // Daily habits
+          DAYS.forEach(day => {
+            if (!breakdown[day].includes(goal)) breakdown[day].push(goal);
+          });
+        } else if (goal.match(/exercise|gym|workout/i)) {
+          // 4 days: Mon, Wed, Fri, Sat
+          ["Monday", "Wednesday", "Friday", "Saturday"].forEach(day => {
+            breakdown[day].push(goal);
+          });
+        } else if (goal.match(/walk/i)) {
+          // Every study day
+          weekdays.forEach(day => { breakdown[day].push(goal); });
+        } else {
+          // Spread across all days
+          DAYS.forEach(day => { breakdown[day].push(goal); });
         }
       });
+
+      // Weekend: add light review + rest
+      if (breakdown["Saturday"].filter(g => !g.match(/exercise|walk|gym|workout|sleep|hydrat|water|mindful|meditat/i)).length === 0) {
+        breakdown["Saturday"].unshift("Light review of the week's material 📖");
+      }
+      if (breakdown["Sunday"].filter(g => !g.match(/exercise|walk|gym|workout|sleep|hydrat|water|mindful|meditat/i)).length === 0) {
+        breakdown["Sunday"].unshift("Rest & light prep for next week 🌿");
+      }
 
       setDailyBreakdown(breakdown);
       setStep("breakdown");
@@ -121,31 +280,46 @@ const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupP
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="relative w-full max-w-md rounded-3xl bg-card p-6 shadow-elevated"
           >
-            {/* Close button */}
             <button onClick={onClose} className="absolute right-4 top-4 rounded-lg p-1 text-muted-foreground hover:bg-muted transition-colors">
               <X className="h-4 w-4" />
             </button>
 
+            {step === "loading" && (
+              <div className="flex flex-col items-center py-10">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+                >
+                  <Target className="h-10 w-10 text-primary" />
+                </motion.div>
+                <p className="mt-4 font-display text-base font-bold text-foreground">{getGreeting(displayName)}</p>
+                <p className="mt-1 text-xs text-muted-foreground">Preparing your personalized goals...</p>
+              </div>
+            )}
+
             {step === "goals" && (
               <div>
-                {/* Personalized greeting */}
                 <div className="mb-1 flex items-center gap-2">
                   <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10">
                     <Target className="h-5 w-5 text-primary" />
                   </div>
                   <div>
                     <h2 className="font-display text-lg font-bold text-foreground">{getGreeting(displayName)}</h2>
-                    <p className="text-xs text-muted-foreground">New week, new goals! What do you want to achieve?</p>
+                    <p className="text-xs text-muted-foreground">{getMotivationalSubtext()}</p>
                   </div>
                 </div>
 
-                <div className="mt-5 space-y-2.5">
+                <p className="mt-3 mb-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                  ✨ Suggested goals based on your progress — edit freely
+                </p>
+
+                <div className="max-h-[40vh] space-y-2 overflow-y-auto pr-1">
                   {goals.map((goal, i) => (
                     <motion.div
                       key={i}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.05 }}
+                      transition={{ delay: i * 0.04 }}
                       className="flex items-center gap-2"
                     >
                       <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
@@ -166,24 +340,29 @@ const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupP
                   ))}
                 </div>
 
-                {goals.length < 7 && (
-                  <button onClick={addGoal} className="mt-2 flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors">
-                    <Plus className="h-3 w-3" /> Add another goal
+                <div className="mt-2 flex items-center gap-3">
+                  {goals.length < 10 && (
+                    <button onClick={addGoal} className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors">
+                      <Plus className="h-3 w-3" /> Add goal
+                    </button>
+                  )}
+                  <button onClick={generateSuggestions} className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-primary transition-colors">
+                    <RefreshCcw className="h-3 w-3" /> Regenerate
                   </button>
-                )}
+                </div>
 
                 <Button
                   onClick={generateBreakdown}
                   disabled={loading || goals.every(g => !g.trim())}
-                  className="mt-5 w-full rounded-xl bg-gradient-primary font-semibold"
+                  className="mt-4 w-full rounded-xl bg-gradient-primary font-semibold"
                 >
                   {loading ? (
                     <span className="flex items-center gap-2">
-                      <Sparkles className="h-4 w-4 animate-spin" /> Breaking down...
+                      <Sparkles className="h-4 w-4 animate-spin" /> Building your week...
                     </span>
                   ) : (
                     <span className="flex items-center gap-2">
-                      Break down into daily tasks <ChevronRight className="h-4 w-4" />
+                      Break down into daily plan <ChevronRight className="h-4 w-4" />
                     </span>
                   )}
                 </Button>
