@@ -26,12 +26,21 @@ export const courseTopics: Record<string, string[]> = {
     "Transcription & Translation",
   ],
   "The Cell: Functions and Control": [
-    "Cell Cycle & Mitosis",
-    "Apoptosis & Cell Death",
-    "Stem Cells & Differentiation",
-    "Gene Regulation",
-    "Epigenetics",
-    "Cancer Biology Basics",
+    // Biochemistry
+    "BIO T1: Introduction to Biochemistry",
+    "BIO T2: Carbohydrate Metabolism",
+    "BIO T3: Mitochondrial ATP Production",
+    "BIO T4: Lipid Metabolism",
+    "BIO T5: Nitrogen & Iron Metabolism",
+    "BIO T6: Nucleotide Metabolism",
+    "BIO T7: Integrated Metabolism",
+    "BIO T8: Planetary Health Pathway",
+    // Physiology
+    "PHY T1: Introduction to Data Handling",
+    "PHY T2: Introduction to Cell Physiology",
+    "PHY T3: Control & Signal Transduction",
+    "PHY T4: Kinetics and Forces (Data Handling Pathway)",
+    "PHY T5: Cellular Bioelectricity",
   ],
   "Body Architecture": [
     // General Anatomy
