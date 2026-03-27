@@ -21,6 +21,7 @@ interface DailyStudyPlanProps {
     studyCapacity: string;
     studyBlockRecommendation: { blockMinutes: number; breakMinutes: number; label: string; tier: string };
   } | null;
+  weeklyGoalsTasks?: Record<string, string[]> | null;
 }
 
 const DailyStudyPlan = ({ scores }: DailyStudyPlanProps) => {
