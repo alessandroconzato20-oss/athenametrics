@@ -101,7 +101,19 @@ const DailyStudyPlan = ({ scores, weeklyGoalsTasks }: DailyStudyPlanProps) => {
       });
       if (error) throw error;
       if (data?.plan) {
-        setPlan(data.plan.map((p: any) => ({ ...p, done: false })));
+        let items: PlanItem[] = data.plan.map((p: any) => ({ ...p, done: false }));
+        // Inject weekly goal tasks for today
+        const todayGoalTasks = getTodayGoalTasks();
+        if (todayGoalTasks.length > 0) {
+          const goalItems: PlanItem[] = todayGoalTasks.map(task => ({
+            time: "Weekly Goal",
+            task,
+            reason: "From your weekly goals",
+            done: false,
+          }));
+          items = [...goalItems, ...items];
+        }
+        setPlan(items);
         setGenerated(true);
       }
     } catch (e) {
