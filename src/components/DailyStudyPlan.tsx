@@ -66,12 +66,11 @@ const DailyStudyPlan = ({ scores }: DailyStudyPlanProps) => {
         return acc;
       }, {});
 
-      // Get student year/semester from metadata
+      // Get student year from metadata
       const year = user.user_metadata?.year || 1;
-      const semester = user.user_metadata?.semester || 1;
 
-      // Current semester courses + any courses they've recently logged (cross-semester)
-      const currentCourses = getCoursesForStudent(year, semester);
+      // All courses for the student's year
+      const currentCourses = getCoursesForYear(year);
       const recentSubjects = [...new Set((logsRes.data || []).map((l: any) => l.subject))];
       const crossSemesterSubjects = recentSubjects.filter(
         (s: string) => !currentCourses.some(c => c.name === s)
