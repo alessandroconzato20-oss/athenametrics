@@ -154,7 +154,7 @@ const StudyLogForm = () => {
               </Select>
               {courseObj && (
                 <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-xs text-muted-foreground">
-                  {courseObj.credits} credits · Year {userYear}, Semester {userSemester}
+                  {courseObj.credits} credits · Year {userYear}
                 </motion.p>
               )}
             </div>
