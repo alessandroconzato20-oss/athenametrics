@@ -160,11 +160,6 @@ const StudyLogForm = () => {
               )}
             </div>
 
-            {/* Topic within the course */}
-            <div className="space-y-2">
-              <Label>Topic / Chapter (optional)</Label>
-              <Input placeholder="e.g. Cell Division, Chapter 5" value={topic} onChange={(e) => setTopic(e.target.value)} className="h-11 rounded-xl" />
-            </div>
 
             <div className="space-y-2">
               <Label>Duration</Label>
