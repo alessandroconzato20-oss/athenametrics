@@ -36,10 +36,11 @@ function getMotivationalSubtext(): string {
 const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupProps) => {
   const { user, displayName } = useAuth();
   const [step, setStep] = useState<"loading" | "goals" | "breakdown" | "saving">("loading");
-  const [goals, setGoals] = useState<string[]>([]);
+  const [suggestedGoals, setSuggestedGoals] = useState<string[]>([]);
+  const [selectedGoals, setSelectedGoals] = useState<Set<number>>(new Set());
+  const [customGoal, setCustomGoal] = useState("");
   const [dailyBreakdown, setDailyBreakdown] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(false);
-  const [suggestedGoals, setSuggestedGoals] = useState<string[]>([]);
 
   // Generate smart suggestions on open
   useEffect(() => {
