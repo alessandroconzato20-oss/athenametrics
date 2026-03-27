@@ -4,7 +4,7 @@ import { CalendarClock, Sparkles, ChevronDown, ChevronUp, CheckCircle2 } from "l
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import DisagreeButton from "@/components/DisagreeButton";
-import { getCoursesForStudent, curriculum } from "@/data/curriculum";
+import { getCoursesForYear, curriculum } from "@/data/curriculum";
 
 interface PlanItem {
   time: string;
