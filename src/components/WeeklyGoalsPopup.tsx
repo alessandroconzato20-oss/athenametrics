@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { startOfWeek, format } from "date-fns";
-import { getCoursesForYear } from "@/data/curriculum";
+
 
 interface WeeklyGoalsPopupProps {
   open: boolean;
