@@ -124,7 +124,15 @@ const DailyStudyPlan = ({ scores, weeklyGoalsTasks }: DailyStudyPlanProps) => {
     } catch (e) {
       console.error("Plan generation failed:", e);
       // Fallback plan
-      setPlan(getFallbackPlan(scores));
+      const fallback = getFallbackPlan(scores);
+      const todayGoalTasks = getTodayGoalTasks();
+      const goalItems: PlanItem[] = todayGoalTasks.map(task => ({
+        time: "Weekly Goal",
+        task,
+        reason: "From your weekly goals",
+        done: false,
+      }));
+      setPlan([...goalItems, ...fallback]);
       setGenerated(true);
     } finally {
       setLoading(false);
