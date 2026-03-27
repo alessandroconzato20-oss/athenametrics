@@ -17,6 +17,11 @@ interface TopicGroup {
   children: string[];
 }
 
+interface SectionGroup {
+  section: string;
+  children: (string | TopicGroup)[];
+}
+
 const STATUS_CONFIG: Record<MasteryStatus, { label: string; bg: string; ring: string; dot: string }> = {
   red:    { label: "Needs Focus", bg: "bg-destructive/15", ring: "ring-destructive/40", dot: "bg-destructive" },
   orange: { label: "In Progress", bg: "bg-amber-500/15",   ring: "ring-amber-400/40",   dot: "bg-amber-500" },
@@ -25,21 +30,19 @@ const STATUS_CONFIG: Record<MasteryStatus, { label: string; bg: string; ring: st
 
 const STATUSES: MasteryStatus[] = ["red", "orange", "green"];
 
-/** Detect parent/child structure: e.g. "PHY T2:" is parent of "PHY T2.1:", "PHY T2.2:" etc. */
-function groupTopics(topics: string[]): (string | TopicGroup)[] {
+/** Group topics with T2/T2.1 parent-child pattern */
+function groupSubtopics(topics: string[]): (string | TopicGroup)[] {
   const result: (string | TopicGroup)[] = [];
   let i = 0;
   while (i < topics.length) {
     const current = topics[i];
-    // Check if next topics are subtopics of current
-    // Pattern: current has "TX:" and next ones have "TX.Y:"
-    const prefixMatch = current.match(/^(\w+\s+T\d+):/);
+    const prefixMatch = current.match(/^(\w[\w-]*\s+T\d+):/);
     if (prefixMatch) {
-      const prefix = prefixMatch[1]; // e.g. "PHY T2"
+      const prefix = prefixMatch[1];
       const children: string[] = [];
       let j = i + 1;
       while (j < topics.length) {
-        const subMatch = topics[j].match(/^(\w+\s+T\d+)\.(\d+):/);
+        const subMatch = topics[j].match(/^(\w[\w-]*\s+T\d+)\.(\d+):/);
         if (subMatch && subMatch[1] === prefix) {
           children.push(topics[j]);
           j++;
@@ -59,6 +62,37 @@ function groupTopics(topics: string[]): (string | TopicGroup)[] {
   return result;
 }
 
+/** Detect "## Section" markers and group following topics into collapsible sections */
+function groupTopics(topics: string[]): (string | TopicGroup | SectionGroup)[] {
+  const hasSection = topics.some(t => t.startsWith("## "));
+  if (!hasSection) {
+    // No sections — just do subtopic grouping
+    return groupSubtopics(topics);
+  }
+
+  const result: (string | TopicGroup | SectionGroup)[] = [];
+  let currentSection: string | null = null;
+  let currentChildren: string[] = [];
+
+  const flushSection = () => {
+    if (currentSection && currentChildren.length > 0) {
+      result.push({ section: currentSection, children: groupSubtopics(currentChildren) });
+    }
+    currentChildren = [];
+  };
+
+  for (const t of topics) {
+    if (t.startsWith("## ")) {
+      flushSection();
+      currentSection = t.slice(3);
+    } else {
+      currentChildren.push(t);
+    }
+  }
+  flushSection();
+  return result;
+}
+
 interface Props {
   courseName: string;
 }
@@ -69,12 +103,13 @@ const TopicMasteryChecklist = ({ courseName }: Props) => {
   const [saving, setSaving] = useState<string | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
-  const courseTopics = getTopicsForCourse(courseName);
-  const grouped = groupTopics(courseTopics);
+  const allCourseTopics = getTopicsForCourse(courseName);
+  const actualTopics = allCourseTopics.filter(t => !t.startsWith("## "));
+  const grouped = groupTopics(allCourseTopics);
 
   // Load existing mastery from DB
   useEffect(() => {
-    if (!user || !courseName || courseTopics.length === 0) {
+    if (!user || !courseName || actualTopics.length === 0) {
       setTopics([]);
       return;
     }
@@ -89,7 +124,7 @@ const TopicMasteryChecklist = ({ courseName }: Props) => {
       const savedMap = new Map<string, MasteryStatus>();
       (data || []).forEach((d: any) => savedMap.set(d.topic_name, d.status));
 
-      setTopics(courseTopics.map(t => ({
+      setTopics(actualTopics.map(t => ({
         topic: t,
         status: savedMap.get(t) || "red",
       })));
@@ -132,7 +167,7 @@ const TopicMasteryChecklist = ({ courseName }: Props) => {
   const getStatus = (topicName: string): MasteryStatus =>
     topics.find(t => t.topic === topicName)?.status || "red";
 
-  if (!courseName || courseTopics.length === 0) return null;
+  if (!courseName || actualTopics.length === 0) return null;
 
   const redCount = topics.filter(t => t.status === "red").length;
   const orangeCount = topics.filter(t => t.status === "orange").length;
@@ -204,7 +239,60 @@ const TopicMasteryChecklist = ({ courseName }: Props) => {
             if (typeof item === "string") {
               return renderTopicButton(item);
             }
-            // Collapsible group
+            // Section group (## marker)
+            if ("section" in item) {
+              const isExpanded = expandedGroups.has(item.section);
+              return (
+                <div key={item.section} className="space-y-1.5">
+                  <button
+                    type="button"
+                    onClick={() => toggleGroup(item.section)}
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 bg-muted/50 ring-1 ring-border/50 hover:bg-muted/80 transition-colors"
+                  >
+                    <span className="text-sm font-semibold text-foreground flex-1 text-left">{item.section}</span>
+                    <span className="text-[10px] text-muted-foreground font-medium">{item.children.length} topics</span>
+                    <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    </motion.div>
+                  </button>
+                  <AnimatePresence>
+                    {isExpanded && item.children.map((child) => {
+                      if (typeof child === "string") {
+                        return renderTopicButton(child, true);
+                      }
+                      // TopicGroup inside a section (T2/T2.1 pattern)
+                      const childExpanded = expandedGroups.has(child.parent);
+                      const parentStatus = getStatus(child.parent);
+                      const parentCfg = STATUS_CONFIG[parentStatus];
+                      return (
+                        <div key={child.parent} className="space-y-1.5 ml-4">
+                          <div className={`flex w-full items-center gap-2 rounded-xl px-3 py-2.5 ring-1 ${parentCfg.bg} ${parentCfg.ring}`}>
+                            <motion.button
+                              type="button"
+                              onClick={() => cycleStatus(child.parent)}
+                              className="flex flex-1 items-center gap-3 text-left min-w-0"
+                            >
+                              <motion.div key={parentStatus} initial={{ scale: 0.5 }} animate={{ scale: 1 }} className={`h-3.5 w-3.5 shrink-0 rounded-full ${parentCfg.dot} shadow-sm`} />
+                              <p className="text-xs font-medium text-foreground truncate flex-1">{child.parent}</p>
+                              <span className={`text-[10px] font-semibold shrink-0 ${parentStatus === "red" ? "text-destructive" : parentStatus === "orange" ? "text-amber-500" : "text-emerald-500"}`}>{parentCfg.label}</span>
+                            </motion.button>
+                            <button type="button" onClick={() => toggleGroup(child.parent)} className="shrink-0 p-1 rounded-lg hover:bg-muted/50 transition-colors">
+                              <motion.div animate={{ rotate: childExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                              </motion.div>
+                            </button>
+                          </div>
+                          <AnimatePresence>
+                            {childExpanded && child.children.map((sub) => renderTopicButton(sub, true))}
+                          </AnimatePresence>
+                        </div>
+                      );
+                    })}
+                  </AnimatePresence>
+                </div>
+              );
+            }
+            // TopicGroup (T2/T2.1 pattern, no section)
             const isExpanded = expandedGroups.has(item.parent);
             const parentStatus = getStatus(item.parent);
             const parentCfg = STATUS_CONFIG[parentStatus];
@@ -216,25 +304,11 @@ const TopicMasteryChecklist = ({ courseName }: Props) => {
                     onClick={() => cycleStatus(item.parent)}
                     className="flex flex-1 items-center gap-3 text-left min-w-0"
                   >
-                    <motion.div
-                      key={parentStatus}
-                      initial={{ scale: 0.5 }}
-                      animate={{ scale: 1 }}
-                      className={`h-3.5 w-3.5 shrink-0 rounded-full ${parentCfg.dot} shadow-sm`}
-                    />
+                    <motion.div key={parentStatus} initial={{ scale: 0.5 }} animate={{ scale: 1 }} className={`h-3.5 w-3.5 shrink-0 rounded-full ${parentCfg.dot} shadow-sm`} />
                     <p className="text-sm font-medium text-foreground truncate flex-1">{item.parent}</p>
-                    <span className={`text-[10px] font-semibold shrink-0 ${
-                      parentStatus === "red" ? "text-destructive" :
-                      parentStatus === "orange" ? "text-amber-500" : "text-emerald-500"
-                    }`}>
-                      {parentCfg.label}
-                    </span>
+                    <span className={`text-[10px] font-semibold shrink-0 ${parentStatus === "red" ? "text-destructive" : parentStatus === "orange" ? "text-amber-500" : "text-emerald-500"}`}>{parentCfg.label}</span>
                   </motion.button>
-                  <button
-                    type="button"
-                    onClick={() => toggleGroup(item.parent)}
-                    className="shrink-0 p-1 rounded-lg hover:bg-muted/50 transition-colors"
-                  >
+                  <button type="button" onClick={() => toggleGroup(item.parent)} className="shrink-0 p-1 rounded-lg hover:bg-muted/50 transition-colors">
                     <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
                       <ChevronDown className="h-4 w-4 text-muted-foreground" />
                     </motion.div>
