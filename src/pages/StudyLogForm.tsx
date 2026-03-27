@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Brain, Zap, AlertTriangle, Eye, GraduationCap, BookOpen } from "lucide-react";
 import { toast } from "sonner";
-import { getCoursesForStudent, type Course } from "@/data/curriculum";
+import { getCoursesForYear, type Course } from "@/data/curriculum";
 import { Checkbox } from "@/components/ui/checkbox";
 import TopicMasteryChecklist from "@/components/TopicMasteryChecklist";
 
