@@ -239,7 +239,60 @@ const TopicMasteryChecklist = ({ courseName }: Props) => {
             if (typeof item === "string") {
               return renderTopicButton(item);
             }
-            // Collapsible group
+            // Section group (## marker)
+            if ("section" in item) {
+              const isExpanded = expandedGroups.has(item.section);
+              return (
+                <div key={item.section} className="space-y-1.5">
+                  <button
+                    type="button"
+                    onClick={() => toggleGroup(item.section)}
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 bg-muted/50 ring-1 ring-border/50 hover:bg-muted/80 transition-colors"
+                  >
+                    <span className="text-sm font-semibold text-foreground flex-1 text-left">{item.section}</span>
+                    <span className="text-[10px] text-muted-foreground font-medium">{item.children.length} topics</span>
+                    <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    </motion.div>
+                  </button>
+                  <AnimatePresence>
+                    {isExpanded && item.children.map((child) => {
+                      if (typeof child === "string") {
+                        return renderTopicButton(child, true);
+                      }
+                      // TopicGroup inside a section (T2/T2.1 pattern)
+                      const childExpanded = expandedGroups.has(child.parent);
+                      const parentStatus = getStatus(child.parent);
+                      const parentCfg = STATUS_CONFIG[parentStatus];
+                      return (
+                        <div key={child.parent} className="space-y-1.5 ml-4">
+                          <div className={`flex w-full items-center gap-2 rounded-xl px-3 py-2.5 ring-1 ${parentCfg.bg} ${parentCfg.ring}`}>
+                            <motion.button
+                              type="button"
+                              onClick={() => cycleStatus(child.parent)}
+                              className="flex flex-1 items-center gap-3 text-left min-w-0"
+                            >
+                              <motion.div key={parentStatus} initial={{ scale: 0.5 }} animate={{ scale: 1 }} className={`h-3.5 w-3.5 shrink-0 rounded-full ${parentCfg.dot} shadow-sm`} />
+                              <p className="text-xs font-medium text-foreground truncate flex-1">{child.parent}</p>
+                              <span className={`text-[10px] font-semibold shrink-0 ${parentStatus === "red" ? "text-destructive" : parentStatus === "orange" ? "text-amber-500" : "text-emerald-500"}`}>{parentCfg.label}</span>
+                            </motion.button>
+                            <button type="button" onClick={() => toggleGroup(child.parent)} className="shrink-0 p-1 rounded-lg hover:bg-muted/50 transition-colors">
+                              <motion.div animate={{ rotate: childExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                              </motion.div>
+                            </button>
+                          </div>
+                          <AnimatePresence>
+                            {childExpanded && child.children.map((sub) => renderTopicButton(sub, true))}
+                          </AnimatePresence>
+                        </div>
+                      );
+                    })}
+                  </AnimatePresence>
+                </div>
+              );
+            }
+            // TopicGroup (T2/T2.1 pattern, no section)
             const isExpanded = expandedGroups.has(item.parent);
             const parentStatus = getStatus(item.parent);
             const parentCfg = STATUS_CONFIG[parentStatus];
@@ -251,25 +304,11 @@ const TopicMasteryChecklist = ({ courseName }: Props) => {
                     onClick={() => cycleStatus(item.parent)}
                     className="flex flex-1 items-center gap-3 text-left min-w-0"
                   >
-                    <motion.div
-                      key={parentStatus}
-                      initial={{ scale: 0.5 }}
-                      animate={{ scale: 1 }}
-                      className={`h-3.5 w-3.5 shrink-0 rounded-full ${parentCfg.dot} shadow-sm`}
-                    />
+                    <motion.div key={parentStatus} initial={{ scale: 0.5 }} animate={{ scale: 1 }} className={`h-3.5 w-3.5 shrink-0 rounded-full ${parentCfg.dot} shadow-sm`} />
                     <p className="text-sm font-medium text-foreground truncate flex-1">{item.parent}</p>
-                    <span className={`text-[10px] font-semibold shrink-0 ${
-                      parentStatus === "red" ? "text-destructive" :
-                      parentStatus === "orange" ? "text-amber-500" : "text-emerald-500"
-                    }`}>
-                      {parentCfg.label}
-                    </span>
+                    <span className={`text-[10px] font-semibold shrink-0 ${parentStatus === "red" ? "text-destructive" : parentStatus === "orange" ? "text-amber-500" : "text-emerald-500"}`}>{parentCfg.label}</span>
                   </motion.button>
-                  <button
-                    type="button"
-                    onClick={() => toggleGroup(item.parent)}
-                    className="shrink-0 p-1 rounded-lg hover:bg-muted/50 transition-colors"
-                  >
+                  <button type="button" onClick={() => toggleGroup(item.parent)} className="shrink-0 p-1 rounded-lg hover:bg-muted/50 transition-colors">
                     <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
                       <ChevronDown className="h-4 w-4 text-muted-foreground" />
                     </motion.div>
