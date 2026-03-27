@@ -4,7 +4,7 @@ import { CalendarClock, Sparkles, ChevronDown, ChevronUp, CheckCircle2 } from "l
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import DisagreeButton from "@/components/DisagreeButton";
-import { getCoursesForStudent, curriculum } from "@/data/curriculum";
+import { getCoursesForYear, curriculum } from "@/data/curriculum";
 
 interface PlanItem {
   time: string;
@@ -66,12 +66,11 @@ const DailyStudyPlan = ({ scores }: DailyStudyPlanProps) => {
         return acc;
       }, {});
 
-      // Get student year/semester from metadata
+      // Get student year from metadata
       const year = user.user_metadata?.year || 1;
-      const semester = user.user_metadata?.semester || 1;
 
-      // Current semester courses + any courses they've recently logged (cross-semester)
-      const currentCourses = getCoursesForStudent(year, semester);
+      // All courses for the student's year
+      const currentCourses = getCoursesForYear(year);
       const recentSubjects = [...new Set((logsRes.data || []).map((l: any) => l.subject))];
       const crossSemesterSubjects = recentSubjects.filter(
         (s: string) => !currentCourses.some(c => c.name === s)
@@ -97,7 +96,6 @@ const DailyStudyPlan = ({ scores }: DailyStudyPlanProps) => {
           recentStudyLogs: (logsRes.data || []).slice(0, 10),
           topicMastery,
           year,
-          semester,
         },
       });
       if (error) throw error;

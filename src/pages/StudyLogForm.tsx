@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Brain, Zap, AlertTriangle, Eye, GraduationCap, BookOpen } from "lucide-react";
 import { toast } from "sonner";
-import { getCoursesForStudent, type Course } from "@/data/curriculum";
+import { getCoursesForYear, type Course } from "@/data/curriculum";
 import { Checkbox } from "@/components/ui/checkbox";
 import TopicMasteryChecklist from "@/components/TopicMasteryChecklist";
 
@@ -61,8 +61,7 @@ const StudyLogForm = () => {
   const navigate = useNavigate();
 
   const userYear = user?.user_metadata?.year || 1;
-  const userSemester = user?.user_metadata?.semester || 1;
-  const availableCourses = useMemo(() => getCoursesForStudent(userYear, userSemester), [userYear, userSemester]);
+  const availableCourses = useMemo(() => getCoursesForYear(userYear), [userYear]);
 
   const [selectedCourse, setSelectedCourse] = useState("");
   const [topic, setTopic] = useState("");
@@ -155,7 +154,7 @@ const StudyLogForm = () => {
               </Select>
               {courseObj && (
                 <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-xs text-muted-foreground">
-                  {courseObj.credits} credits · Year {userYear}, Semester {userSemester}
+                  {courseObj.credits} credits · Year {userYear}
                 </motion.p>
               )}
             </div>
