@@ -399,6 +399,12 @@ const Index = () => {
         emoji={reward.emoji}
         onComplete={() => setReward(prev => ({ ...prev, show: false }))}
       />
+
+      <WeeklyGoalsPopup
+        open={showWeeklyGoals}
+        onClose={() => setShowWeeklyGoals(false)}
+        onGoalsConfirmed={(breakdown) => setWeeklyDailyBreakdown(breakdown)}
+      />
     </div>
   );
 };
