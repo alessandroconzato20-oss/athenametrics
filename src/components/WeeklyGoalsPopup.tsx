@@ -226,7 +226,7 @@ const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupP
     setStep("saving");
 
     const weekStart = format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd");
-    const validGoals = goals.filter(g => g.trim());
+    const validGoals = getSelectedGoalTexts();
 
     const { error } = await supabase.from("weekly_goals" as any).upsert(
       {
