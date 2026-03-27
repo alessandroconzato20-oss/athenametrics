@@ -63,28 +63,16 @@ const Signup = () => {
               </button>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label>Year</Label>
-              <Select value={year} onValueChange={setYear}>
-                <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="Select year" /></SelectTrigger>
-                <SelectContent>
-                  {[1,2,3,4,5,6].map(y => (
-                    <SelectItem key={y} value={String(y)}>{y === 1 ? "1st" : y === 2 ? "2nd" : y === 3 ? "3rd" : `${y}th`} Year</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Semester</Label>
-              <Select value={semester} onValueChange={setSemester}>
-                <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="Semester" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">1st Semester</SelectItem>
-                  <SelectItem value="2">2nd Semester</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-2">
+            <Label>Year</Label>
+            <Select value={year} onValueChange={setYear}>
+              <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="Select your year" /></SelectTrigger>
+              <SelectContent>
+                {[1,2,3,4,5,6].map(y => (
+                  <SelectItem key={y} value={String(y)}>{y === 1 ? "1st" : y === 2 ? "2nd" : y === 3 ? "3rd" : `${y}th`} Year</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <Button type="submit" disabled={isLoading} className="h-12 w-full rounded-xl bg-gradient-primary text-base font-semibold text-primary-foreground">
             {isLoading ? "Creating account..." : "Create Account"}

@@ -61,8 +61,7 @@ const StudyLogForm = () => {
   const navigate = useNavigate();
 
   const userYear = user?.user_metadata?.year || 1;
-  const userSemester = user?.user_metadata?.semester || 1;
-  const availableCourses = useMemo(() => getCoursesForStudent(userYear, userSemester), [userYear, userSemester]);
+  const availableCourses = useMemo(() => getCoursesForYear(userYear), [userYear]);
 
   const [selectedCourse, setSelectedCourse] = useState("");
   const [topic, setTopic] = useState("");
