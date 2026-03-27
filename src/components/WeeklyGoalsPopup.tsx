@@ -51,10 +51,8 @@ const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupP
   const generateSuggestions = async () => {
     if (!user) return;
     try {
-      const year = user.user_metadata?.year || 1;
-      const courses = getCoursesForYear(year);
 
-      // Fetch mastery & persona in parallel
+      // Fetch mastery, persona & recent logs
       const [masteryRes, personaRes, logsRes] = await Promise.all([
         supabase
           .from("topic_mastery")
