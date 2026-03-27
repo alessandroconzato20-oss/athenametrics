@@ -61,20 +61,16 @@ const DisagreeButton = ({ feedbackType, context, size = "sm" }: DisagreeButtonPr
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <motion.button
-          whileHover={{ scale: 1.15 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={(e) => e.stopPropagation()}
-          className={`flex items-center justify-center rounded-full transition-colors ${
-            size === "sm"
-              ? "h-6 w-6 bg-muted/60 hover:bg-destructive/10"
-              : "h-7 w-7 bg-muted hover:bg-destructive/10"
-          }`}
-          title="This doesn't feel right"
-        >
-          <ThumbsDown className={`${size === "sm" ? "h-3 w-3" : "h-3.5 w-3.5"} text-muted-foreground hover:text-destructive transition-colors`} />
-        </motion.button>
+      <PopoverTrigger
+        onClick={(e) => e.stopPropagation()}
+        className={`flex items-center justify-center rounded-full transition-colors hover:scale-110 active:scale-90 ${
+          size === "sm"
+            ? "h-6 w-6 bg-muted/60 hover:bg-destructive/10"
+            : "h-7 w-7 bg-muted hover:bg-destructive/10"
+        }`}
+        title="This doesn't feel right"
+      >
+        <ThumbsDown className={`${size === "sm" ? "h-3 w-3" : "h-3.5 w-3.5"} text-muted-foreground hover:text-destructive transition-colors`} />
       </PopoverTrigger>
       <PopoverContent
         side="bottom"
