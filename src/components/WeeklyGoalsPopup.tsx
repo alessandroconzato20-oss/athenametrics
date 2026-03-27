@@ -77,53 +77,33 @@ const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupP
       const persona = personaRes.data;
       const logs = logsRes.data || [];
 
-      // Find weak topics (red status)
-      const redTopics = mastery.filter(m => m.status === "red");
-      const orangeTopics = mastery.filter(m => m.status === "orange");
+      // Count mastery stats (general, no specific subjects)
+      const redCount = mastery.filter(m => m.status === "red").length;
+      const orangeCount = mastery.filter(m => m.status === "orange").length;
+      const totalMinutes = logs.reduce((sum: number, l: any) => sum + l.duration_minutes, 0);
 
-      // Find under-studied courses
-      const studiedMinutes: Record<string, number> = {};
-      logs.forEach((l: any) => {
-        studiedMinutes[l.subject] = (studiedMinutes[l.subject] || 0) + l.duration_minutes;
-      });
-      const leastStudied = courses
-        .sort((a, b) => (studiedMinutes[a.name] || 0) - (studiedMinutes[b.name] || 0))
-        .slice(0, 2);
-
-      // Build smart suggestions
+      // Build general suggestions
       const suggestions: string[] = [];
 
-      // 1. Red topic focus
-      if (redTopics.length > 0) {
-        const grouped: Record<string, string[]> = {};
-        redTopics.slice(0, 6).forEach(t => {
-          if (!grouped[t.course_name]) grouped[t.course_name] = [];
-          grouped[t.course_name].push(t.topic_name);
-        });
-        for (const [course, topics] of Object.entries(grouped).slice(0, 2)) {
-          suggestions.push(`Master weak topics in ${course} (${topics.slice(0, 2).join(", ")})`);
-        }
+      // 1. Study-focused but general
+      if (redCount > 0) {
+        suggestions.push(`Focus on your weakest topics this week (${redCount} topics need attention) 🔴`);
+      }
+      if (orangeCount > 0) {
+        suggestions.push("Revise and solidify topics you're not fully confident on 🟠");
+      }
+      suggestions.push("Complete 3 active recall sessions on your hardest material 🧠");
+      if (totalMinutes < 300) {
+        suggestions.push("Aim for at least 1 hour of focused study per day 📚");
+      } else {
+        suggestions.push("Maintain your study momentum — keep consistent daily sessions 📚");
       }
 
-      // 2. Orange topic revision
-      if (orangeTopics.length > 0) {
-        const course = orangeTopics[0].course_name;
-        suggestions.push(`Revise and solidify ${course} orange topics`);
-      }
-
-      // 3. Under-studied course catch-up
-      if (leastStudied.length > 0 && !suggestions.some(s => s.includes(leastStudied[0].name))) {
-        suggestions.push(`Catch up on ${leastStudied[0].name} (${leastStudied[0].credits} credits)`);
-      }
-
-      // 4. Active recall / practice
-      suggestions.push("Complete 3 active recall sessions on hardest material");
-
-      // 5. Wellness goals
+      // 2. Wellness & balance
       suggestions.push("Exercise or walk for 30 min at least 4 days this week 🏃");
       suggestions.push("Take a 10-min walk between every study block 🌳");
 
-      // 6. Stress / balance based on persona
+      // 3. Stress / balance based on persona
       if (persona?.stress_management === "exercise") {
         suggestions.push("Hit the gym or do a workout 3 times this week 💪");
       } else if (persona?.stress_management === "meditation") {
@@ -132,10 +112,9 @@ const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupP
         suggestions.push("Stay hydrated — drink 2L of water daily 💧");
       }
 
-      // 7. Sleep & recovery
+      // 4. Sleep & recovery
       suggestions.push("Get 7+ hours of sleep every night this week 😴");
 
-      // Trim to 7 max
       const finalSuggestions = suggestions.slice(0, 7);
       setSuggestedGoals(finalSuggestions);
       setGoals(finalSuggestions);
