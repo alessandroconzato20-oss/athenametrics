@@ -292,9 +292,12 @@ const Index = () => {
         />
 
         {/* Quick actions */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="mb-5 grid grid-cols-3 gap-2">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="mb-5 grid grid-cols-4 gap-2">
           <Button onClick={() => navigate("/study-logs/new")} className="w-full rounded-xl h-11 gap-1.5 bg-gradient-primary text-primary-foreground font-semibold text-xs">
-            <Plus className="h-3.5 w-3.5" /> Log Session
+            <Plus className="h-3.5 w-3.5" /> Log
+          </Button>
+          <Button onClick={() => navigate("/weekly-goals")} className="w-full rounded-xl h-11 gap-1.5 bg-goals-purple text-primary-foreground font-semibold text-xs hover:bg-goals-purple/90">
+            <Target className="h-3.5 w-3.5" /> Goals
           </Button>
           <Button onClick={() => navigate("/study-logs")} variant="outline" className="w-full rounded-xl h-11 gap-1.5 border-primary/20 text-primary text-xs">
             <BookOpen className="h-3.5 w-3.5" /> Logs
