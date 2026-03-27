@@ -24,7 +24,7 @@ interface DailyStudyPlanProps {
   weeklyGoalsTasks?: Record<string, string[]> | null;
 }
 
-const DailyStudyPlan = ({ scores }: DailyStudyPlanProps) => {
+const DailyStudyPlan = ({ scores, weeklyGoalsTasks }: DailyStudyPlanProps) => {
   const { user } = useAuth();
   const [plan, setPlan] = useState<PlanItem[]>([]);
   const [loading, setLoading] = useState(false);
