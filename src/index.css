@@ -41,6 +41,7 @@
     --score-burnout: 0 72% 55%;
     --score-retention: 270 60% 55%;
     --score-peak: 38 92% 55%;
+    --goals-purple: 270 50% 30%;
 
     --gradient-primary: linear-gradient(135deg, hsl(162 63% 41%), hsl(180 55% 45%));
     --gradient-warm: linear-gradient(135deg, hsl(38 92% 60%), hsl(25 90% 55%));

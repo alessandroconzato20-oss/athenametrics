@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useNavigate } from "react-router-dom";
-import { LogOut, Activity, BookOpen, Trophy, Plus, RefreshCcw } from "lucide-react";
+import { LogOut, Activity, BookOpen, Trophy, Plus, RefreshCcw, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import ScoreCard from "@/components/ScoreCard";
@@ -14,6 +14,8 @@ import HeroAction from "@/components/HeroAction";
 import TodaysInsight from "@/components/TodaysInsight";
 import DailyStudyPlan from "@/components/DailyStudyPlan";
 import MicroReward from "@/components/MicroReward";
+import WeeklyGoalsPopup from "@/components/WeeklyGoalsPopup";
+import { startOfWeek } from "date-fns";
 import {
   fetchHealthData,
   calculateApexScores,
@@ -160,6 +162,29 @@ const Index = () => {
   const [syncingHealth, setSyncingHealth] = useState(false);
   const [syncStatus, setSyncStatus] = useState("");
   const [reward, setReward] = useState<{ show: boolean; message: string; emoji: string }>({ show: false, message: "", emoji: "" });
+  const [showWeeklyGoals, setShowWeeklyGoals] = useState(false);
+  const [weeklyDailyBreakdown, setWeeklyDailyBreakdown] = useState<Record<string, string[]> | null>(null);
+
+  // Check if weekly goals popup should show (Monday or first visit this week)
+  useEffect(() => {
+    if (!user) return;
+    const checkWeeklyGoals = async () => {
+      const weekStart = format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd");
+      const { data } = await (supabase.from("weekly_goals" as any)
+        .select("id, daily_breakdown")
+        .eq("user_id", user.id)
+        .eq("week_start", weekStart)
+        .maybeSingle() as any);
+      if (!data) {
+        // No goals set for this week — show popup
+        setShowWeeklyGoals(true);
+      } else {
+        // Goals already set — load breakdown for today's plan
+        setWeeklyDailyBreakdown(data.daily_breakdown as Record<string, string[]>);
+      }
+    };
+    checkWeeklyGoals();
+  }, [user]);
 
   useEffect(() => {
     async function init() {
@@ -267,9 +292,12 @@ const Index = () => {
         />
 
         {/* Quick actions */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="mb-5 grid grid-cols-3 gap-2">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="mb-5 grid grid-cols-4 gap-2">
           <Button onClick={() => navigate("/study-logs/new")} className="w-full rounded-xl h-11 gap-1.5 bg-gradient-primary text-primary-foreground font-semibold text-xs">
-            <Plus className="h-3.5 w-3.5" /> Log Session
+            <Plus className="h-3.5 w-3.5" /> Log
+          </Button>
+          <Button onClick={() => navigate("/weekly-goals")} className="w-full rounded-xl h-11 gap-1.5 bg-goals-purple text-primary-foreground font-semibold text-xs hover:bg-goals-purple/90">
+            <Target className="h-3.5 w-3.5" /> Goals
           </Button>
           <Button onClick={() => navigate("/study-logs")} variant="outline" className="w-full rounded-xl h-11 gap-1.5 border-primary/20 text-primary text-xs">
             <BookOpen className="h-3.5 w-3.5" /> Logs
@@ -342,13 +370,16 @@ const Index = () => {
         {/* AI Daily Plan */}
         {!loading && (
           <div className="mb-6">
-            <DailyStudyPlan scores={scores ? {
-              cognitiveReadiness: scores.cognitiveReadiness,
-              burnoutRisk: scores.burnoutRisk,
-              peakWindow: peakLabel,
-              studyCapacity: scores.studyCapacity.label,
-              studyBlockRecommendation: blockRec!,
-            } : null} />
+            <DailyStudyPlan
+              scores={scores ? {
+                cognitiveReadiness: scores.cognitiveReadiness,
+                burnoutRisk: scores.burnoutRisk,
+                peakWindow: peakLabel,
+                studyCapacity: scores.studyCapacity.label,
+                studyBlockRecommendation: blockRec!,
+              } : null}
+              weeklyGoalsTasks={weeklyDailyBreakdown}
+            />
           </div>
         )}
 
@@ -367,6 +398,12 @@ const Index = () => {
         message={reward.message}
         emoji={reward.emoji}
         onComplete={() => setReward(prev => ({ ...prev, show: false }))}
+      />
+
+      <WeeklyGoalsPopup
+        open={showWeeklyGoals}
+        onClose={() => setShowWeeklyGoals(false)}
+        onGoalsConfirmed={(breakdown) => setWeeklyDailyBreakdown(breakdown)}
       />
     </div>
   );

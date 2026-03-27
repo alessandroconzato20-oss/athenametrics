@@ -68,6 +68,7 @@ export default {
           retention: "hsl(var(--score-retention))",
           peak: "hsl(var(--score-peak))",
         },
+        "goals-purple": "hsl(var(--goals-purple))",
       },
       borderRadius: {
         lg: "var(--radius)",

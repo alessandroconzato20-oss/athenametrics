@@ -21,14 +21,20 @@ interface DailyStudyPlanProps {
     studyCapacity: string;
     studyBlockRecommendation: { blockMinutes: number; breakMinutes: number; label: string; tier: string };
   } | null;
+  weeklyGoalsTasks?: Record<string, string[]> | null;
 }
 
-const DailyStudyPlan = ({ scores }: DailyStudyPlanProps) => {
+const DailyStudyPlan = ({ scores, weeklyGoalsTasks }: DailyStudyPlanProps) => {
   const { user } = useAuth();
   const [plan, setPlan] = useState<PlanItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(true);
   const [generated, setGenerated] = useState(false);
+  const getTodayGoalTasks = (): string[] => {
+    if (!weeklyGoalsTasks) return [];
+    const today = new Date().toLocaleDateString("en-US", { weekday: "long" });
+    return weeklyGoalsTasks[today] || [];
+  };
 
   const generatePlan = async () => {
     if (!user || !scores) return;
@@ -100,13 +106,33 @@ const DailyStudyPlan = ({ scores }: DailyStudyPlanProps) => {
       });
       if (error) throw error;
       if (data?.plan) {
-        setPlan(data.plan.map((p: any) => ({ ...p, done: false })));
+        let items: PlanItem[] = data.plan.map((p: any) => ({ ...p, done: false }));
+        // Inject weekly goal tasks for today
+        const todayGoalTasks = getTodayGoalTasks();
+        if (todayGoalTasks.length > 0) {
+          const goalItems: PlanItem[] = todayGoalTasks.map(task => ({
+            time: "Weekly Goal",
+            task,
+            reason: "From your weekly goals",
+            done: false,
+          }));
+          items = [...goalItems, ...items];
+        }
+        setPlan(items);
         setGenerated(true);
       }
     } catch (e) {
       console.error("Plan generation failed:", e);
       // Fallback plan
-      setPlan(getFallbackPlan(scores));
+      const fallback = getFallbackPlan(scores);
+      const todayGoalTasks = getTodayGoalTasks();
+      const goalItems: PlanItem[] = todayGoalTasks.map(task => ({
+        time: "Weekly Goal",
+        task,
+        reason: "From your weekly goals",
+        done: false,
+      }));
+      setPlan([...goalItems, ...fallback]);
       setGenerated(true);
     } finally {
       setLoading(false);
