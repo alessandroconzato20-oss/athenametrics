@@ -1,12 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Target, Sparkles, Plus, X, ChevronRight, Check, RefreshCcw } from "lucide-react";
+import { Target, Sparkles, Plus, X, ChevronRight, Check, RefreshCcw, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { startOfWeek, format } from "date-fns";
-
+import { getCoursesForYear } from "@/data/curriculum";
 
 interface WeeklyGoalsPopupProps {
   open: boolean;
@@ -35,25 +36,68 @@ function getMotivationalSubtext(): string {
 
 const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupProps) => {
   const { user, displayName } = useAuth();
-  const [step, setStep] = useState<"loading" | "goals" | "breakdown" | "saving">("loading");
+  const [step, setStep] = useState<"loading" | "focus" | "goals" | "breakdown" | "saving">("loading");
   const [suggestedGoals, setSuggestedGoals] = useState<string[]>([]);
   const [selectedGoals, setSelectedGoals] = useState<Set<number>>(new Set());
   const [customGoal, setCustomGoal] = useState("");
   const [dailyBreakdown, setDailyBreakdown] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(false);
+  const [subjectFocus, setSubjectFocus] = useState<Record<string, number>>({});
 
-  // Generate smart suggestions on open
+  const userYear = user?.user_metadata?.year || 1;
+  const yearCourses = useMemo(() => getCoursesForYear(userYear), [userYear]);
+
+  // Initialize subject focus evenly
+  useEffect(() => {
+    if (yearCourses.length > 0 && Object.keys(subjectFocus).length === 0) {
+      const even = Math.round(100 / yearCourses.length);
+      const initial: Record<string, number> = {};
+      yearCourses.forEach((c, i) => {
+        initial[c.name] = i === yearCourses.length - 1 ? 100 - even * (yearCourses.length - 1) : even;
+      });
+      setSubjectFocus(initial);
+    }
+  }, [yearCourses]);
+
+  // Normalize percentages when one slider changes
+  const handleFocusChange = (subjectName: string, newValue: number) => {
+    const others = Object.keys(subjectFocus).filter(k => k !== subjectName);
+    const oldOthersTotal = others.reduce((s, k) => s + subjectFocus[k], 0);
+    const remaining = 100 - newValue;
+
+    const updated: Record<string, number> = { ...subjectFocus, [subjectName]: newValue };
+
+    if (oldOthersTotal === 0) {
+      // Distribute remaining evenly
+      others.forEach(k => { updated[k] = Math.round(remaining / others.length); });
+    } else {
+      // Scale others proportionally
+      others.forEach(k => {
+        updated[k] = Math.round((subjectFocus[k] / oldOthersTotal) * remaining);
+      });
+    }
+
+    // Fix rounding errors
+    const total = Object.values(updated).reduce((s, v) => s + v, 0);
+    if (total !== 100 && others.length > 0) {
+      updated[others[0]] += 100 - total;
+    }
+
+    setSubjectFocus(updated);
+  };
+
   useEffect(() => {
     if (!open || !user) return;
     setStep("loading");
-    generateSuggestions();
+    // Short delay then show focus step
+    const t = setTimeout(() => setStep("focus"), 600);
+    return () => clearTimeout(t);
   }, [open, user]);
 
   const generateSuggestions = async () => {
     if (!user) return;
+    setLoading(true);
     try {
-
-      // Fetch mastery, persona & recent logs
       const [masteryRes, personaRes, logsRes] = await Promise.all([
         supabase
           .from("topic_mastery")
@@ -76,15 +120,12 @@ const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupP
       const persona = personaRes.data;
       const logs = logsRes.data || [];
 
-      // Count mastery stats (general, no specific subjects)
       const redCount = mastery.filter(m => m.status === "red").length;
       const orangeCount = mastery.filter(m => m.status === "orange").length;
       const totalMinutes = logs.reduce((sum: number, l: any) => sum + l.duration_minutes, 0);
 
-      // Build general suggestions
       const suggestions: string[] = [];
 
-      // 1. Study-focused but general
       if (redCount > 0) {
         suggestions.push(`Focus on your weakest topics this week (${redCount} topics need attention) 🔴`);
       }
@@ -98,11 +139,9 @@ const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupP
         suggestions.push("Maintain your study momentum — keep consistent daily sessions 📚");
       }
 
-      // 2. Wellness & balance
       suggestions.push("Exercise or walk for 30 min at least 4 days this week 🏃");
       suggestions.push("Take a 10-min walk between every study block 🌳");
 
-      // 3. Stress / balance based on persona
       if (persona?.stress_management === "exercise") {
         suggestions.push("Hit the gym or do a workout 3 times this week 💪");
       } else if (persona?.stress_management === "meditation") {
@@ -111,7 +150,6 @@ const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupP
         suggestions.push("Stay hydrated — drink 2L of water daily 💧");
       }
 
-      // 4. Sleep & recovery
       suggestions.push("Get 7+ hours of sleep every night this week 😴");
 
       const finalSuggestions = suggestions.slice(0, 7);
@@ -130,6 +168,8 @@ const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupP
       setSuggestedGoals(fallback);
       setSelectedGoals(new Set(fallback.map((_, i) => i)));
       setStep("goals");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -160,9 +200,29 @@ const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupP
 
     setLoading(true);
     try {
-      // Smart distribution: study goals on weekdays, lighter on weekends
       const breakdown: Record<string, string[]> = {};
       DAYS.forEach(day => { breakdown[day] = []; });
+
+      // Add subject focus as daily study tasks based on percentages
+      const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+      const sortedSubjects = Object.entries(subjectFocus)
+        .filter(([, pct]) => pct > 0)
+        .sort((a, b) => b[1] - a[1]);
+
+      // Map subjects to weekdays weighted by focus percentage
+      if (sortedSubjects.length > 0) {
+        // Total weekday slots = 5
+        sortedSubjects.forEach(([subject, pct]) => {
+          const daysCount = Math.max(1, Math.round((pct / 100) * 5));
+          const label = `📖 Study ${subject} (${pct}% focus)`;
+          for (let d = 0; d < daysCount && d < 5; d++) {
+            const dayIdx = d % 5;
+            if (!breakdown[weekdays[dayIdx]].includes(label)) {
+              breakdown[weekdays[dayIdx]].push(label);
+            }
+          }
+        });
+      }
 
       const studyGoals = validGoals.filter(g =>
         !g.match(/exercise|walk|gym|workout|sleep|hydrat|water|mindful|meditat/i)
@@ -171,10 +231,7 @@ const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupP
         g.match(/exercise|walk|gym|workout|sleep|hydrat|water|mindful|meditat/i)
       );
 
-      // Distribute study goals across weekdays with spaced repetition
-      const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
       studyGoals.forEach((goal, i) => {
-        // Each study goal on 2-3 weekdays, spaced out
         const start = i % 5;
         const spread = Math.min(3, studyGoals.length <= 3 ? 3 : 2);
         for (let d = 0; d < spread; d++) {
@@ -185,28 +242,22 @@ const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupP
         }
       });
 
-      // Wellness goals spread across all days
       wellnessGoals.forEach(goal => {
         if (goal.match(/sleep|hydrat|water/i)) {
-          // Daily habits
           DAYS.forEach(day => {
             if (!breakdown[day].includes(goal)) breakdown[day].push(goal);
           });
         } else if (goal.match(/exercise|gym|workout/i)) {
-          // 4 days: Mon, Wed, Fri, Sat
           ["Monday", "Wednesday", "Friday", "Saturday"].forEach(day => {
             breakdown[day].push(goal);
           });
         } else if (goal.match(/walk/i)) {
-          // Every study day
           weekdays.forEach(day => { breakdown[day].push(goal); });
         } else {
-          // Spread across all days
           DAYS.forEach(day => { breakdown[day].push(goal); });
         }
       });
 
-      // Weekend: add light review + rest
       if (breakdown["Saturday"].filter(g => !g.match(/exercise|walk|gym|workout|sleep|hydrat|water|mindful|meditat/i)).length === 0) {
         breakdown["Saturday"].unshift("Light review of the week's material 📖");
       }
@@ -250,6 +301,8 @@ const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupP
 
   if (!open) return null;
 
+  const focusTotal = Object.values(subjectFocus).reduce((s, v) => s + v, 0);
+
   return (
     <AnimatePresence>
       {open && (
@@ -283,6 +336,74 @@ const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupP
               </div>
             )}
 
+            {/* Subject Focus Step */}
+            {step === "focus" && (
+              <div>
+                <div className="mb-1 flex items-center gap-2">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10">
+                    <BookOpen className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h2 className="font-display text-lg font-bold text-foreground">{getGreeting(displayName)}</h2>
+                    <p className="text-xs text-muted-foreground">How do you want to split your focus this week?</p>
+                  </div>
+                </div>
+
+                <p className="mt-3 mb-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                  📊 Drag sliders to set your subject priority
+                </p>
+
+                <div className="max-h-[45vh] space-y-4 overflow-y-auto pr-1">
+                  {yearCourses.map((course, i) => {
+                    const pct = subjectFocus[course.name] || 0;
+                    return (
+                      <motion.div
+                        key={course.name}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                      >
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-sm font-medium text-foreground truncate mr-2">{course.name}</span>
+                          <span className={`text-sm font-bold tabular-nums ${pct >= 50 ? "text-primary" : pct > 0 ? "text-foreground" : "text-muted-foreground"}`}>
+                            {pct}%
+                          </span>
+                        </div>
+                        <Slider
+                          value={[pct]}
+                          onValueChange={([v]) => handleFocusChange(course.name, v)}
+                          min={0}
+                          max={100}
+                          step={5}
+                          className="w-full"
+                        />
+                      </motion.div>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-3 flex items-center justify-between">
+                  <span className={`text-xs font-medium ${focusTotal === 100 ? "text-primary" : "text-destructive"}`}>
+                    Total: {focusTotal}%
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">Must equal 100%</span>
+                </div>
+
+                <Button
+                  onClick={() => {
+                    setStep("loading");
+                    generateSuggestions();
+                  }}
+                  disabled={focusTotal !== 100}
+                  className="mt-3 w-full rounded-xl bg-gradient-primary font-semibold"
+                >
+                  <span className="flex items-center gap-2">
+                    Next: Set weekly goals <ChevronRight className="h-4 w-4" />
+                  </span>
+                </Button>
+              </div>
+            )}
+
             {step === "goals" && (
               <div>
                 <div className="mb-1 flex items-center gap-2">
@@ -290,16 +411,31 @@ const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupP
                     <Target className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <h2 className="font-display text-lg font-bold text-foreground">{getGreeting(displayName)}</h2>
+                    <h2 className="font-display text-lg font-bold text-foreground">Weekly Goals</h2>
                     <p className="text-xs text-muted-foreground">{getMotivationalSubtext()}</p>
                   </div>
                 </div>
 
-                <p className="mt-3 mb-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                {/* Subject focus summary */}
+                <div className="mt-2 mb-2 rounded-xl bg-muted/50 p-2.5">
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1.5">Your Focus Split</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {Object.entries(subjectFocus)
+                      .filter(([, pct]) => pct > 0)
+                      .sort((a, b) => b[1] - a[1])
+                      .map(([name, pct]) => (
+                        <span key={name} className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                          {name} · {pct}%
+                        </span>
+                      ))}
+                  </div>
+                </div>
+
+                <p className="mt-2 mb-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                   ✨ Check the goals you want for this week
                 </p>
 
-                <div className="max-h-[40vh] space-y-1.5 overflow-y-auto pr-1">
+                <div className="max-h-[35vh] space-y-1.5 overflow-y-auto pr-1">
                   {suggestedGoals.map((goal, i) => {
                     const checked = selectedGoals.has(i);
                     return (
@@ -326,7 +462,6 @@ const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupP
                   })}
                 </div>
 
-                {/* Add custom goal */}
                 <div className="mt-3 flex items-center gap-2">
                   <Input
                     value={customGoal}
@@ -342,9 +477,14 @@ const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupP
 
                 <div className="mt-2 flex items-center justify-between">
                   <span className="text-[11px] text-muted-foreground">{selectedGoals.size} goals selected</span>
-                  <button onClick={generateSuggestions} className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-primary transition-colors">
-                    <RefreshCcw className="h-3 w-3" /> Regenerate
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button onClick={() => setStep("focus")} className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors">
+                      ← Edit focus
+                    </button>
+                    <button onClick={() => { setStep("loading"); generateSuggestions(); }} className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-primary transition-colors">
+                      <RefreshCcw className="h-3 w-3" /> Regenerate
+                    </button>
+                  </div>
                 </div>
 
                 <Button
@@ -427,7 +567,7 @@ const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupP
                 >
                   <Sparkles className="h-8 w-8 text-primary" />
                 </motion.div>
-                <p className="mt-3 text-sm font-medium text-muted-foreground">Saving your goals...</p>
+                <p className="mt-3 font-display text-sm font-bold text-foreground">Saving your plan...</p>
               </div>
             )}
           </motion.div>
