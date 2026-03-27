@@ -124,7 +124,7 @@ const TopicMasteryChecklist = ({ courseName }: Props) => {
       const savedMap = new Map<string, MasteryStatus>();
       (data || []).forEach((d: any) => savedMap.set(d.topic_name, d.status));
 
-      setTopics(courseTopics.map(t => ({
+      setTopics(actualTopics.map(t => ({
         topic: t,
         status: savedMap.get(t) || "red",
       })));
