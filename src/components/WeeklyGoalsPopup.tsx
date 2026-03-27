@@ -116,38 +116,46 @@ const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupP
 
       const finalSuggestions = suggestions.slice(0, 7);
       setSuggestedGoals(finalSuggestions);
-      setGoals(finalSuggestions);
+      setSelectedGoals(new Set(finalSuggestions.map((_, i) => i)));
       setStep("goals");
     } catch (e) {
       console.error("Failed to generate suggestions:", e);
-      // Fallback suggestions
       const fallback = [
-        "Review weakest subject topics",
-        "Complete 3 active recall sessions",
+        "Review weakest subject topics 📖",
+        "Complete 3 active recall sessions 🧠",
         "Exercise 30 min × 4 days 🏃",
         "Walk between study blocks 🌳",
         "Sleep 7+ hours nightly 😴",
       ];
       setSuggestedGoals(fallback);
-      setGoals(fallback);
+      setSelectedGoals(new Set(fallback.map((_, i) => i)));
       setStep("goals");
     }
   };
 
-  const addGoal = () => {
-    if (goals.length < 10) setGoals([...goals, ""]);
+  const toggleGoal = (idx: number) => {
+    setSelectedGoals(prev => {
+      const next = new Set(prev);
+      if (next.has(idx)) next.delete(idx);
+      else next.add(idx);
+      return next;
+    });
   };
 
-  const updateGoal = (idx: number, val: string) => {
-    setGoals(prev => prev.map((g, i) => (i === idx ? val : g)));
+  const addCustomGoal = () => {
+    if (customGoal.trim()) {
+      setSuggestedGoals(prev => [...prev, customGoal.trim()]);
+      setSelectedGoals(prev => new Set([...prev, suggestedGoals.length]));
+      setCustomGoal("");
+    }
   };
 
-  const removeGoal = (idx: number) => {
-    if (goals.length > 1) setGoals(prev => prev.filter((_, i) => i !== idx));
+  const getSelectedGoalTexts = () => {
+    return suggestedGoals.filter((_, i) => selectedGoals.has(i));
   };
 
   const generateBreakdown = async () => {
-    const validGoals = goals.filter(g => g.trim());
+    const validGoals = getSelectedGoalTexts();
     if (validGoals.length === 0) return;
 
     setLoading(true);
