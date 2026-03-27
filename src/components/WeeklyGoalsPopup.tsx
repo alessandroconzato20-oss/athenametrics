@@ -36,10 +36,11 @@ function getMotivationalSubtext(): string {
 const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupProps) => {
   const { user, displayName } = useAuth();
   const [step, setStep] = useState<"loading" | "goals" | "breakdown" | "saving">("loading");
-  const [goals, setGoals] = useState<string[]>([]);
+  const [suggestedGoals, setSuggestedGoals] = useState<string[]>([]);
+  const [selectedGoals, setSelectedGoals] = useState<Set<number>>(new Set());
+  const [customGoal, setCustomGoal] = useState("");
   const [dailyBreakdown, setDailyBreakdown] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(false);
-  const [suggestedGoals, setSuggestedGoals] = useState<string[]>([]);
 
   // Generate smart suggestions on open
   useEffect(() => {
@@ -115,38 +116,46 @@ const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupP
 
       const finalSuggestions = suggestions.slice(0, 7);
       setSuggestedGoals(finalSuggestions);
-      setGoals(finalSuggestions);
+      setSelectedGoals(new Set(finalSuggestions.map((_, i) => i)));
       setStep("goals");
     } catch (e) {
       console.error("Failed to generate suggestions:", e);
-      // Fallback suggestions
       const fallback = [
-        "Review weakest subject topics",
-        "Complete 3 active recall sessions",
+        "Review weakest subject topics 📖",
+        "Complete 3 active recall sessions 🧠",
         "Exercise 30 min × 4 days 🏃",
         "Walk between study blocks 🌳",
         "Sleep 7+ hours nightly 😴",
       ];
       setSuggestedGoals(fallback);
-      setGoals(fallback);
+      setSelectedGoals(new Set(fallback.map((_, i) => i)));
       setStep("goals");
     }
   };
 
-  const addGoal = () => {
-    if (goals.length < 10) setGoals([...goals, ""]);
+  const toggleGoal = (idx: number) => {
+    setSelectedGoals(prev => {
+      const next = new Set(prev);
+      if (next.has(idx)) next.delete(idx);
+      else next.add(idx);
+      return next;
+    });
   };
 
-  const updateGoal = (idx: number, val: string) => {
-    setGoals(prev => prev.map((g, i) => (i === idx ? val : g)));
+  const addCustomGoal = () => {
+    if (customGoal.trim()) {
+      setSuggestedGoals(prev => [...prev, customGoal.trim()]);
+      setSelectedGoals(prev => new Set([...prev, suggestedGoals.length]));
+      setCustomGoal("");
+    }
   };
 
-  const removeGoal = (idx: number) => {
-    if (goals.length > 1) setGoals(prev => prev.filter((_, i) => i !== idx));
+  const getSelectedGoalTexts = () => {
+    return suggestedGoals.filter((_, i) => selectedGoals.has(i));
   };
 
   const generateBreakdown = async () => {
-    const validGoals = goals.filter(g => g.trim());
+    const validGoals = getSelectedGoalTexts();
     if (validGoals.length === 0) return;
 
     setLoading(true);
@@ -217,7 +226,7 @@ const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupP
     setStep("saving");
 
     const weekStart = format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd");
-    const validGoals = goals.filter(g => g.trim());
+    const validGoals = getSelectedGoalTexts();
 
     const { error } = await supabase.from("weekly_goals" as any).upsert(
       {
@@ -287,42 +296,52 @@ const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupP
                 </div>
 
                 <p className="mt-3 mb-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                  ✨ Suggested goals based on your progress — edit freely
+                  ✨ Check the goals you want for this week
                 </p>
 
-                <div className="max-h-[40vh] space-y-2 overflow-y-auto pr-1">
-                  {goals.map((goal, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.04 }}
-                      className="flex items-center gap-2"
-                    >
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
-                        {i + 1}
-                      </span>
-                      <Input
-                        value={goal}
-                        onChange={e => updateGoal(i, e.target.value)}
-                        placeholder={`Goal ${i + 1}...`}
-                        className="rounded-xl border-muted bg-muted/50 text-sm"
-                      />
-                      {goals.length > 1 && (
-                        <button onClick={() => removeGoal(i)} className="shrink-0 rounded-lg p-1 text-muted-foreground hover:text-destructive transition-colors">
-                          <X className="h-3.5 w-3.5" />
-                        </button>
-                      )}
-                    </motion.div>
-                  ))}
+                <div className="max-h-[40vh] space-y-1.5 overflow-y-auto pr-1">
+                  {suggestedGoals.map((goal, i) => {
+                    const checked = selectedGoals.has(i);
+                    return (
+                      <motion.button
+                        key={i}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.04 }}
+                        onClick={() => toggleGoal(i)}
+                        className={`flex w-full items-center gap-3 rounded-xl p-3 text-left transition-all ${
+                          checked ? "bg-primary/10 ring-1 ring-primary/20" : "bg-muted/50 hover:bg-muted"
+                        }`}
+                      >
+                        <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-colors ${
+                          checked ? "border-primary bg-primary" : "border-muted-foreground/30 bg-transparent"
+                        }`}>
+                          {checked && <Check className="h-3 w-3 text-primary-foreground" />}
+                        </div>
+                        <span className={`text-sm ${checked ? "font-medium text-foreground" : "text-muted-foreground"}`}>
+                          {goal}
+                        </span>
+                      </motion.button>
+                    );
+                  })}
                 </div>
 
-                <div className="mt-2 flex items-center gap-3">
-                  {goals.length < 10 && (
-                    <button onClick={addGoal} className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors">
-                      <Plus className="h-3 w-3" /> Add goal
-                    </button>
-                  )}
+                {/* Add custom goal */}
+                <div className="mt-3 flex items-center gap-2">
+                  <Input
+                    value={customGoal}
+                    onChange={e => setCustomGoal(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && addCustomGoal()}
+                    placeholder="Add your own goal..."
+                    className="rounded-xl border-muted bg-muted/50 text-sm"
+                  />
+                  <Button onClick={addCustomGoal} disabled={!customGoal.trim()} size="sm" variant="outline" className="shrink-0 rounded-xl">
+                    <Plus className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+
+                <div className="mt-2 flex items-center justify-between">
+                  <span className="text-[11px] text-muted-foreground">{selectedGoals.size} goals selected</span>
                   <button onClick={generateSuggestions} className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-primary transition-colors">
                     <RefreshCcw className="h-3 w-3" /> Regenerate
                   </button>
@@ -330,8 +349,8 @@ const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupP
 
                 <Button
                   onClick={generateBreakdown}
-                  disabled={loading || goals.every(g => !g.trim())}
-                  className="mt-4 w-full rounded-xl bg-gradient-primary font-semibold"
+                  disabled={loading || selectedGoals.size === 0}
+                  className="mt-3 w-full rounded-xl bg-gradient-primary font-semibold"
                 >
                   {loading ? (
                     <span className="flex items-center gap-2">
