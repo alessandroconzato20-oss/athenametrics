@@ -53,6 +53,7 @@ const AdminPanel = () => {
   const [students, setStudents] = useState<StudentStat[]>([]);
   const [scores, setScores] = useState<Record<string, ScoreStat>>({});
   const [loadingData, setLoadingData] = useState(true);
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
   useEffect(() => {
     if (authLoading) return;
