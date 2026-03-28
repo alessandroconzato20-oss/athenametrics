@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, ShieldCheck, Users, BookOpen, Clock, Brain, TrendingUp, BarChart3 } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Users, BookOpen, Clock, TrendingUp, BarChart3, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
 interface StudentStat {
@@ -143,6 +144,19 @@ const AdminPanel = () => {
     }
   };
 
+  const deleteStudentData = async (userId: string, matricola: string) => {
+    try {
+      const { error: logsErr } = await supabase.from("study_logs").delete().eq("user_id", userId);
+      if (logsErr) throw logsErr;
+      const { error: scoresErr } = await supabase.from("daily_scores").delete().eq("user_id", userId);
+      if (scoresErr) throw scoresErr;
+      toast.success(`Deleted all data for ${matricola}`);
+      loadData();
+    } catch {
+      toast.error("Failed to delete student data");
+    }
+  };
+
   const formatTime = (mins: number) => {
     if (mins < 60) return `${mins}m`;
     return `${Math.floor(mins / 60)}h ${mins % 60}m`;
@@ -227,6 +241,7 @@ const AdminPanel = () => {
                       <TableHead>Burnout Risk</TableHead>
                       <TableHead>Cognitive</TableHead>
                       <TableHead>Retention</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -254,6 +269,29 @@ const AdminPanel = () => {
                           <TableCell>{sc ? `${sc.avg_burnout}%` : "—"}</TableCell>
                           <TableCell>{sc ? `${sc.avg_cognitive}%` : "—"}</TableCell>
                           <TableCell>{sc ? `${sc.avg_retention}%` : "—"}</TableCell>
+                          <TableCell className="text-right">
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete student data?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This will permanently delete all study logs and scores for <span className="font-mono font-semibold">{s.matricola}</span>. This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => deleteStudentData(s.user_id, s.matricola)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </TableCell>
                         </TableRow>
                       );
                     })}
