@@ -144,6 +144,19 @@ const AdminPanel = () => {
     }
   };
 
+  const deleteStudentData = async (userId: string, matricola: string) => {
+    try {
+      const { error: logsErr } = await supabase.from("study_logs").delete().eq("user_id", userId);
+      if (logsErr) throw logsErr;
+      const { error: scoresErr } = await supabase.from("daily_scores").delete().eq("user_id", userId);
+      if (scoresErr) throw scoresErr;
+      toast.success(`Deleted all data for ${matricola}`);
+      loadData();
+    } catch {
+      toast.error("Failed to delete student data");
+    }
+  };
+
   const formatTime = (mins: number) => {
     if (mins < 60) return `${mins}m`;
     return `${Math.floor(mins / 60)}h ${mins % 60}m`;
