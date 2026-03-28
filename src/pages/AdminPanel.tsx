@@ -269,7 +269,29 @@ const AdminPanel = () => {
                           <TableCell>{sc ? `${sc.avg_burnout}%` : "—"}</TableCell>
                           <TableCell>{sc ? `${sc.avg_cognitive}%` : "—"}</TableCell>
                           <TableCell>{sc ? `${sc.avg_retention}%` : "—"}</TableCell>
-                        </TableRow>
+                          <TableCell className="text-right">
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete student data?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This will permanently delete all study logs and scores for <span className="font-mono font-semibold">{s.matricola}</span>. This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => deleteStudentData(s.user_id, s.matricola)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </TableCell>
                       );
                     })}
                   </TableBody>
