@@ -120,6 +120,7 @@ const AdminPanel = () => {
             avg_energy: 0,
             avg_distraction: 0,
             last_active: null,
+            persona: personaMap[log.user_id] || null,
           };
         }
         const s = studentMap[log.user_id];
