@@ -352,7 +352,7 @@ const AdminPanel = () => {
                               )}
                             </TableCell>
                           </TableRow>
-                        )}
+                        </React.Fragment>
                       );
                     })}
                   </TableBody>
