@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Brain, Clock, AlertTriangle, BookOpen, Sun } from "lucide-react";
+import BurnoutTrendChart from "@/components/BurnoutTrendChart";
 
 interface ScoreDetailModalProps {
   score: {
