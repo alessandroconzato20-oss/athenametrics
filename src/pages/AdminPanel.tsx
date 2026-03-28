@@ -241,6 +241,7 @@ const AdminPanel = () => {
                       <TableHead>Burnout Risk</TableHead>
                       <TableHead>Cognitive</TableHead>
                       <TableHead>Retention</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
