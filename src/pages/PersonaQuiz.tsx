@@ -20,7 +20,7 @@ interface QuizQuestion {
 const questions: QuizQuestion[] = [
   {
     id: "goals",
-    question: "What are your main goals with CoFactor?",
+    question: "What are your main goals with CoFactor Student?",
     type: "multi",
     maxSelect: 3,
     options: [
@@ -48,13 +48,7 @@ const questions: QuizQuestion[] = [
     id: "weekly_study_hours",
     question: "How many hours do you typically study per week?",
     type: "single",
-    options: [
-      "Less than 10 hours",
-      "10–20 hours",
-      "20–30 hours",
-      "30–40 hours",
-      "40+ hours",
-    ],
+    options: ["Less than 10 hours", "10–20 hours", "20–30 hours", "30–40 hours", "40+ hours"],
   },
   {
     id: "biggest_challenge",
@@ -85,13 +79,7 @@ const questions: QuizQuestion[] = [
     id: "preferred_session_length",
     question: "What's your ideal study session length?",
     type: "single",
-    options: [
-      "25 min (Pomodoro)",
-      "45–60 minutes",
-      "1.5–2 hours",
-      "2–3 hours",
-      "3+ hours",
-    ],
+    options: ["25 min (Pomodoro)", "45–60 minutes", "1.5–2 hours", "2–3 hours", "3+ hours"],
   },
   {
     id: "learning_method",
@@ -152,7 +140,7 @@ const PersonaQuiz = () => {
     if (current.type === "multi") {
       const prev = (answers[current.id] as string[]) || [];
       if (prev.includes(option)) {
-        setAnswers({ ...answers, [current.id]: prev.filter(o => o !== option) });
+        setAnswers({ ...answers, [current.id]: prev.filter((o) => o !== option) });
       } else if (!current.maxSelect || prev.length < current.maxSelect) {
         setAnswers({ ...answers, [current.id]: [...prev, option] });
       }
@@ -174,7 +162,10 @@ const PersonaQuiz = () => {
   };
 
   const handleSubmit = async () => {
-    if (!user) { toast.error("Please sign in first"); return; }
+    if (!user) {
+      toast.error("Please sign in first");
+      return;
+    }
     setSaving(true);
     try {
       const goals = (answers.goals as string[]) || [];
@@ -186,7 +177,9 @@ const PersonaQuiz = () => {
         biggest_challenge: answers.biggest_challenge || null,
         motivation_type: answers.motivation_type || null,
         preferred_session_length: answers.preferred_session_length || null,
-        learning_method: Array.isArray(answers.learning_method) ? answers.learning_method.join(", ") : answers.learning_method || null,
+        learning_method: Array.isArray(answers.learning_method)
+          ? answers.learning_method.join(", ")
+          : answers.learning_method || null,
         stress_management: answers.stress_management || null,
         social_preference: answers.social_preference || null,
         additional_notes: (answers.additional_notes as string) || null,
@@ -217,7 +210,12 @@ const PersonaQuiz = () => {
           </div>
           <h1 className="font-display text-2xl font-bold text-foreground">Let's personalise CoFactor</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {step + 1} of {questions.length} · {current.type === "multi" ? `Select up to ${current.maxSelect}` : current.type === "text" ? "Optional" : "Pick one"}
+            {step + 1} of {questions.length} ·{" "}
+            {current.type === "multi"
+              ? `Select up to ${current.maxSelect}`
+              : current.type === "text"
+                ? "Optional"
+                : "Pick one"}
           </p>
         </motion.div>
 
@@ -256,11 +254,17 @@ const PersonaQuiz = () => {
                     }`}
                   >
                     <span className="flex items-center gap-3">
-                      <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
-                        isSelected(option) ? "border-primary bg-primary" : "border-muted-foreground/30"
-                      }`}>
+                      <span
+                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                          isSelected(option) ? "border-primary bg-primary" : "border-muted-foreground/30"
+                        }`}
+                      >
                         {isSelected(option) && (
-                          <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="h-2 w-2 rounded-full bg-primary-foreground" />
+                          <motion.span
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="h-2 w-2 rounded-full bg-primary-foreground"
+                          />
                         )}
                       </span>
                       {option}
@@ -281,7 +285,7 @@ const PersonaQuiz = () => {
           )}
           <Button
             onClick={handleNext}
-            disabled={!canProceed() && current.type !== "text" || saving}
+            disabled={(!canProceed() && current.type !== "text") || saving}
             className="h-12 flex-1 rounded-xl bg-gradient-primary text-base font-semibold text-primary-foreground"
           >
             {saving ? "Saving..." : step === questions.length - 1 ? "Finish & Start" : "Continue"}
