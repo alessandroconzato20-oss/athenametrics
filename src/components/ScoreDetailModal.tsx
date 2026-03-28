@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Brain, Clock, AlertTriangle, BookOpen, Sun } from "lucide-react";
+import BurnoutTrendChart from "@/components/BurnoutTrendChart";
 
 interface ScoreDetailModalProps {
   score: {
@@ -83,6 +84,12 @@ const ScoreDetailModal = ({ score, onClose }: ScoreDetailModalProps) => {
               <p key={i} className="text-sm text-muted-foreground leading-relaxed">• {r}</p>
             ))}
           </div>
+
+          {score.icon === "alert" && (
+            <div className="mt-5">
+              <BurnoutTrendChart />
+            </div>
+          )}
         </motion.div>
       </motion.div>
     </AnimatePresence>

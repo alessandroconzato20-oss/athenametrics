@@ -9,7 +9,7 @@ import ScoreCard from "@/components/ScoreCard";
 import ScoreDetailModal from "@/components/ScoreDetailModal";
 import StreakBadge from "@/components/StreakBadge";
 import WeeklyChallenges from "@/components/WeeklyChallenges";
-import BurnoutTrendChart from "@/components/BurnoutTrendChart";
+
 import HeroAction from "@/components/HeroAction";
 import TodaysInsight from "@/components/TodaysInsight";
 import DailyStudyPlan from "@/components/DailyStudyPlan";
@@ -383,10 +383,6 @@ const Index = () => {
           </div>
         )}
 
-        {/* Burnout Trend */}
-        <div className="mb-6">
-          <BurnoutTrendChart />
-        </div>
 
         <WeeklyChallenges />
       </div>
