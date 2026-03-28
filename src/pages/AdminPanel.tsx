@@ -276,8 +276,13 @@ const AdminPanel = () => {
                     {students.map((s) => {
                       const sc = scores[s.user_id];
                       return (
-                        <TableRow key={s.user_id}>
-                          <TableCell className="font-mono font-semibold">{s.matricola}</TableCell>
+                        <TableRow key={s.user_id} className="cursor-pointer hover:bg-muted/50" onClick={() => setExpandedRow(expandedRow === s.user_id ? null : s.user_id)}>
+                          <TableCell className="font-mono font-semibold">
+                            <span className="flex items-center gap-2">
+                              {expandedRow === s.user_id ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                              {s.matricola}
+                            </span>
+                          </TableCell>
                           <TableCell>{s.total_sessions}</TableCell>
                           <TableCell>{formatTime(s.total_minutes)}</TableCell>
                           <TableCell>
