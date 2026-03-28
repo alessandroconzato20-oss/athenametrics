@@ -14,6 +14,7 @@ const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [year, setYear] = useState("");
+  const [matricola, setMatricola] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { signUp } = useAuth();
@@ -24,7 +25,7 @@ const Signup = () => {
     if (!year) { toast.error("Please select your year"); return; }
     setIsLoading(true);
     try {
-      await signUp(email, password, name, parseInt(year));
+      await signUp(email, password, name, parseInt(year), matricola);
       toast.success("Account created! Check your email to verify, then sign in.");
       navigate("/login");
     } catch (err: any) {
@@ -62,6 +63,10 @@ const Signup = () => {
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="matricola">Numero di Matricola</Label>
+            <Input id="matricola" placeholder="e.g. 123456" value={matricola} onChange={(e) => setMatricola(e.target.value)} required className="h-12 rounded-xl" />
           </div>
           <div className="space-y-2">
             <Label>Year</Label>
