@@ -80,12 +80,10 @@ const AdminPanel = () => {
   const loadData = async () => {
     setLoadingData(true);
     try {
-      // Fetch all study logs
       const { data: logs } = await supabase.from("study_logs").select("*");
-      // Fetch all profiles for matricola
       const { data: profiles } = await supabase.from("profiles").select("id, matricola");
-      // Fetch all daily scores
       const { data: dailyScores } = await supabase.from("daily_scores").select("*");
+      const { data: personas } = await supabase.from("student_personas").select("*");
 
       const matricolaMap: Record<string, string> = {};
       (profiles || []).forEach((p: any) => {
