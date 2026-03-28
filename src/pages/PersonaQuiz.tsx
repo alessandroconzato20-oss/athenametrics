@@ -244,7 +244,7 @@ const PersonaQuiz = () => {
             ) : (
               <div className="space-y-2">
                 {current.options?.map((option) => (
-                  <motion.button
+                    <motion.button
                     key={option}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => selectOption(option)}
@@ -255,19 +255,27 @@ const PersonaQuiz = () => {
                     }`}
                   >
                     <span className="flex items-center gap-3">
-                      <span
-                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
-                          isSelected(option) ? "border-primary bg-primary" : "border-muted-foreground/30"
-                        }`}
-                      >
-                        {isSelected(option) && (
-                          <motion.span
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="h-2 w-2 rounded-full bg-primary-foreground"
-                          />
-                        )}
-                      </span>
+                      {current.type === "multi" ? (
+                        <Checkbox
+                          checked={isSelected(option)}
+                          className="h-5 w-5 shrink-0"
+                          tabIndex={-1}
+                        />
+                      ) : (
+                        <span
+                          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                            isSelected(option) ? "border-primary bg-primary" : "border-muted-foreground/30"
+                          }`}
+                        >
+                          {isSelected(option) && (
+                            <motion.span
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="h-2 w-2 rounded-full bg-primary-foreground"
+                            />
+                          )}
+                        </span>
+                      )}
                       {option}
                     </span>
                   </motion.button>

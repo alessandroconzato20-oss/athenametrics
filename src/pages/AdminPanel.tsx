@@ -326,6 +326,33 @@ const AdminPanel = () => {
                             </AlertDialog>
                           </TableCell>
                         </TableRow>
+                        {expandedRow === s.user_id && (
+                          <TableRow>
+                            <TableCell colSpan={12} className="bg-muted/30 p-4">
+                              <div className="flex items-center gap-2 mb-3">
+                                <UserCircle className="h-5 w-5 text-primary" />
+                                <span className="font-semibold text-foreground">Student Persona</span>
+                              </div>
+                              {s.persona ? (
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 text-sm">
+                                  {s.persona.goals.length > 0 && (
+                                    <div><span className="text-muted-foreground">Goals:</span><div className="flex flex-wrap gap-1 mt-1">{s.persona.goals.map(g => <Badge key={g} variant="secondary" className="text-xs">{g}</Badge>)}</div></div>
+                                  )}
+                                  {s.persona.study_style && <div><span className="text-muted-foreground">Study Style:</span><p className="font-medium">{s.persona.study_style}</p></div>}
+                                  {s.persona.weekly_study_hours && <div><span className="text-muted-foreground">Weekly Hours:</span><p className="font-medium">{s.persona.weekly_study_hours}</p></div>}
+                                  {s.persona.biggest_challenge && <div><span className="text-muted-foreground">Challenge:</span><p className="font-medium">{s.persona.biggest_challenge}</p></div>}
+                                  {s.persona.motivation_type && <div><span className="text-muted-foreground">Motivation:</span><p className="font-medium">{s.persona.motivation_type}</p></div>}
+                                  {s.persona.preferred_session_length && <div><span className="text-muted-foreground">Session Length:</span><p className="font-medium">{s.persona.preferred_session_length}</p></div>}
+                                  {s.persona.learning_method && <div><span className="text-muted-foreground">Learning Method:</span><p className="font-medium">{s.persona.learning_method}</p></div>}
+                                  {s.persona.stress_management && <div><span className="text-muted-foreground">Stress Mgmt:</span><p className="font-medium">{s.persona.stress_management}</p></div>}
+                                  {s.persona.social_preference && <div><span className="text-muted-foreground">Social Pref:</span><p className="font-medium">{s.persona.social_preference}</p></div>}
+                                </div>
+                              ) : (
+                                <p className="text-muted-foreground italic">No persona quiz completed.</p>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        )}
                       );
                     })}
                   </TableBody>
