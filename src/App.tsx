@@ -33,6 +33,7 @@ const App = () => (
             <Route path="/study-logs/new" element={<StudyLogForm />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/weekly-goals" element={<WeeklyGoalsHistory />} />
+            <Route path="/admin" element={<AdminPanel />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
