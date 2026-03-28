@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,9 +8,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, ShieldCheck, Users, BookOpen, Clock, TrendingUp, BarChart3, Trash2 } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Users, BookOpen, Clock, TrendingUp, BarChart3, Trash2, ChevronDown, ChevronUp, UserCircle } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+
+interface PersonaData {
+  goals: string[];
+  study_style: string | null;
+  weekly_study_hours: string | null;
+  biggest_challenge: string | null;
+  motivation_type: string | null;
+  preferred_session_length: string | null;
+  learning_method: string | null;
+  stress_management: string | null;
+  social_preference: string | null;
+}
 
 interface StudentStat {
   user_id: string;
@@ -23,6 +35,7 @@ interface StudentStat {
   avg_energy: number;
   avg_distraction: number;
   last_active: string | null;
+  persona: PersonaData | null;
 }
 
 interface ScoreStat {
@@ -40,6 +53,7 @@ const AdminPanel = () => {
   const [students, setStudents] = useState<StudentStat[]>([]);
   const [scores, setScores] = useState<Record<string, ScoreStat>>({});
   const [loadingData, setLoadingData] = useState(true);
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -66,16 +80,29 @@ const AdminPanel = () => {
   const loadData = async () => {
     setLoadingData(true);
     try {
-      // Fetch all study logs
       const { data: logs } = await supabase.from("study_logs").select("*");
-      // Fetch all profiles for matricola
       const { data: profiles } = await supabase.from("profiles").select("id, matricola");
-      // Fetch all daily scores
       const { data: dailyScores } = await supabase.from("daily_scores").select("*");
+      const { data: personas } = await supabase.from("student_personas").select("*");
 
       const matricolaMap: Record<string, string> = {};
       (profiles || []).forEach((p: any) => {
         matricolaMap[p.id] = p.matricola || "N/A";
+      });
+
+      const personaMap: Record<string, PersonaData> = {};
+      (personas || []).forEach((p: any) => {
+        personaMap[p.user_id] = {
+          goals: p.goals || [],
+          study_style: p.study_style,
+          weekly_study_hours: p.weekly_study_hours,
+          biggest_challenge: p.biggest_challenge,
+          motivation_type: p.motivation_type,
+          preferred_session_length: p.preferred_session_length,
+          learning_method: p.learning_method,
+          stress_management: p.stress_management,
+          social_preference: p.social_preference,
+        };
       });
 
       // Aggregate study logs per student
@@ -93,6 +120,7 @@ const AdminPanel = () => {
             avg_energy: 0,
             avg_distraction: 0,
             last_active: null,
+            persona: personaMap[log.user_id] || null,
           };
         }
         const s = studentMap[log.user_id];
@@ -248,8 +276,14 @@ const AdminPanel = () => {
                     {students.map((s) => {
                       const sc = scores[s.user_id];
                       return (
-                        <TableRow key={s.user_id}>
-                          <TableCell className="font-mono font-semibold">{s.matricola}</TableCell>
+                        <React.Fragment key={s.user_id}>
+                          <TableRow className="cursor-pointer hover:bg-muted/50" onClick={() => setExpandedRow(expandedRow === s.user_id ? null : s.user_id)}>
+                          <TableCell className="font-mono font-semibold">
+                            <span className="flex items-center gap-2">
+                              {expandedRow === s.user_id ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                              {s.matricola}
+                            </span>
+                          </TableCell>
                           <TableCell>{s.total_sessions}</TableCell>
                           <TableCell>{formatTime(s.total_minutes)}</TableCell>
                           <TableCell>
@@ -293,6 +327,34 @@ const AdminPanel = () => {
                             </AlertDialog>
                           </TableCell>
                         </TableRow>
+                        {expandedRow === s.user_id && (
+                          <TableRow>
+                            <TableCell colSpan={12} className="bg-muted/30 p-4">
+                              <div className="flex items-center gap-2 mb-3">
+                                <UserCircle className="h-5 w-5 text-primary" />
+                                <span className="font-semibold text-foreground">Student Persona</span>
+                              </div>
+                              {s.persona ? (
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 text-sm">
+                                  {s.persona.goals.length > 0 && (
+                                    <div><span className="text-muted-foreground">Goals:</span><div className="flex flex-wrap gap-1 mt-1">{s.persona.goals.map(g => <Badge key={g} variant="secondary" className="text-xs">{g}</Badge>)}</div></div>
+                                  )}
+                                  {s.persona.study_style && <div><span className="text-muted-foreground">Study Style:</span><p className="font-medium">{s.persona.study_style}</p></div>}
+                                  {s.persona.weekly_study_hours && <div><span className="text-muted-foreground">Weekly Hours:</span><p className="font-medium">{s.persona.weekly_study_hours}</p></div>}
+                                  {s.persona.biggest_challenge && <div><span className="text-muted-foreground">Challenge:</span><p className="font-medium">{s.persona.biggest_challenge}</p></div>}
+                                  {s.persona.motivation_type && <div><span className="text-muted-foreground">Motivation:</span><p className="font-medium">{s.persona.motivation_type}</p></div>}
+                                  {s.persona.preferred_session_length && <div><span className="text-muted-foreground">Session Length:</span><p className="font-medium">{s.persona.preferred_session_length}</p></div>}
+                                  {s.persona.learning_method && <div><span className="text-muted-foreground">Learning Method:</span><p className="font-medium">{s.persona.learning_method}</p></div>}
+                                  {s.persona.stress_management && <div><span className="text-muted-foreground">Stress Mgmt:</span><p className="font-medium">{s.persona.stress_management}</p></div>}
+                                  {s.persona.social_preference && <div><span className="text-muted-foreground">Social Pref:</span><p className="font-medium">{s.persona.social_preference}</p></div>}
+                                </div>
+                              ) : (
+                                <p className="text-muted-foreground italic">No persona quiz completed.</p>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        )}
+                        </React.Fragment>
                       );
                     })}
                   </TableBody>
