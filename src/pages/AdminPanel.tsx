@@ -90,6 +90,21 @@ const AdminPanel = () => {
         matricolaMap[p.id] = p.matricola || "N/A";
       });
 
+      const personaMap: Record<string, PersonaData> = {};
+      (personas || []).forEach((p: any) => {
+        personaMap[p.user_id] = {
+          goals: p.goals || [],
+          study_style: p.study_style,
+          weekly_study_hours: p.weekly_study_hours,
+          biggest_challenge: p.biggest_challenge,
+          motivation_type: p.motivation_type,
+          preferred_session_length: p.preferred_session_length,
+          learning_method: p.learning_method,
+          stress_management: p.stress_management,
+          social_preference: p.social_preference,
+        };
+      });
+
       // Aggregate study logs per student
       const studentMap: Record<string, StudentStat> = {};
       (logs || []).forEach((log: any) => {
