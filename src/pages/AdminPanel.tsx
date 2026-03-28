@@ -277,7 +277,7 @@ const AdminPanel = () => {
                       const sc = scores[s.user_id];
                       return (
                         <React.Fragment key={s.user_id}>
-                          <TableCell className="font-mono font-semibold">
+                          <TableRow className="cursor-pointer hover:bg-muted/50" onClick={() => setExpandedRow(expandedRow === s.user_id ? null : s.user_id)}>
                             <span className="flex items-center gap-2">
                               {expandedRow === s.user_id ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                               {s.matricola}
