@@ -12,6 +12,18 @@ import { ArrowLeft, ShieldCheck, Users, BookOpen, Clock, TrendingUp, BarChart3, 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
+interface PersonaData {
+  goals: string[];
+  study_style: string | null;
+  weekly_study_hours: string | null;
+  biggest_challenge: string | null;
+  motivation_type: string | null;
+  preferred_session_length: string | null;
+  learning_method: string | null;
+  stress_management: string | null;
+  social_preference: string | null;
+}
+
 interface StudentStat {
   user_id: string;
   matricola: string;
@@ -23,6 +35,7 @@ interface StudentStat {
   avg_energy: number;
   avg_distraction: number;
   last_active: string | null;
+  persona: PersonaData | null;
 }
 
 interface ScoreStat {
