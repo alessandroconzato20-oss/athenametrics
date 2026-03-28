@@ -383,10 +383,6 @@ const Index = () => {
           </div>
         )}
 
-        {/* Burnout Trend */}
-        <div className="mb-6">
-          <BurnoutTrendChart />
-        </div>
 
         <WeeklyChallenges />
       </div>

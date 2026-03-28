@@ -84,6 +84,12 @@ const ScoreDetailModal = ({ score, onClose }: ScoreDetailModalProps) => {
               <p key={i} className="text-sm text-muted-foreground leading-relaxed">• {r}</p>
             ))}
           </div>
+
+          {score.icon === "alert" && (
+            <div className="mt-5">
+              <BurnoutTrendChart />
+            </div>
+          )}
         </motion.div>
       </motion.div>
     </AnimatePresence>
