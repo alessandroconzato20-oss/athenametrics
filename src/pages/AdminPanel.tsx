@@ -292,6 +292,7 @@ const AdminPanel = () => {
                               </AlertDialogContent>
                             </AlertDialog>
                           </TableCell>
+                        </TableRow>
                       );
                     })}
                   </TableBody>
