@@ -311,7 +311,7 @@ const Index = () => {
       <div className="mx-auto max-w-lg px-5 pb-10 pt-8">
         {/* Header */}
         <div className="mb-5 flex items-start justify-between">
-          <StreakBadge streak={7} studySessions={23} />
+          <StreakBadge streak={streak} studySessions={totalSessions} />
           <button onClick={signOut} className="rounded-xl p-2 text-muted-foreground hover:bg-muted transition-colors">
             <LogOut className="h-5 w-5" />
           </button>
