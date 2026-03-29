@@ -164,6 +164,43 @@ const Index = () => {
   const [reward, setReward] = useState<{ show: boolean; message: string; emoji: string }>({ show: false, message: "", emoji: "" });
   const [showWeeklyGoals, setShowWeeklyGoals] = useState(false);
   const [weeklyDailyBreakdown, setWeeklyDailyBreakdown] = useState<Record<string, string[]> | null>(null);
+  const [streak, setStreak] = useState(0);
+  const [totalSessions, setTotalSessions] = useState(0);
+
+  // Compute streak and total sessions from study_logs
+  useEffect(() => {
+    if (!user) return;
+    const computeStreak = async () => {
+      const { data, error } = await supabase
+        .from("study_logs")
+        .select("studied_at")
+        .eq("user_id", user.id)
+        .order("studied_at", { ascending: false });
+      if (error || !data) return;
+      setTotalSessions(data.length);
+
+      // Calculate consecutive day streak ending today or yesterday
+      const uniqueDays = [...new Set(data.map(d => format(new Date(d.studied_at), "yyyy-MM-dd")))].sort().reverse();
+      if (uniqueDays.length === 0) { setStreak(0); return; }
+
+      const today = format(new Date(), "yyyy-MM-dd");
+      const yesterday = format(new Date(Date.now() - 86400000), "yyyy-MM-dd");
+
+      // Streak must start from today or yesterday
+      if (uniqueDays[0] !== today && uniqueDays[0] !== yesterday) { setStreak(0); return; }
+
+      let count = 1;
+      for (let i = 1; i < uniqueDays.length; i++) {
+        const prev = new Date(uniqueDays[i - 1]);
+        const curr = new Date(uniqueDays[i]);
+        const diff = (prev.getTime() - curr.getTime()) / 86400000;
+        if (diff === 1) count++;
+        else break;
+      }
+      setStreak(count);
+    };
+    computeStreak();
+  }, [user]);
 
   // Check if weekly goals popup should show (Monday or first visit this week)
   useEffect(() => {
@@ -274,7 +311,7 @@ const Index = () => {
       <div className="mx-auto max-w-lg px-5 pb-10 pt-8">
         {/* Header */}
         <div className="mb-5 flex items-start justify-between">
-          <StreakBadge streak={7} studySessions={23} />
+          <StreakBadge streak={streak} studySessions={totalSessions} />
           <button onClick={signOut} className="rounded-xl p-2 text-muted-foreground hover:bg-muted transition-colors">
             <LogOut className="h-5 w-5" />
           </button>
