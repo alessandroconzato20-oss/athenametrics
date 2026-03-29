@@ -75,12 +75,7 @@ const ScoreCard = ({ label, value, icon, colorClass, index, actionText, numValue
         <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground/80 line-clamp-2">{actionText}</p>
       </div>
       
-      <div className="flex flex-col items-center gap-1.5 shrink-0">
-        <DisagreeButton
-          feedbackType="metric"
-          context={{ metric: label, value, numValue }}
-          size="sm"
-        />
+      <div className="flex items-center shrink-0">
         <ChevronRight className="h-4 w-4 text-muted-foreground/40 transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
       </div>
     </motion.button>
