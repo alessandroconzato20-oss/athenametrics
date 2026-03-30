@@ -161,6 +161,42 @@ export type Database = {
         }
         Relationships: []
       }
+      study_schedule: {
+        Row: {
+          created_at: string
+          end_time: string | null
+          id: string
+          notes: string | null
+          schedule_date: string
+          start_time: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          notes?: string | null
+          schedule_date: string
+          start_time?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          notes?: string | null
+          schedule_date?: string
+          start_time?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       topic_mastery: {
         Row: {
           course_name: string

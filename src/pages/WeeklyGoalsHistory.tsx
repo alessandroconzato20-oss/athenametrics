@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useNavigate } from "react-router-dom";
 import { ArrowLeft, Target, CheckCircle2, XCircle, Clock, Check } from "lucide-react";
+import StudyCalendar from "@/components/StudyCalendar";
 import { supabase } from "@/integrations/supabase/client";
 import { format, parseISO, isAfter, startOfWeek } from "date-fns";
 
@@ -84,14 +85,17 @@ const WeeklyGoalsHistory = () => {
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-lg px-5 pb-10 pt-8">
         {/* Header */}
-        <div className="mb-6 flex items-center gap-3">
-          <button onClick={() => navigate("/")} className="rounded-xl p-2 text-muted-foreground hover:bg-muted transition-colors">
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <div>
-            <h1 className="font-display text-xl font-bold text-foreground">Weekly Goals</h1>
-            <p className="text-xs text-muted-foreground">Your goal history & achievements</p>
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button onClick={() => navigate("/")} className="rounded-xl p-2 text-muted-foreground hover:bg-muted transition-colors">
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <div>
+              <h1 className="font-display text-xl font-bold text-foreground">Weekly Goals</h1>
+              <p className="text-xs text-muted-foreground">Your goal history & achievements</p>
+            </div>
           </div>
+          <StudyCalendar />
         </div>
 
         {loading ? (
