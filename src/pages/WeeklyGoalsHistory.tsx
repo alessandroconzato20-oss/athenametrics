@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useNavigate } from "react-router-dom";
 import { ArrowLeft, Target, CheckCircle2, XCircle, Clock, Check } from "lucide-react";
+import StudyCalendar from "@/components/StudyCalendar";
 import { supabase } from "@/integrations/supabase/client";
 import { format, parseISO, isAfter, startOfWeek } from "date-fns";
 
