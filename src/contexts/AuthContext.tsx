@@ -6,7 +6,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, name: string, year: number, matricola: string) => Promise<void>;
+  signUp: (email: string, password: string, name: string, year: number, matricola: string, university: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   displayName: string;
