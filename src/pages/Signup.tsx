@@ -66,8 +66,12 @@ const Signup = () => {
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="matricola">Numero di Matricola</Label>
-            <Input id="matricola" placeholder="e.g. 123456" value={matricola} onChange={(e) => setMatricola(e.target.value)} required className="h-12 rounded-xl" />
+            <Label htmlFor="university">University</Label>
+            <Input id="university" placeholder="e.g. Università di Padova" value={university} onChange={(e) => setUniversity(e.target.value)} className="h-12 rounded-xl" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="matricola">Numero di Matricola <span className="text-muted-foreground font-normal">(optional)</span></Label>
+            <Input id="matricola" placeholder="e.g. 123456" value={matricola} onChange={(e) => setMatricola(e.target.value)} className="h-12 rounded-xl" />
           </div>
           <div className="space-y-2">
             <Label>Year</Label>
