@@ -26,7 +26,7 @@ const Signup = () => {
     if (!year) { toast.error("Please select your year"); return; }
     setIsLoading(true);
     try {
-      await signUp(email, password, name, parseInt(year), matricola);
+      await signUp(email, password, name, parseInt(year), matricola, university);
       toast.success("Account created! Check your email to verify, then sign in.");
       navigate("/login");
     } catch (err: any) {
