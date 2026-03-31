@@ -15,6 +15,7 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [year, setYear] = useState("");
   const [matricola, setMatricola] = useState("");
+  const [university, setUniversity] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { signUp } = useAuth();
