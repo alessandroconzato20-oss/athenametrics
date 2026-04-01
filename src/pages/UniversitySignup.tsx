@@ -2,20 +2,19 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Stethoscope, Eye, EyeOff } from "lucide-react";
+import { GraduationCap, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
-const Signup = () => {
+const UniversitySignup = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [year, setYear] = useState("");
-  const [matricola, setMatricola] = useState("");
   const [university, setUniversity] = useState("");
+  const [accessCode, setAccessCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { signUp } = useAuth();
@@ -23,12 +22,51 @@ const Signup = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!year) { toast.error("Please select your year"); return; }
+    if (!university || !accessCode) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
     setIsLoading(true);
     try {
-      await signUp(email, password, name, parseInt(year), matricola, university);
-      toast.success("Account created! Check your email to verify, then sign in.");
-      navigate("/login");
+      // First sign up the user
+      await signUp(email, password, name, 0, "", university);
+
+      toast.info("Verifying access code...");
+
+      // Sign in to get the user ID, then verify the code
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) {
+        // If email confirmation is required, we can't sign in yet
+        toast.success("Account created! Please verify your email, then sign in. Your access code will be verified on first login.");
+        navigate("/login");
+        return;
+      }
+
+      if (signInData.user) {
+        // Verify access code and assign role
+        const { data: valid, error: verifyError } = await supabase.rpc("verify_university_code", {
+          _user_id: signInData.user.id,
+          _university_name: university,
+          _access_code: accessCode,
+        });
+
+        if (verifyError || !valid) {
+          toast.error("Invalid access code for this university. Your account was created but you won't have admin access.");
+          await supabase.auth.signOut();
+          navigate("/login");
+          return;
+        }
+
+        // Also update profile with university
+        await supabase.from("profiles").update({ university } as any).eq("id", signInData.user.id);
+
+        toast.success("University admin account created successfully!");
+        navigate("/admin");
+      }
     } catch (err: any) {
       toast.error(err.message || "Failed to sign up");
     } finally {
@@ -41,10 +79,10 @@ const Signup = () => {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full max-w-md">
         <div className="mb-8 text-center">
           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }} className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-primary">
-            <Stethoscope className="h-8 w-8 text-primary-foreground" />
+            <GraduationCap className="h-8 w-8 text-primary-foreground" />
           </motion.div>
-          <h1 className="font-display text-3xl font-bold text-foreground">Join CoFactor</h1>
-          <p className="mt-2 text-muted-foreground">Start optimising your student life today.</p>
+          <h1 className="font-display text-3xl font-bold text-foreground">University Admin</h1>
+          <p className="mt-2 text-muted-foreground">Register as a university administrator to manage your institution's syllabi and monitor student progress.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -53,7 +91,7 @@ const Signup = () => {
             <Input id="name" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} required className="h-12 rounded-xl" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">University Email</Label>
             <Input id="email" type="email" placeholder="you@university.edu" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-12 rounded-xl" />
           </div>
           <div className="space-y-2">
@@ -66,26 +104,18 @@ const Signup = () => {
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="university">University</Label>
-            <Input id="university" placeholder="e.g. Università di Padova" value={university} onChange={(e) => setUniversity(e.target.value)} className="h-12 rounded-xl" />
+            <Label htmlFor="university">University / Institution Name</Label>
+            <Input id="university" placeholder="e.g. Università di Padova" value={university} onChange={(e) => setUniversity(e.target.value)} required className="h-12 rounded-xl" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="matricola">Numero di Matricola <span className="text-muted-foreground font-normal">(optional)</span></Label>
-            <Input id="matricola" placeholder="e.g. 123456" value={matricola} onChange={(e) => setMatricola(e.target.value)} className="h-12 rounded-xl" />
-          </div>
-          <div className="space-y-2">
-            <Label>Year</Label>
-            <Select value={year} onValueChange={setYear}>
-              <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="Select your year" /></SelectTrigger>
-              <SelectContent>
-                {[1,2,3,4,5,6].map(y => (
-                  <SelectItem key={y} value={String(y)}>{y === 1 ? "1st" : y === 2 ? "2nd" : y === 3 ? "3rd" : `${y}th`} Year</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="accessCode">Access Code</Label>
+            <Input id="accessCode" placeholder="Enter your institution's access code" value={accessCode} onChange={(e) => setAccessCode(e.target.value)} required className="h-12 rounded-xl" />
+            <p className="text-xs text-muted-foreground">
+              Contact your CoFactor representative to obtain your institution's access code.
+            </p>
           </div>
           <Button type="submit" disabled={isLoading} className="h-12 w-full rounded-xl bg-gradient-primary text-base font-semibold text-primary-foreground">
-            {isLoading ? "Creating account..." : "Create Account"}
+            {isLoading ? "Creating account..." : "Register as University Admin"}
           </Button>
         </form>
 
@@ -93,16 +123,13 @@ const Signup = () => {
           Already have an account?{" "}
           <Link to="/login" className="font-medium text-primary hover:underline">Sign in</Link>
         </p>
-
-        <p className="mt-3 text-center text-xs text-muted-foreground">
-          Are you a university administrator?{" "}
-          <Link to="/university-signup" className="font-medium text-primary hover:underline">
-            Register your institution here
-          </Link>
+        <p className="mt-2 text-center text-sm text-muted-foreground">
+          Are you a student?{" "}
+          <Link to="/signup" className="font-medium text-primary hover:underline">Student sign up</Link>
         </p>
       </motion.div>
     </div>
   );
 };
 
-export default Signup;
+export default UniversitySignup;
