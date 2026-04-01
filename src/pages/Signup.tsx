@@ -93,6 +93,13 @@ const Signup = () => {
           Already have an account?{" "}
           <Link to="/login" className="font-medium text-primary hover:underline">Sign in</Link>
         </p>
+
+        <p className="mt-3 text-center text-xs text-muted-foreground">
+          Are you a university administrator?{" "}
+          <Link to="/signup" className="font-medium text-primary hover:underline">
+            Contact us to upload your institution's syllabi
+          </Link>
+        </p>
       </motion.div>
     </div>
   );

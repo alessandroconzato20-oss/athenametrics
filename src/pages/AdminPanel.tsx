@@ -267,6 +267,11 @@ const AdminPanel = () => {
             ))}
           </div>
         )}
+
+        {/* Syllabus Management */}
+        <div className="mt-8 border-t pt-6">
+          <SyllabusManager />
+        </div>
       </div>
     </div>
   );
