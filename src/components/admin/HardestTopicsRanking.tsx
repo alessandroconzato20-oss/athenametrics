@@ -2,7 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Flame, Brain, Zap, Eye, BookOpen, GraduationCap, TrendingDown } from "lucide-react";
+import { Flame, Brain, Zap, Eye, BookOpen, GraduationCap } from "lucide-react";
 
 export interface HardestTopicEntry {
   subject: string;
