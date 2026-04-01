@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -61,7 +61,29 @@ const StudyLogForm = () => {
   const navigate = useNavigate();
 
   const userYear = user?.user_metadata?.year || 1;
-  const availableCourses = useMemo(() => getCoursesForYear(userYear), [userYear]);
+  const userUniversity = user?.user_metadata?.university || "";
+  const defaultCourses = useMemo(() => getCoursesForYear(userYear), [userYear]);
+
+  const [syllabiCourses, setSyllabiCourses] = useState<Course[]>([]);
+
+  useEffect(() => {
+    if (!userUniversity) return;
+    const fetchSyllabi = async () => {
+      const { data } = await supabase
+        .from("university_syllabi")
+        .select("course_name, credits, year")
+        .eq("university_name", userUniversity)
+        .eq("status", "approved")
+        .eq("year", userYear) as any;
+      if (data && data.length > 0) {
+        setSyllabiCourses(data.map((s: any) => ({ name: s.course_name, credits: s.credits || 0 })));
+      }
+    };
+    fetchSyllabi();
+  }, [userUniversity, userYear]);
+
+  // Use syllabi courses if available, otherwise fall back to defaults
+  const availableCourses = syllabiCourses.length > 0 ? syllabiCourses : defaultCourses;
 
   const [selectedCourse, setSelectedCourse] = useState("");
   const [topic, setTopic] = useState("");

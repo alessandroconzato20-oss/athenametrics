@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, ShieldCheck, Users, BookOpen, Clock, BarChart3, Search, Activity } from "lucide-react";
 import { toast } from "sonner";
 import StudentCard, { StudentStat, ScoreStat } from "@/components/admin/StudentCard";
+import SyllabusManager from "@/components/admin/SyllabusManager";
 
 const AdminPanel = () => {
   const { user, loading: authLoading } = useAuth();
@@ -266,6 +267,11 @@ const AdminPanel = () => {
             ))}
           </div>
         )}
+
+        {/* Syllabus Management */}
+        <div className="mt-8 border-t pt-6">
+          <SyllabusManager />
+        </div>
       </div>
     </div>
   );

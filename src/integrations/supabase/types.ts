@@ -49,18 +49,21 @@ export type Database = {
           created_at: string
           id: string
           matricola: string | null
+          university: string | null
           username: string
         }
         Insert: {
           created_at?: string
           id: string
           matricola?: string | null
+          university?: string | null
           username: string
         }
         Update: {
           created_at?: string
           id?: string
           matricola?: string | null
+          university?: string | null
           username?: string
         }
         Relationships: []
@@ -227,6 +230,54 @@ export type Database = {
         }
         Relationships: []
       }
+      university_syllabi: {
+        Row: {
+          course_name: string
+          created_at: string
+          credits: number | null
+          id: string
+          notes: string | null
+          pdf_path: string | null
+          semester: number | null
+          status: string
+          topics: Json
+          university_name: string
+          updated_at: string
+          uploaded_by: string
+          year: number
+        }
+        Insert: {
+          course_name: string
+          created_at?: string
+          credits?: number | null
+          id?: string
+          notes?: string | null
+          pdf_path?: string | null
+          semester?: number | null
+          status?: string
+          topics?: Json
+          university_name: string
+          updated_at?: string
+          uploaded_by: string
+          year: number
+        }
+        Update: {
+          course_name?: string
+          created_at?: string
+          credits?: number | null
+          id?: string
+          notes?: string | null
+          pdf_path?: string | null
+          semester?: number | null
+          status?: string
+          topics?: Json
+          university_name?: string
+          updated_at?: string
+          uploaded_by?: string
+          year?: number
+        }
+        Relationships: []
+      }
       user_feedback: {
         Row: {
           context: Json
@@ -332,7 +383,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "user"
+      app_role: "admin" | "user" | "university_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -460,7 +511,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
+      app_role: ["admin", "user", "university_admin"],
     },
   },
 } as const
