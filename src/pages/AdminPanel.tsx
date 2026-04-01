@@ -126,6 +126,14 @@ const AdminPanel = () => {
         };
       });
 
+      // Build topic mastery map per user: { userId: { courseName: { topicName: status } } }
+      const masteryMap: Record<string, Record<string, Record<string, string>>> = {};
+      (masteryData || []).forEach((m: any) => {
+        if (!masteryMap[m.user_id]) masteryMap[m.user_id] = {};
+        if (!masteryMap[m.user_id][m.course_name]) masteryMap[m.user_id][m.course_name] = {};
+        masteryMap[m.user_id][m.course_name][m.topic_name] = m.status;
+      });
+
       const studentMap: Record<string, StudentStat> = {};
       const recentLogs: Record<string, any[]> = {};
       const studyDays: Record<string, Set<string>> = {};
