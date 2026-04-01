@@ -219,6 +219,10 @@ const AdminPanel = () => {
           s.avg_stress = Math.round((s.avg_stress / s.total_sessions) * 10) / 10;
           s.avg_energy = Math.round((s.avg_energy / s.total_sessions) * 10) / 10;
           s.avg_distraction = Math.round((s.avg_distraction / s.total_sessions) * 10) / 10;
+          s.avg_comprehension = Math.round((s.avg_comprehension / s.total_sessions) * 10) / 10;
+          s.avg_confidence = Math.round((s.avg_confidence / s.total_sessions) * 10) / 10;
+          s.avg_revision_priority = Math.round((s.avg_revision_priority / s.total_sessions) * 10) / 10;
+          s.avg_teaching_readiness = Math.round((s.avg_teaching_readiness / s.total_sessions) * 10) / 10;
         }
         s.study_days = studyDays[s.user_id]?.size || 0;
         s.recent_sessions = (recentLogs[s.user_id] || [])
