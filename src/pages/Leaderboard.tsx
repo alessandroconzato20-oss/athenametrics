@@ -308,7 +308,7 @@ const Leaderboard = () => {
     }
 
     setActiveLibrary(null);
-    await fetchLeaderboardDirect();
+    setEntries([]);
   };
 
   const copyCode = () => {
@@ -369,64 +369,88 @@ const Leaderboard = () => {
         )}
 
         <p className="mb-5 text-sm text-muted-foreground">
-          {activeLibrary ? "Private leaderboard — only members can see this." : "Global leaderboard — see who's putting in the work 💪"}
+          {activeLibrary
+            ? "Private leaderboard — only members can see this."
+            : "Create your own study crew or join a friend's — compete, stay accountable, and crush your goals together 🔥"}
         </p>
 
-        {/* Join profile */}
-        {hasProfile === false && (
+        {/* Only show leaderboard content when user has an active library */}
+        {activeLibrary ? (
+          <>
+            {/* Join profile */}
+            {hasProfile === false && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                className="mb-6 rounded-2xl border border-border bg-card p-5">
+                <h2 className="mb-2 font-display text-lg font-semibold text-foreground">Join the Leaderboard</h2>
+                <p className="mb-4 text-sm text-muted-foreground">Pick a username to appear on the board.</p>
+                <div className="flex gap-2">
+                  <Input placeholder="Your username" value={username} onChange={(e) => setUsername(e.target.value)} maxLength={20} className="rounded-xl" />
+                  <Button onClick={handleJoin} disabled={!username.trim() || submitting} className="rounded-xl px-5">
+                    {submitting ? "..." : "Join"}
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Leaderboard list */}
+            {loading ? (
+              <div className="space-y-3">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="h-16 animate-pulse rounded-2xl bg-muted" />
+                ))}
+              </div>
+            ) : entries.length === 0 ? (
+              <div className="rounded-2xl border border-border bg-card p-8 text-center">
+                <Trophy className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
+                <p className="text-muted-foreground">No one on the board yet. Be the first!</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {entries.map((entry, i) => {
+                  const isMe = entry.user_id === user?.id;
+                  return (
+                    <motion.div key={entry.user_id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.04 }}
+                      className={`flex items-center gap-3 rounded-2xl border p-4 transition-colors ${
+                        isMe ? "border-primary/30 bg-primary/5" : "border-border bg-card"
+                      } ${i < 3 ? "shadow-sm" : ""}`}>
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center">{rankIcon(i)}</div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-display font-semibold text-foreground">
+                          {entry.username} {isMe && <span className="text-xs text-primary">(you)</span>}
+                        </p>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {formatTime(entry.total_minutes)}</span>
+                          <span className="flex items-center gap-1"><BookOpen className="h-3 w-3" /> {entry.total_sessions} sessions</span>
+                          <span>{entry.subjects_studied} subjects</span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-display text-lg font-bold text-foreground">{formatTime(entry.total_minutes)}</p>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        ) : (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-            className="mb-6 rounded-2xl border border-border bg-card p-5">
-            <h2 className="mb-2 font-display text-lg font-semibold text-foreground">Join the Leaderboard</h2>
-            <p className="mb-4 text-sm text-muted-foreground">Pick a username to appear on the board.</p>
-            <div className="flex gap-2">
-              <Input placeholder="Your username" value={username} onChange={(e) => setUsername(e.target.value)} maxLength={20} className="rounded-xl" />
-              <Button onClick={handleJoin} disabled={!username.trim() || submitting} className="rounded-xl px-5">
-                {submitting ? "..." : "Join"}
+            className="mt-4 rounded-2xl border border-border bg-card p-8 text-center">
+            <Trophy className="mx-auto mb-4 h-12 w-12 text-primary/60" />
+            <h2 className="mb-2 font-display text-lg font-semibold text-foreground">No library yet</h2>
+            <p className="mb-5 text-sm text-muted-foreground">
+              Create or join a library to start competing with your study crew!
+            </p>
+            <div className="flex justify-center gap-3">
+              <Button className="rounded-xl" onClick={() => openDialog("create")}>
+                <Plus className="mr-1 h-4 w-4" /> Create
+              </Button>
+              <Button variant="outline" className="rounded-xl" onClick={() => openDialog("join")}>
+                <LogIn className="mr-1 h-4 w-4" /> Join
               </Button>
             </div>
           </motion.div>
-        )}
-
-        {/* Leaderboard list */}
-        {loading ? (
-          <div className="space-y-3">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-16 animate-pulse rounded-2xl bg-muted" />
-            ))}
-          </div>
-        ) : entries.length === 0 ? (
-          <div className="rounded-2xl border border-border bg-card p-8 text-center">
-            <Trophy className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
-            <p className="text-muted-foreground">No one on the board yet. Be the first!</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {entries.map((entry, i) => {
-              const isMe = entry.user_id === user?.id;
-              return (
-                <motion.div key={entry.user_id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.04 }}
-                  className={`flex items-center gap-3 rounded-2xl border p-4 transition-colors ${
-                    isMe ? "border-primary/30 bg-primary/5" : "border-border bg-card"
-                  } ${i < 3 ? "shadow-sm" : ""}`}>
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center">{rankIcon(i)}</div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-display font-semibold text-foreground">
-                      {entry.username} {isMe && <span className="text-xs text-primary">(you)</span>}
-                    </p>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {formatTime(entry.total_minutes)}</span>
-                      <span className="flex items-center gap-1"><BookOpen className="h-3 w-3" /> {entry.total_sessions} sessions</span>
-                      <span>{entry.subjects_studied} subjects</span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-display text-lg font-bold text-foreground">{formatTime(entry.total_minutes)}</p>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
         )}
       </div>
 
