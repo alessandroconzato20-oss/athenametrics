@@ -121,6 +121,8 @@ export type Database = {
       }
       study_logs: {
         Row: {
+          comprehension_level: number | null
+          confidence_level: number | null
           created_at: string
           difficulty: number
           distraction_level: number
@@ -128,13 +130,17 @@ export type Database = {
           energy_level: number
           id: string
           notes: string | null
+          revision_priority: number | null
           stress_level: number
           studied_at: string
           subject: string
+          teaching_readiness: number | null
           topic: string
           user_id: string
         }
         Insert: {
+          comprehension_level?: number | null
+          confidence_level?: number | null
           created_at?: string
           difficulty: number
           distraction_level: number
@@ -142,13 +148,17 @@ export type Database = {
           energy_level: number
           id?: string
           notes?: string | null
+          revision_priority?: number | null
           stress_level: number
           studied_at?: string
           subject: string
+          teaching_readiness?: number | null
           topic: string
           user_id: string
         }
         Update: {
+          comprehension_level?: number | null
+          confidence_level?: number | null
           created_at?: string
           difficulty?: number
           distraction_level?: number
@@ -156,9 +166,11 @@ export type Database = {
           energy_level?: number
           id?: string
           notes?: string | null
+          revision_priority?: number | null
           stress_level?: number
           studied_at?: string
           subject?: string
+          teaching_readiness?: number | null
           topic?: string
           user_id?: string
         }

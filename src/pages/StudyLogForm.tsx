@@ -96,6 +96,10 @@ const StudyLogForm = () => {
   const [notes, setNotes] = useState("");
   const [selectedMethods, setSelectedMethods] = useState<string[]>([]);
   const [otherMethod, setOtherMethod] = useState("");
+  const [comprehension, setComprehension] = useState(3);
+  const [confidence, setConfidence] = useState(3);
+  const [revisionPriority, setRevisionPriority] = useState(3);
+  const [teachingReadiness, setTeachingReadiness] = useState(3);
   const [saving, setSaving] = useState(false);
 
   const courseObj = availableCourses.find(c => c.name === selectedCourse);
@@ -130,8 +134,12 @@ const StudyLogForm = () => {
         stress_level: stress,
         distraction_level: distraction,
         energy_level: energy,
+        comprehension_level: comprehension,
+        confidence_level: confidence,
+        revision_priority: revisionPriority,
+        teaching_readiness: teachingReadiness,
         notes: combinedNotes,
-      });
+      } as any);
       if (error) throw error;
       toast.success("Study session logged! 🎉");
       navigate("/study-logs");
@@ -195,6 +203,18 @@ const StudyLogForm = () => {
               <LevelPicker label="Stress Level" icon={<AlertTriangle className="h-4 w-4 text-score-burnout" />} value={stress} onChange={setStress} color="bg-score-burnout text-primary-foreground" />
               <LevelPicker label="Distraction Level" icon={<Eye className="h-4 w-4 text-score-peak" />} value={distraction} onChange={setDistraction} color="bg-score-peak text-primary-foreground" />
               <LevelPicker label="Energy Level" icon={<Zap className="h-4 w-4 text-score-study" />} value={energy} onChange={setEnergy} color="bg-score-study text-primary-foreground" />
+            </div>
+
+            {/* Deeper Insight Questions */}
+            <div className="rounded-2xl bg-card p-4 space-y-5 shadow-card">
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <GraduationCap className="h-4 w-4 text-primary" />
+                Deeper Insight
+              </h3>
+              <LevelPicker label="Comprehension" icon={<BookOpen className="h-4 w-4 text-primary" />} value={comprehension} onChange={setComprehension} color="bg-primary text-primary-foreground" />
+              <LevelPicker label="Confidence" icon={<Zap className="h-4 w-4 text-green-500" />} value={confidence} onChange={setConfidence} color="bg-green-500 text-white" />
+              <LevelPicker label="Revision Priority" icon={<AlertTriangle className="h-4 w-4 text-amber-500" />} value={revisionPriority} onChange={setRevisionPriority} color="bg-amber-500 text-white" />
+              <LevelPicker label="Could You Teach This?" icon={<GraduationCap className="h-4 w-4 text-blue-500" />} value={teachingReadiness} onChange={setTeachingReadiness} color="bg-blue-500 text-white" />
             </div>
 
             {/* Topic Mastery Checklist */}

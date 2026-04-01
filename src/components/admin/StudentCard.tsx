@@ -33,6 +33,10 @@ export interface RecentSession {
   studied_at: string;
   difficulty: number;
   stress_level: number;
+  comprehension_level: number | null;
+  confidence_level: number | null;
+  revision_priority: number | null;
+  teaching_readiness: number | null;
   notes: string | null;
 }
 
@@ -54,6 +58,10 @@ export interface StudentStat {
   avg_stress: number;
   avg_energy: number;
   avg_distraction: number;
+  avg_comprehension: number;
+  avg_confidence: number;
+  avg_revision_priority: number;
+  avg_teaching_readiness: number;
   last_active: string | null;
   persona: PersonaData | null;
   recent_sessions: RecentSession[];
@@ -195,6 +203,12 @@ const StudentCard: React.FC<Props> = ({ student: s, score: sc, onDelete }) => {
                     <MetricBar label="Stress" value={s.avg_stress} max={5} icon={Flame} color="[&>div]:bg-red-500" />
                     <MetricBar label="Energy" value={s.avg_energy} max={5} icon={Zap} color="[&>div]:bg-green-500" />
                     <MetricBar label="Distraction" value={s.avg_distraction} max={5} icon={Eye} color="[&>div]:bg-yellow-500" />
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+                    <MetricBar label="Comprehension" value={s.avg_comprehension} max={5} icon={BookOpen} color="[&>div]:bg-blue-500" />
+                    <MetricBar label="Confidence" value={s.avg_confidence} max={5} icon={Zap} color="[&>div]:bg-emerald-500" />
+                    <MetricBar label="Rev. Priority" value={s.avg_revision_priority} max={5} icon={Activity} color="[&>div]:bg-amber-500" />
+                    <MetricBar label="Teach Ready" value={s.avg_teaching_readiness} max={5} icon={GraduationCap} color="[&>div]:bg-indigo-500" />
                   </div>
                 </div>
 

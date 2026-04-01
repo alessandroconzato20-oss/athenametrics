@@ -13,6 +13,7 @@ import { ArrowLeft, ShieldCheck, Users, BookOpen, Clock, BarChart3, Search, Acti
 import { toast } from "sonner";
 import StudentCard, { StudentStat, ScoreStat } from "@/components/admin/StudentCard";
 import SyllabusManager from "@/components/admin/SyllabusManager";
+import TopicSummaryTable, { TopicMetric } from "@/components/admin/TopicSummaryTable";
 
 type AdminRole = "admin" | "university_admin";
 
@@ -24,6 +25,7 @@ const AdminPanel = () => {
   const [checking, setChecking] = useState(true);
   const [students, setStudents] = useState<StudentStat[]>([]);
   const [scores, setScores] = useState<Record<string, ScoreStat>>({});
+  const [topicMetrics, setTopicMetrics] = useState<TopicMetric[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [search, setSearch] = useState("");
 
@@ -126,6 +128,8 @@ const AdminPanel = () => {
       const studentMap: Record<string, StudentStat> = {};
       const recentLogs: Record<string, any[]> = {};
       const studyDays: Record<string, Set<string>> = {};
+      // Topic-level aggregation
+      const topicAgg: Record<string, { sessions: number; total_minutes: number; sum_difficulty: number; sum_stress: number; sum_energy: number; sum_distraction: number; sum_comprehension: number; sum_confidence: number; sum_revision: number; sum_teaching: number; comp_count: number; students: Set<string>; subject: string; topic: string }> = {};
 
       (logs || []).forEach((log: any) => {
         // For university admins, only include students from their university
@@ -147,6 +151,10 @@ const AdminPanel = () => {
             avg_stress: 0,
             avg_energy: 0,
             avg_distraction: 0,
+            avg_comprehension: 0,
+            avg_confidence: 0,
+            avg_revision_priority: 0,
+            avg_teaching_readiness: 0,
             last_active: null,
             persona: personaMap[log.user_id] || null,
             recent_sessions: [],
@@ -164,10 +172,32 @@ const AdminPanel = () => {
         s.avg_stress += log.stress_level;
         s.avg_energy += log.energy_level;
         s.avg_distraction += log.distraction_level;
+        s.avg_comprehension += (log.comprehension_level || 0);
+        s.avg_confidence += (log.confidence_level || 0);
+        s.avg_revision_priority += (log.revision_priority || 0);
+        s.avg_teaching_readiness += (log.teaching_readiness || 0);
         if (!s.last_active || log.studied_at > s.last_active) s.last_active = log.studied_at;
 
         const day = log.studied_at?.slice(0, 10);
         if (day) studyDays[log.user_id].add(day);
+
+        // Topic aggregation
+        const topicKey = `${log.subject}|||${log.topic}`;
+        if (!topicAgg[topicKey]) {
+          topicAgg[topicKey] = { sessions: 0, total_minutes: 0, sum_difficulty: 0, sum_stress: 0, sum_energy: 0, sum_distraction: 0, sum_comprehension: 0, sum_confidence: 0, sum_revision: 0, sum_teaching: 0, comp_count: 0, students: new Set(), subject: log.subject, topic: log.topic };
+        }
+        const ta = topicAgg[topicKey];
+        ta.sessions++;
+        ta.total_minutes += log.duration_minutes;
+        ta.sum_difficulty += log.difficulty;
+        ta.sum_stress += log.stress_level;
+        ta.sum_energy += log.energy_level;
+        ta.sum_distraction += log.distraction_level;
+        if (log.comprehension_level) { ta.sum_comprehension += log.comprehension_level; ta.comp_count++; }
+        if (log.confidence_level) ta.sum_confidence += log.confidence_level;
+        if (log.revision_priority) ta.sum_revision += log.revision_priority;
+        if (log.teaching_readiness) ta.sum_teaching += log.teaching_readiness;
+        ta.students.add(log.user_id);
 
         recentLogs[log.user_id].push({
           subject: log.subject,
@@ -176,6 +206,10 @@ const AdminPanel = () => {
           studied_at: log.studied_at,
           difficulty: log.difficulty,
           stress_level: log.stress_level,
+          comprehension_level: log.comprehension_level,
+          confidence_level: log.confidence_level,
+          revision_priority: log.revision_priority,
+          teaching_readiness: log.teaching_readiness,
           notes: log.notes,
         });
       });
@@ -186,6 +220,10 @@ const AdminPanel = () => {
           s.avg_stress = Math.round((s.avg_stress / s.total_sessions) * 10) / 10;
           s.avg_energy = Math.round((s.avg_energy / s.total_sessions) * 10) / 10;
           s.avg_distraction = Math.round((s.avg_distraction / s.total_sessions) * 10) / 10;
+          s.avg_comprehension = Math.round((s.avg_comprehension / s.total_sessions) * 10) / 10;
+          s.avg_confidence = Math.round((s.avg_confidence / s.total_sessions) * 10) / 10;
+          s.avg_revision_priority = Math.round((s.avg_revision_priority / s.total_sessions) * 10) / 10;
+          s.avg_teaching_readiness = Math.round((s.avg_teaching_readiness / s.total_sessions) * 10) / 10;
         }
         s.study_days = studyDays[s.user_id]?.size || 0;
         s.recent_sessions = (recentLogs[s.user_id] || [])
@@ -212,8 +250,26 @@ const AdminPanel = () => {
         };
       });
 
+      // Build topic metrics
+      const topicMetricsResult: TopicMetric[] = Object.values(topicAgg).map(ta => ({
+        subject: ta.subject,
+        topic: ta.topic,
+        sessions: ta.sessions,
+        total_minutes: ta.total_minutes,
+        avg_difficulty: Math.round((ta.sum_difficulty / ta.sessions) * 10) / 10,
+        avg_stress: Math.round((ta.sum_stress / ta.sessions) * 10) / 10,
+        avg_energy: Math.round((ta.sum_energy / ta.sessions) * 10) / 10,
+        avg_distraction: Math.round((ta.sum_distraction / ta.sessions) * 10) / 10,
+        avg_comprehension: ta.comp_count > 0 ? Math.round((ta.sum_comprehension / ta.comp_count) * 10) / 10 : 0,
+        avg_confidence: ta.comp_count > 0 ? Math.round((ta.sum_confidence / ta.comp_count) * 10) / 10 : 0,
+        avg_revision_priority: ta.comp_count > 0 ? Math.round((ta.sum_revision / ta.comp_count) * 10) / 10 : 0,
+        avg_teaching_readiness: ta.comp_count > 0 ? Math.round((ta.sum_teaching / ta.comp_count) * 10) / 10 : 0,
+        students_count: ta.students.size,
+      }));
+
       setStudents(Object.values(studentMap).sort((a, b) => b.total_minutes - a.total_minutes));
       setScores(scoresResult);
+      setTopicMetrics(topicMetricsResult);
     } catch {
       toast.error("Failed to load admin data");
     } finally {
@@ -332,6 +388,13 @@ const AdminPanel = () => {
             {filtered.map((s) => (
               <StudentCard key={s.user_id} student={s} score={scores[s.user_id]} onDelete={deleteStudentData} />
             ))}
+          </div>
+        )}
+
+        {/* Topic Insights Summary */}
+        {!loadingData && topicMetrics.length > 0 && (
+          <div className="mt-8 border-t pt-6">
+            <TopicSummaryTable topics={topicMetrics} />
           </div>
         )}
 
