@@ -66,6 +66,7 @@ export interface StudentStat {
   persona: PersonaData | null;
   recent_sessions: RecentSession[];
   study_days: number;
+  topic_mastery: Record<string, Record<string, string>>; // { courseName: { topicName: status } }
 }
 
 interface Props {
