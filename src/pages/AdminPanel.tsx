@@ -425,6 +425,13 @@ const AdminPanel = () => {
           ))}
         </div>
 
+        {/* Hardest Topics Ranking — prominent position */}
+        {!loadingData && hardestTopics.length > 0 && (
+          <div className="mb-6">
+            <HardestTopicsRanking topics={hardestTopics} />
+          </div>
+        )}
+
         {/* Search */}
         <div className="mb-4 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
