@@ -29,7 +29,7 @@ interface SyllabusEntry {
   created_at: string;
 }
 
-const SyllabusManager = () => {
+const SyllabusManager = ({ universityFilter }: { universityFilter?: string | null }) => {
   const { user } = useAuth();
   const [syllabi, setSyllabi] = useState<SyllabusEntry[]>([]);
   const [loading, setLoading] = useState(true);
