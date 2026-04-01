@@ -204,6 +204,12 @@ const StudentCard: React.FC<Props> = ({ student: s, score: sc, onDelete }) => {
                     <MetricBar label="Energy" value={s.avg_energy} max={5} icon={Zap} color="[&>div]:bg-green-500" />
                     <MetricBar label="Distraction" value={s.avg_distraction} max={5} icon={Eye} color="[&>div]:bg-yellow-500" />
                   </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+                    <MetricBar label="Comprehension" value={s.avg_comprehension} max={5} icon={BookOpen} color="[&>div]:bg-blue-500" />
+                    <MetricBar label="Confidence" value={s.avg_confidence} max={5} icon={Zap} color="[&>div]:bg-emerald-500" />
+                    <MetricBar label="Rev. Priority" value={s.avg_revision_priority} max={5} icon={Activity} color="[&>div]:bg-amber-500" />
+                    <MetricBar label="Teach Ready" value={s.avg_teaching_readiness} max={5} icon={GraduationCap} color="[&>div]:bg-indigo-500" />
+                  </div>
                 </div>
 
                 {/* Subject breakdown */}
