@@ -230,6 +230,33 @@ export type Database = {
         }
         Relationships: []
       }
+      university_access_codes: {
+        Row: {
+          access_code: string
+          created_at: string
+          created_by: string
+          id: string
+          is_active: boolean
+          university_name: string
+        }
+        Insert: {
+          access_code: string
+          created_at?: string
+          created_by: string
+          id?: string
+          is_active?: boolean
+          university_name: string
+        }
+        Update: {
+          access_code?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_active?: boolean
+          university_name?: string
+        }
+        Relationships: []
+      }
       university_syllabi: {
         Row: {
           course_name: string
@@ -377,6 +404,14 @@ export type Database = {
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      verify_university_code: {
+        Args: {
+          _access_code: string
+          _university_name: string
           _user_id: string
         }
         Returns: boolean
