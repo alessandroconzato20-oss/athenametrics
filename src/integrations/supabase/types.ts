@@ -44,6 +44,35 @@ export type Database = {
         }
         Relationships: []
       }
+      library_members: {
+        Row: {
+          id: string
+          joined_at: string
+          library_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          library_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          library_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "library_members_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "study_libraries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -116,6 +145,30 @@ export type Database = {
           updated_at?: string
           user_id?: string
           weekly_study_hours?: string | null
+        }
+        Relationships: []
+      }
+      study_libraries: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          invite_code: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          invite_code?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          invite_code?: string
+          name?: string
         }
         Relationships: []
       }
@@ -419,6 +472,14 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      is_library_member: {
+        Args: { _library_id: string; _user_id: string }
+        Returns: boolean
+      }
+      join_library_by_code: {
+        Args: { _invite_code: string; _user_id: string }
+        Returns: string
       }
       verify_university_code: {
         Args: {
