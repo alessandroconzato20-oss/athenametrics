@@ -250,8 +250,26 @@ const AdminPanel = () => {
         };
       });
 
+      // Build topic metrics
+      const topicMetricsResult: TopicMetric[] = Object.values(topicAgg).map(ta => ({
+        subject: ta.subject,
+        topic: ta.topic,
+        sessions: ta.sessions,
+        total_minutes: ta.total_minutes,
+        avg_difficulty: Math.round((ta.sum_difficulty / ta.sessions) * 10) / 10,
+        avg_stress: Math.round((ta.sum_stress / ta.sessions) * 10) / 10,
+        avg_energy: Math.round((ta.sum_energy / ta.sessions) * 10) / 10,
+        avg_distraction: Math.round((ta.sum_distraction / ta.sessions) * 10) / 10,
+        avg_comprehension: ta.comp_count > 0 ? Math.round((ta.sum_comprehension / ta.comp_count) * 10) / 10 : 0,
+        avg_confidence: ta.comp_count > 0 ? Math.round((ta.sum_confidence / ta.comp_count) * 10) / 10 : 0,
+        avg_revision_priority: ta.comp_count > 0 ? Math.round((ta.sum_revision / ta.comp_count) * 10) / 10 : 0,
+        avg_teaching_readiness: ta.comp_count > 0 ? Math.round((ta.sum_teaching / ta.comp_count) * 10) / 10 : 0,
+        students_count: ta.students.size,
+      }));
+
       setStudents(Object.values(studentMap).sort((a, b) => b.total_minutes - a.total_minutes));
       setScores(scoresResult);
+      setTopicMetrics(topicMetricsResult);
     } catch {
       toast.error("Failed to load admin data");
     } finally {
