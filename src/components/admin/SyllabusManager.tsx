@@ -37,7 +37,7 @@ const SyllabusManager = ({ universityFilter }: { universityFilter?: string | nul
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // Form state
-  const [universityName, setUniversityName] = useState("");
+  const [universityName, setUniversityName] = useState(universityFilter || "");
   const [courseName, setCourseName] = useState("");
   const [credits, setCredits] = useState("");
   const [year, setYear] = useState("");
