@@ -4,46 +4,12 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, ShieldCheck, Users, BookOpen, Clock, TrendingUp, BarChart3, Trash2, ChevronDown, ChevronUp, UserCircle } from "lucide-react";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft, ShieldCheck, Users, BookOpen, Clock, BarChart3, Search, Activity } from "lucide-react";
 import { toast } from "sonner";
-
-interface PersonaData {
-  goals: string[];
-  study_style: string | null;
-  weekly_study_hours: string | null;
-  biggest_challenge: string | null;
-  motivation_type: string | null;
-  preferred_session_length: string | null;
-  learning_method: string | null;
-  stress_management: string | null;
-  social_preference: string | null;
-}
-
-interface StudentStat {
-  user_id: string;
-  matricola: string;
-  total_sessions: number;
-  total_minutes: number;
-  subjects_studied: string[];
-  avg_difficulty: number;
-  avg_stress: number;
-  avg_energy: number;
-  avg_distraction: number;
-  last_active: string | null;
-  persona: PersonaData | null;
-}
-
-interface ScoreStat {
-  user_id: string;
-  avg_burnout: number;
-  avg_cognitive: number;
-  avg_retention: number;
-}
+import StudentCard, { StudentStat, ScoreStat } from "@/components/admin/StudentCard";
 
 const AdminPanel = () => {
   const { user, loading: authLoading } = useAuth();
@@ -53,19 +19,14 @@ const AdminPanel = () => {
   const [students, setStudents] = useState<StudentStat[]>([]);
   const [scores, setScores] = useState<Record<string, ScoreStat>>({});
   const [loadingData, setLoadingData] = useState(true);
-  const [expandedRow, setExpandedRow] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     if (authLoading) return;
     if (!user) { navigate("/login"); return; }
-
     const checkAdmin = async () => {
       const { data } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
-      if (!data) {
-        toast.error("Access denied");
-        navigate("/");
-        return;
-      }
+      if (!data) { toast.error("Access denied"); navigate("/"); return; }
       setIsAdmin(true);
       setChecking(false);
     };
@@ -80,17 +41,24 @@ const AdminPanel = () => {
   const loadData = async () => {
     setLoadingData(true);
     try {
-      const { data: logs } = await supabase.from("study_logs").select("*");
-      const { data: profiles } = await supabase.from("profiles").select("id, matricola");
-      const { data: dailyScores } = await supabase.from("daily_scores").select("*");
-      const { data: personas } = await supabase.from("student_personas").select("*");
+      const [{ data: logs }, { data: profiles }, { data: dailyScores }, { data: personas }] = await Promise.all([
+        supabase.from("study_logs").select("*"),
+        supabase.from("profiles").select("id, matricola"),
+        supabase.from("daily_scores").select("*"),
+        supabase.from("student_personas").select("*"),
+      ]);
 
       const matricolaMap: Record<string, string> = {};
+      const universityMap: Record<string, string> = {};
       (profiles || []).forEach((p: any) => {
         matricolaMap[p.id] = p.matricola || "N/A";
       });
 
-      const personaMap: Record<string, PersonaData> = {};
+      // Get university from auth metadata via admin - we'll use profiles for now
+      // University is stored in user_metadata, but we can't access that from client
+      // We'll show it when available
+
+      const personaMap: Record<string, any> = {};
       (personas || []).forEach((p: any) => {
         personaMap[p.user_id] = {
           goals: p.goals || [],
@@ -105,33 +73,55 @@ const AdminPanel = () => {
         };
       });
 
-      // Aggregate study logs per student
       const studentMap: Record<string, StudentStat> = {};
+      const recentLogs: Record<string, any[]> = {};
+      const studyDays: Record<string, Set<string>> = {};
+
       (logs || []).forEach((log: any) => {
         if (!studentMap[log.user_id]) {
           studentMap[log.user_id] = {
             user_id: log.user_id,
             matricola: matricolaMap[log.user_id] || "N/A",
+            university: "N/A",
             total_sessions: 0,
             total_minutes: 0,
             subjects_studied: [],
+            subject_minutes: {},
             avg_difficulty: 0,
             avg_stress: 0,
             avg_energy: 0,
             avg_distraction: 0,
             last_active: null,
             persona: personaMap[log.user_id] || null,
+            recent_sessions: [],
+            study_days: 0,
           };
+          recentLogs[log.user_id] = [];
+          studyDays[log.user_id] = new Set();
         }
         const s = studentMap[log.user_id];
         s.total_sessions++;
         s.total_minutes += log.duration_minutes;
         if (!s.subjects_studied.includes(log.subject)) s.subjects_studied.push(log.subject);
+        s.subject_minutes[log.subject] = (s.subject_minutes[log.subject] || 0) + log.duration_minutes;
         s.avg_difficulty += log.difficulty;
         s.avg_stress += log.stress_level;
         s.avg_energy += log.energy_level;
         s.avg_distraction += log.distraction_level;
         if (!s.last_active || log.studied_at > s.last_active) s.last_active = log.studied_at;
+
+        const day = log.studied_at?.slice(0, 10);
+        if (day) studyDays[log.user_id].add(day);
+
+        recentLogs[log.user_id].push({
+          subject: log.subject,
+          topic: log.topic,
+          duration_minutes: log.duration_minutes,
+          studied_at: log.studied_at,
+          difficulty: log.difficulty,
+          stress_level: log.stress_level,
+          notes: log.notes,
+        });
       });
 
       Object.values(studentMap).forEach((s) => {
@@ -141,9 +131,12 @@ const AdminPanel = () => {
           s.avg_energy = Math.round((s.avg_energy / s.total_sessions) * 10) / 10;
           s.avg_distraction = Math.round((s.avg_distraction / s.total_sessions) * 10) / 10;
         }
+        s.study_days = studyDays[s.user_id]?.size || 0;
+        s.recent_sessions = (recentLogs[s.user_id] || [])
+          .sort((a, b) => b.studied_at.localeCompare(a.studied_at))
+          .slice(0, 5);
       });
 
-      // Aggregate daily scores
       const scoreMap: Record<string, { sum_b: number; sum_c: number; sum_r: number; count: number }> = {};
       (dailyScores || []).forEach((ds: any) => {
         if (!scoreMap[ds.user_id]) scoreMap[ds.user_id] = { sum_b: 0, sum_c: 0, sum_r: 0, count: 0 };
@@ -156,7 +149,6 @@ const AdminPanel = () => {
       const scoresResult: Record<string, ScoreStat> = {};
       Object.entries(scoreMap).forEach(([uid, v]) => {
         scoresResult[uid] = {
-          user_id: uid,
           avg_burnout: Math.round(v.sum_b / v.count),
           avg_cognitive: Math.round(v.sum_c / v.count),
           avg_retention: Math.round(v.sum_r / v.count),
@@ -185,11 +177,6 @@ const AdminPanel = () => {
     }
   };
 
-  const formatTime = (mins: number) => {
-    if (mins < 60) return `${mins}m`;
-    return `${Math.floor(mins / 60)}h ${mins % 60}m`;
-  };
-
   if (authLoading || checking) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -204,10 +191,20 @@ const AdminPanel = () => {
   const totalSessions = students.reduce((a, s) => a + s.total_sessions, 0);
   const totalMinutes = students.reduce((a, s) => a + s.total_minutes, 0);
   const avgSessionLength = totalSessions > 0 ? Math.round(totalMinutes / totalSessions) : 0;
+  const avgStress = students.length > 0 ? Math.round(students.reduce((a, s) => a + s.avg_stress, 0) / students.length * 10) / 10 : 0;
+  const totalActiveDays = students.reduce((a, s) => a + s.study_days, 0);
+
+  const filtered = search
+    ? students.filter(s =>
+        s.matricola.toLowerCase().includes(search.toLowerCase()) ||
+        s.subjects_studied.some(sub => sub.toLowerCase().includes(search.toLowerCase())) ||
+        s.university.toLowerCase().includes(search.toLowerCase())
+      )
+    : students;
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto max-w-4xl">
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6 flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
             <ArrowLeft className="h-5 w-5" />
@@ -217,20 +214,22 @@ const AdminPanel = () => {
         </motion.div>
 
         {/* Summary Cards */}
-        <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
           {[
             { label: "Students", value: totalStudents, icon: Users, color: "text-primary" },
-            { label: "Total Sessions", value: totalSessions, icon: BookOpen, color: "text-accent" },
+            { label: "Sessions", value: totalSessions, icon: BookOpen, color: "text-accent" },
             { label: "Total Hours", value: `${Math.round(totalMinutes / 60)}h`, icon: Clock, color: "text-secondary" },
             { label: "Avg Session", value: `${avgSessionLength}m`, icon: BarChart3, color: "text-muted-foreground" },
+            { label: "Avg Stress", value: `${avgStress}/5`, icon: Activity, color: "text-destructive" },
+            { label: "Active Days", value: totalActiveDays, icon: Clock, color: "text-primary" },
           ].map((card, i) => (
-            <motion.div key={card.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
+            <motion.div key={card.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
               <Card>
-                <CardContent className="flex items-center gap-3 p-4">
-                  <card.icon className={`h-8 w-8 ${card.color}`} />
-                  <div>
-                    <p className="text-xs text-muted-foreground">{card.label}</p>
-                    <p className="text-xl font-bold text-foreground">{card.value}</p>
+                <CardContent className="flex items-center gap-2 p-3">
+                  <card.icon className={`h-6 w-6 ${card.color} shrink-0`} />
+                  <div className="min-w-0">
+                    <p className="text-[10px] text-muted-foreground">{card.label}</p>
+                    <p className="text-lg font-bold text-foreground">{card.value}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -238,131 +237,35 @@ const AdminPanel = () => {
           ))}
         </div>
 
-        {/* Student Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              Student Study Analytics
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loadingData ? (
-              <div className="space-y-3">
-                {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
-              </div>
-            ) : students.length === 0 ? (
-              <p className="py-8 text-center text-muted-foreground">No student data yet.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Matricola</TableHead>
-                      <TableHead>Sessions</TableHead>
-                      <TableHead>Total Time</TableHead>
-                      <TableHead>Subjects</TableHead>
-                      <TableHead>Avg Difficulty</TableHead>
-                      <TableHead>Avg Stress</TableHead>
-                      <TableHead>Avg Energy</TableHead>
-                      <TableHead>Avg Distraction</TableHead>
-                      <TableHead>Burnout Risk</TableHead>
-                      <TableHead>Cognitive</TableHead>
-                      <TableHead>Retention</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {students.map((s) => {
-                      const sc = scores[s.user_id];
-                      return (
-                        <React.Fragment key={s.user_id}>
-                          <TableRow className="cursor-pointer hover:bg-muted/50" onClick={() => setExpandedRow(expandedRow === s.user_id ? null : s.user_id)}>
-                          <TableCell className="font-mono font-semibold">
-                            <span className="flex items-center gap-2">
-                              {expandedRow === s.user_id ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-                              {s.matricola}
-                            </span>
-                          </TableCell>
-                          <TableCell>{s.total_sessions}</TableCell>
-                          <TableCell>{formatTime(s.total_minutes)}</TableCell>
-                          <TableCell>
-                            <div className="flex flex-wrap gap-1">
-                              {s.subjects_studied.slice(0, 3).map((sub) => (
-                                <Badge key={sub} variant="secondary" className="text-xs">{sub}</Badge>
-                              ))}
-                              {s.subjects_studied.length > 3 && (
-                                <Badge variant="outline" className="text-xs">+{s.subjects_studied.length - 3}</Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>{s.avg_difficulty}/5</TableCell>
-                          <TableCell>{s.avg_stress}/5</TableCell>
-                          <TableCell>{s.avg_energy}/5</TableCell>
-                          <TableCell>{s.avg_distraction}/5</TableCell>
-                          <TableCell>{sc ? `${sc.avg_burnout}%` : "—"}</TableCell>
-                          <TableCell>{sc ? `${sc.avg_cognitive}%` : "—"}</TableCell>
-                          <TableCell>{sc ? `${sc.avg_retention}%` : "—"}</TableCell>
-                          <TableCell className="text-right">
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete student data?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This will permanently delete all study logs and scores for <span className="font-mono font-semibold">{s.matricola}</span>. This action cannot be undone.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => deleteStudentData(s.user_id, s.matricola)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </TableCell>
-                        </TableRow>
-                        {expandedRow === s.user_id && (
-                          <TableRow>
-                            <TableCell colSpan={12} className="bg-muted/30 p-4">
-                              <div className="flex items-center gap-2 mb-3">
-                                <UserCircle className="h-5 w-5 text-primary" />
-                                <span className="font-semibold text-foreground">Student Persona</span>
-                              </div>
-                              {s.persona ? (
-                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 text-sm">
-                                  {s.persona.goals.length > 0 && (
-                                    <div><span className="text-muted-foreground">Goals:</span><div className="flex flex-wrap gap-1 mt-1">{s.persona.goals.map(g => <Badge key={g} variant="secondary" className="text-xs">{g}</Badge>)}</div></div>
-                                  )}
-                                  {s.persona.study_style && <div><span className="text-muted-foreground">Study Style:</span><p className="font-medium">{s.persona.study_style}</p></div>}
-                                  {s.persona.weekly_study_hours && <div><span className="text-muted-foreground">Weekly Hours:</span><p className="font-medium">{s.persona.weekly_study_hours}</p></div>}
-                                  {s.persona.biggest_challenge && <div><span className="text-muted-foreground">Challenge:</span><p className="font-medium">{s.persona.biggest_challenge}</p></div>}
-                                  {s.persona.motivation_type && <div><span className="text-muted-foreground">Motivation:</span><p className="font-medium">{s.persona.motivation_type}</p></div>}
-                                  {s.persona.preferred_session_length && <div><span className="text-muted-foreground">Session Length:</span><p className="font-medium">{s.persona.preferred_session_length}</p></div>}
-                                  {s.persona.learning_method && <div><span className="text-muted-foreground">Learning Method:</span><p className="font-medium">{s.persona.learning_method}</p></div>}
-                                  {s.persona.stress_management && <div><span className="text-muted-foreground">Stress Mgmt:</span><p className="font-medium">{s.persona.stress_management}</p></div>}
-                                  {s.persona.social_preference && <div><span className="text-muted-foreground">Social Pref:</span><p className="font-medium">{s.persona.social_preference}</p></div>}
-                                </div>
-                              ) : (
-                                <p className="text-muted-foreground italic">No persona quiz completed.</p>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        )}
-                        </React.Fragment>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        {/* Search */}
+        <div className="mb-4 relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by matricola, subject, or university..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+
+        {/* Student Cards */}
+        {loadingData ? (
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-lg" />)}
+          </div>
+        ) : filtered.length === 0 ? (
+          <Card>
+            <CardContent className="py-12 text-center text-muted-foreground">
+              {search ? "No students match your search." : "No student data yet."}
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {filtered.map((s) => (
+              <StudentCard key={s.user_id} student={s} score={scores[s.user_id]} onDelete={deleteStudentData} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
