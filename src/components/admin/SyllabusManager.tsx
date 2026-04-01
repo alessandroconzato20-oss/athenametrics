@@ -52,10 +52,14 @@ const SyllabusManager = ({ universityFilter }: { universityFilter?: string | nul
   }, []);
 
   const fetchSyllabi = async () => {
-    const { data, error } = await supabase
+    let query = supabase
       .from("university_syllabi")
       .select("*")
       .order("created_at", { ascending: false });
+    if (universityFilter) {
+      query = query.ilike("university_name", universityFilter);
+    }
+    const { data, error } = await query;
     if (error) {
       toast.error("Failed to load syllabi");
     } else {
