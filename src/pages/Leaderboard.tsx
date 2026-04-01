@@ -308,7 +308,7 @@ const Leaderboard = () => {
     }
 
     setActiveLibrary(null);
-    await fetchLeaderboardDirect();
+    setEntries([]);
   };
 
   const copyCode = () => {
