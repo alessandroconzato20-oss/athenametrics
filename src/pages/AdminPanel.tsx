@@ -168,6 +168,7 @@ const AdminPanel = () => {
             persona: personaMap[log.user_id] || null,
             recent_sessions: [],
             study_days: 0,
+            topic_mastery: masteryMap[log.user_id] || {},
           };
           recentLogs[log.user_id] = [];
           studyDays[log.user_id] = new Set();
