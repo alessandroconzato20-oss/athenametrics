@@ -27,6 +27,7 @@ const AdminPanel = () => {
   const [students, setStudents] = useState<StudentStat[]>([]);
   const [scores, setScores] = useState<Record<string, ScoreStat>>({});
   const [topicMetrics, setTopicMetrics] = useState<TopicMetric[]>([]);
+  const [hardestTopics, setHardestTopics] = useState<HardestTopicEntry[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [search, setSearch] = useState("");
 
