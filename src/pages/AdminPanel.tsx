@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import StudentCard, { StudentStat, ScoreStat } from "@/components/admin/StudentCard";
 import SyllabusManager from "@/components/admin/SyllabusManager";
 import TopicSummaryTable, { TopicMetric } from "@/components/admin/TopicSummaryTable";
+import HardestTopicsRanking, { HardestTopicEntry } from "@/components/admin/HardestTopicsRanking";
 
 type AdminRole = "admin" | "university_admin";
 
