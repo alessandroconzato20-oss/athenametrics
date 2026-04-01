@@ -13,6 +13,7 @@ import StudyLogForm from "./pages/StudyLogForm";
 import Leaderboard from "./pages/Leaderboard";
 import WeeklyGoalsHistory from "./pages/WeeklyGoalsHistory";
 import AdminPanel from "./pages/AdminPanel";
+import UniversitySignup from "./pages/UniversitySignup";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
