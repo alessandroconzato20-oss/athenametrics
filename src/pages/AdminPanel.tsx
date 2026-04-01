@@ -391,6 +391,13 @@ const AdminPanel = () => {
           </div>
         )}
 
+        {/* Topic Insights Summary */}
+        {!loadingData && topicMetrics.length > 0 && (
+          <div className="mt-8 border-t pt-6">
+            <TopicSummaryTable topics={topicMetrics} />
+          </div>
+        )}
+
         {/* Syllabus Management */}
         <div className="mt-8 border-t pt-6">
           <SyllabusManager universityFilter={adminRole === "university_admin" ? adminUniversity : null} />
