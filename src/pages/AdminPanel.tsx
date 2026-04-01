@@ -98,11 +98,12 @@ const AdminPanel = () => {
   const loadData = async () => {
     setLoadingData(true);
     try {
-      const [{ data: logs }, { data: profiles }, { data: dailyScores }, { data: personas }] = await Promise.all([
+      const [{ data: logs }, { data: profiles }, { data: dailyScores }, { data: personas }, { data: masteryData }] = await Promise.all([
         supabase.from("study_logs").select("*"),
         supabase.from("profiles").select("id, matricola, university"),
         supabase.from("daily_scores").select("*"),
         supabase.from("student_personas").select("*"),
+        supabase.from("topic_mastery").select("*"),
       ]);
 
       const profileMap: Record<string, { matricola: string; university: string }> = {};
