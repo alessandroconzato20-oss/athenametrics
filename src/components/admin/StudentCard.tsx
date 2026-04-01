@@ -33,6 +33,10 @@ export interface RecentSession {
   studied_at: string;
   difficulty: number;
   stress_level: number;
+  comprehension_level: number | null;
+  confidence_level: number | null;
+  revision_priority: number | null;
+  teaching_readiness: number | null;
   notes: string | null;
 }
 
