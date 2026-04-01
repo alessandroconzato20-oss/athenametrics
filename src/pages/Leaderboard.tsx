@@ -369,7 +369,9 @@ const Leaderboard = () => {
         )}
 
         <p className="mb-5 text-sm text-muted-foreground">
-          {activeLibrary ? "Private leaderboard — only members can see this." : "Global leaderboard — see who's putting in the work 💪"}
+          {activeLibrary
+            ? "Private leaderboard — only members can see this."
+            : "Create your own study crew or join a friend's — compete, stay accountable, and crush your goals together 🔥"}
         </p>
 
         {/* Join profile */}
