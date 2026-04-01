@@ -214,7 +214,7 @@ const StudyLogForm = () => {
               <LevelPicker label="Comprehension" icon={<BookOpen className="h-4 w-4 text-primary" />} value={comprehension} onChange={setComprehension} color="bg-primary text-primary-foreground" />
               <LevelPicker label="Confidence" icon={<Zap className="h-4 w-4 text-green-500" />} value={confidence} onChange={setConfidence} color="bg-green-500 text-white" />
               <LevelPicker label="Revision Priority" icon={<AlertTriangle className="h-4 w-4 text-amber-500" />} value={revisionPriority} onChange={setRevisionPriority} color="bg-amber-500 text-white" />
-              <LevelPicker label="Could You Teach This?" icon={<GraduationCap className="h-4 w-4 text-blue-500" />} value={teachingReadiness} onChange={setTeachingReadiness} color="bg-blue-500 text-white" />
+              <LevelPicker label="Real-World Applicability" icon={<GraduationCap className="h-4 w-4 text-blue-500" />} value={teachingReadiness} onChange={setTeachingReadiness} color="bg-blue-500 text-white" />
             </div>
 
             {/* Topic Mastery Checklist */}

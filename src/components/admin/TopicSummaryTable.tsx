@@ -169,7 +169,7 @@ const TopicSummaryTable: React.FC<Props> = ({ topics }) => {
                               <MiniMetric label="Comp" value={t.avg_comprehension} inverted />
                               <MiniMetric label="Conf" value={t.avg_confidence} inverted />
                               <MiniMetric label="Rev Pri" value={t.avg_revision_priority} />
-                              <MiniMetric label="Teach" value={t.avg_teaching_readiness} inverted />
+                              <MiniMetric label="Applic." value={t.avg_teaching_readiness} inverted />
                             </div>
                           </div>
                         ))}
