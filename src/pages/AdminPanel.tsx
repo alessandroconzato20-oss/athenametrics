@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import StudentCard, { StudentStat, ScoreStat } from "@/components/admin/StudentCard";
 import SyllabusManager from "@/components/admin/SyllabusManager";
 import TopicSummaryTable, { TopicMetric } from "@/components/admin/TopicSummaryTable";
+import HardestTopicsRanking, { HardestTopicEntry } from "@/components/admin/HardestTopicsRanking";
 
 type AdminRole = "admin" | "university_admin";
 
@@ -26,6 +27,7 @@ const AdminPanel = () => {
   const [students, setStudents] = useState<StudentStat[]>([]);
   const [scores, setScores] = useState<Record<string, ScoreStat>>({});
   const [topicMetrics, setTopicMetrics] = useState<TopicMetric[]>([]);
+  const [hardestTopics, setHardestTopics] = useState<HardestTopicEntry[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [search, setSearch] = useState("");
 
@@ -277,9 +279,61 @@ const AdminPanel = () => {
         students_count: ta.students.size,
       }));
 
+      // Aggregate mastery statuses per topic (across all students)
+      const masteryAgg: Record<string, { red: number; orange: number; green: number }> = {};
+      (masteryData || []).forEach((m: any) => {
+        // Filter by university for university admins
+        const mUni = profileMap[m.user_id]?.university || "N/A";
+        if (adminRole === "university_admin" && adminUniversity && mUni.toLowerCase() !== adminUniversity.toLowerCase()) return;
+
+        const key = `${m.course_name}|||${m.topic_name}`;
+        if (!masteryAgg[key]) masteryAgg[key] = { red: 0, orange: 0, green: 0 };
+        if (m.status === "red") masteryAgg[key].red++;
+        else if (m.status === "orange") masteryAgg[key].orange++;
+        else if (m.status === "green") masteryAgg[key].green++;
+      });
+
+      // Build hardest topics ranking with composite score
+      const hardestResult: HardestTopicEntry[] = topicMetricsResult.map(tm => {
+        const mKey = `${tm.subject}|||${tm.topic}`;
+        const mastery = masteryAgg[mKey] || { red: 0, orange: 0, green: 0 };
+        const totalMastery = mastery.red + mastery.orange + mastery.green;
+
+        // Composite: weight difficulty (30%), stress (15%), inverse comprehension (20%), inverse confidence (15%), revision priority (10%), mastery red ratio (10%)
+        const invComp = tm.avg_comprehension > 0 ? (5 - tm.avg_comprehension) + 1 : 0;
+        const invConf = tm.avg_confidence > 0 ? (5 - tm.avg_confidence) + 1 : 0;
+        const masteryRedRatio = totalMastery > 0 ? (mastery.red / totalMastery) * 5 : 0;
+
+        const composite = (
+          tm.avg_difficulty * 0.30 +
+          tm.avg_stress * 0.15 +
+          invComp * 0.20 +
+          invConf * 0.15 +
+          tm.avg_revision_priority * 0.10 +
+          masteryRedRatio * 0.10
+        );
+
+        return {
+          subject: tm.subject,
+          topic: tm.topic,
+          composite_score: Math.round(composite * 10) / 10,
+          avg_difficulty: tm.avg_difficulty,
+          avg_stress: tm.avg_stress,
+          avg_comprehension: tm.avg_comprehension,
+          avg_confidence: tm.avg_confidence,
+          avg_revision_priority: tm.avg_revision_priority,
+          avg_applicability: tm.avg_teaching_readiness,
+          students_logged: tm.students_count,
+          mastery_red: mastery.red,
+          mastery_orange: mastery.orange,
+          mastery_green: mastery.green,
+        };
+      }).sort((a, b) => b.composite_score - a.composite_score);
+
       setStudents(Object.values(studentMap).sort((a, b) => b.total_minutes - a.total_minutes));
       setScores(scoresResult);
       setTopicMetrics(topicMetricsResult);
+      setHardestTopics(hardestResult);
     } catch {
       toast.error("Failed to load admin data");
     } finally {
@@ -370,6 +424,13 @@ const AdminPanel = () => {
             </motion.div>
           ))}
         </div>
+
+        {/* Hardest Topics Ranking — prominent position */}
+        {!loadingData && hardestTopics.length > 0 && (
+          <div className="mb-6">
+            <HardestTopicsRanking topics={hardestTopics} />
+          </div>
+        )}
 
         {/* Search */}
         <div className="mb-4 relative">
