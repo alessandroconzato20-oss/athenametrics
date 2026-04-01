@@ -49,18 +49,21 @@ export type Database = {
           created_at: string
           id: string
           matricola: string | null
+          university: string | null
           username: string
         }
         Insert: {
           created_at?: string
           id: string
           matricola?: string | null
+          university?: string | null
           username: string
         }
         Update: {
           created_at?: string
           id?: string
           matricola?: string | null
+          university?: string | null
           username?: string
         }
         Relationships: []
@@ -224,6 +227,54 @@ export type Database = {
           topic_name?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      university_syllabi: {
+        Row: {
+          course_name: string
+          created_at: string
+          credits: number | null
+          id: string
+          notes: string | null
+          pdf_path: string | null
+          semester: number | null
+          status: string
+          topics: Json
+          university_name: string
+          updated_at: string
+          uploaded_by: string
+          year: number
+        }
+        Insert: {
+          course_name: string
+          created_at?: string
+          credits?: number | null
+          id?: string
+          notes?: string | null
+          pdf_path?: string | null
+          semester?: number | null
+          status?: string
+          topics?: Json
+          university_name: string
+          updated_at?: string
+          uploaded_by: string
+          year: number
+        }
+        Update: {
+          course_name?: string
+          created_at?: string
+          credits?: number | null
+          id?: string
+          notes?: string | null
+          pdf_path?: string | null
+          semester?: number | null
+          status?: string
+          topics?: Json
+          university_name?: string
+          updated_at?: string
+          uploaded_by?: string
+          year?: number
         }
         Relationships: []
       }
