@@ -134,8 +134,12 @@ const StudyLogForm = () => {
         stress_level: stress,
         distraction_level: distraction,
         energy_level: energy,
+        comprehension_level: comprehension,
+        confidence_level: confidence,
+        revision_priority: revisionPriority,
+        teaching_readiness: teachingReadiness,
         notes: combinedNotes,
-      });
+      } as any);
       if (error) throw error;
       toast.success("Study session logged! 🎉");
       navigate("/study-logs");
