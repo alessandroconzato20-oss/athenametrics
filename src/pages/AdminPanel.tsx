@@ -127,6 +127,8 @@ const AdminPanel = () => {
       const studentMap: Record<string, StudentStat> = {};
       const recentLogs: Record<string, any[]> = {};
       const studyDays: Record<string, Set<string>> = {};
+      // Topic-level aggregation
+      const topicAgg: Record<string, { sessions: number; total_minutes: number; sum_difficulty: number; sum_stress: number; sum_energy: number; sum_distraction: number; sum_comprehension: number; sum_confidence: number; sum_revision: number; sum_teaching: number; comp_count: number; students: Set<string>; subject: string; topic: string }> = {};
 
       (logs || []).forEach((log: any) => {
         // For university admins, only include students from their university
