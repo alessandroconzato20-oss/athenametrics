@@ -171,10 +171,32 @@ const AdminPanel = () => {
         s.avg_stress += log.stress_level;
         s.avg_energy += log.energy_level;
         s.avg_distraction += log.distraction_level;
+        s.avg_comprehension += (log.comprehension_level || 0);
+        s.avg_confidence += (log.confidence_level || 0);
+        s.avg_revision_priority += (log.revision_priority || 0);
+        s.avg_teaching_readiness += (log.teaching_readiness || 0);
         if (!s.last_active || log.studied_at > s.last_active) s.last_active = log.studied_at;
 
         const day = log.studied_at?.slice(0, 10);
         if (day) studyDays[log.user_id].add(day);
+
+        // Topic aggregation
+        const topicKey = `${log.subject}|||${log.topic}`;
+        if (!topicAgg[topicKey]) {
+          topicAgg[topicKey] = { sessions: 0, total_minutes: 0, sum_difficulty: 0, sum_stress: 0, sum_energy: 0, sum_distraction: 0, sum_comprehension: 0, sum_confidence: 0, sum_revision: 0, sum_teaching: 0, comp_count: 0, students: new Set(), subject: log.subject, topic: log.topic };
+        }
+        const ta = topicAgg[topicKey];
+        ta.sessions++;
+        ta.total_minutes += log.duration_minutes;
+        ta.sum_difficulty += log.difficulty;
+        ta.sum_stress += log.stress_level;
+        ta.sum_energy += log.energy_level;
+        ta.sum_distraction += log.distraction_level;
+        if (log.comprehension_level) { ta.sum_comprehension += log.comprehension_level; ta.comp_count++; }
+        if (log.confidence_level) ta.sum_confidence += log.confidence_level;
+        if (log.revision_priority) ta.sum_revision += log.revision_priority;
+        if (log.teaching_readiness) ta.sum_teaching += log.teaching_readiness;
+        ta.students.add(log.user_id);
 
         recentLogs[log.user_id].push({
           subject: log.subject,
@@ -183,6 +205,10 @@ const AdminPanel = () => {
           studied_at: log.studied_at,
           difficulty: log.difficulty,
           stress_level: log.stress_level,
+          comprehension_level: log.comprehension_level,
+          confidence_level: log.confidence_level,
+          revision_priority: log.revision_priority,
+          teaching_readiness: log.teaching_readiness,
           notes: log.notes,
         });
       });
