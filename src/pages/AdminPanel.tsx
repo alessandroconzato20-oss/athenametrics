@@ -98,11 +98,12 @@ const AdminPanel = () => {
   const loadData = async () => {
     setLoadingData(true);
     try {
-      const [{ data: logs }, { data: profiles }, { data: dailyScores }, { data: personas }] = await Promise.all([
+      const [{ data: logs }, { data: profiles }, { data: dailyScores }, { data: personas }, { data: masteryData }] = await Promise.all([
         supabase.from("study_logs").select("*"),
         supabase.from("profiles").select("id, matricola, university"),
         supabase.from("daily_scores").select("*"),
         supabase.from("student_personas").select("*"),
+        supabase.from("topic_mastery").select("*"),
       ]);
 
       const profileMap: Record<string, { matricola: string; university: string }> = {};
@@ -123,6 +124,14 @@ const AdminPanel = () => {
           stress_management: p.stress_management,
           social_preference: p.social_preference,
         };
+      });
+
+      // Build topic mastery map per user: { userId: { courseName: { topicName: status } } }
+      const masteryMap: Record<string, Record<string, Record<string, string>>> = {};
+      (masteryData || []).forEach((m: any) => {
+        if (!masteryMap[m.user_id]) masteryMap[m.user_id] = {};
+        if (!masteryMap[m.user_id][m.course_name]) masteryMap[m.user_id][m.course_name] = {};
+        masteryMap[m.user_id][m.course_name][m.topic_name] = m.status;
       });
 
       const studentMap: Record<string, StudentStat> = {};
@@ -159,6 +168,7 @@ const AdminPanel = () => {
             persona: personaMap[log.user_id] || null,
             recent_sessions: [],
             study_days: 0,
+            topic_mastery: masteryMap[log.user_id] || {},
           };
           recentLogs[log.user_id] = [];
           studyDays[log.user_id] = new Set();

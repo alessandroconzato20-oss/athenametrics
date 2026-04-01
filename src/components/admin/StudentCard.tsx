@@ -66,6 +66,7 @@ export interface StudentStat {
   persona: PersonaData | null;
   recent_sessions: RecentSession[];
   study_days: number;
+  topic_mastery: Record<string, Record<string, string>>; // { courseName: { topicName: status } }
 }
 
 interface Props {
@@ -226,6 +227,50 @@ const StudentCard: React.FC<Props> = ({ student: s, score: sc, onDelete }) => {
                       ))}
                   </div>
                 </div>
+
+                {/* Topic Mastery per Subject */}
+                {Object.keys(s.topic_mastery).length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Topic Mastery</h4>
+                    <div className="space-y-2">
+                      {Object.entries(s.topic_mastery)
+                        .sort(([a], [b]) => a.localeCompare(b))
+                        .map(([course, topics]) => {
+                          const topicEntries = Object.entries(topics);
+                          const red = topicEntries.filter(([, st]) => st === "red").length;
+                          const orange = topicEntries.filter(([, st]) => st === "orange").length;
+                          const green = topicEntries.filter(([, st]) => st === "green").length;
+                          return (
+                            <div key={course} className="rounded-lg bg-muted/30 p-2.5">
+                              <div className="flex items-center justify-between mb-1.5">
+                                <p className="text-xs font-semibold text-foreground">{course}</p>
+                                <div className="flex items-center gap-2 text-[10px] font-medium">
+                                  <span className="flex items-center gap-0.5"><span className="h-2 w-2 rounded-full bg-destructive" />{red}</span>
+                                  <span className="flex items-center gap-0.5"><span className="h-2 w-2 rounded-full bg-amber-500" />{orange}</span>
+                                  <span className="flex items-center gap-0.5"><span className="h-2 w-2 rounded-full bg-emerald-500" />{green}</span>
+                                </div>
+                              </div>
+                              <div className="flex flex-wrap gap-1">
+                                {topicEntries.map(([topicName, status]) => (
+                                  <span
+                                    key={topicName}
+                                    className={`inline-block rounded-md px-1.5 py-0.5 text-[10px] font-medium ${
+                                      status === "green" ? "bg-emerald-500/15 text-emerald-600" :
+                                      status === "orange" ? "bg-amber-500/15 text-amber-600" :
+                                      "bg-destructive/15 text-destructive"
+                                    }`}
+                                    title={topicName}
+                                  >
+                                    {topicName.length > 30 ? topicName.slice(0, 28) + "…" : topicName}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+                )}
 
                 {/* Activity summary */}
                 <div>
