@@ -7,57 +7,106 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, ShieldCheck, Users, BookOpen, Clock, BarChart3, Search, Activity } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, ShieldCheck, Users, BookOpen, Clock, BarChart3, Search, Activity, Key, Plus, Trash2, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
 import StudentCard, { StudentStat, ScoreStat } from "@/components/admin/StudentCard";
 import SyllabusManager from "@/components/admin/SyllabusManager";
 
+type AdminRole = "admin" | "university_admin";
+
 const AdminPanel = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminRole, setAdminRole] = useState<AdminRole | null>(null);
+  const [adminUniversity, setAdminUniversity] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
   const [students, setStudents] = useState<StudentStat[]>([]);
   const [scores, setScores] = useState<Record<string, ScoreStat>>({});
   const [loadingData, setLoadingData] = useState(true);
   const [search, setSearch] = useState("");
 
+  // Access code management (global admin only)
+  const [accessCodes, setAccessCodes] = useState<any[]>([]);
+  const [newCodeUni, setNewCodeUni] = useState("");
+  const [newCode, setNewCode] = useState("");
+
   useEffect(() => {
     if (authLoading) return;
     if (!user) { navigate("/login"); return; }
     const checkAdmin = async () => {
-      const { data } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
-      if (!data) { toast.error("Access denied"); navigate("/"); return; }
-      setIsAdmin(true);
-      setChecking(false);
+      // Check global admin first
+      const { data: isGlobal } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
+      if (isGlobal) {
+        setAdminRole("admin");
+        setChecking(false);
+        return;
+      }
+      // Check university admin
+      const { data: isUniAdmin } = await supabase.rpc("has_role", { _user_id: user.id, _role: "university_admin" });
+      if (isUniAdmin) {
+        setAdminRole("university_admin");
+        // Get their university from profile
+        const { data: profile } = await supabase.from("profiles").select("university").eq("id", user.id).single();
+        setAdminUniversity(profile?.university || null);
+        setChecking(false);
+        return;
+      }
+      toast.error("Access denied");
+      navigate("/");
     };
     checkAdmin();
   }, [user, authLoading, navigate]);
 
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!adminRole) return;
     loadData();
-  }, [isAdmin]);
+    if (adminRole === "admin") loadAccessCodes();
+  }, [adminRole]);
+
+  const loadAccessCodes = async () => {
+    const { data } = await supabase.from("university_access_codes").select("*").order("created_at", { ascending: false });
+    setAccessCodes(data || []);
+  };
+
+  const addAccessCode = async () => {
+    if (!newCodeUni || !newCode || !user) return;
+    const { error } = await supabase.from("university_access_codes").insert({
+      university_name: newCodeUni,
+      access_code: newCode,
+      created_by: user.id,
+    } as any);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Access code created");
+      setNewCodeUni("");
+      setNewCode("");
+      loadAccessCodes();
+    }
+  };
+
+  const deleteAccessCode = async (id: string) => {
+    const { error } = await supabase.from("university_access_codes").delete().eq("id", id);
+    if (error) toast.error("Failed to delete");
+    else { toast.success("Deleted"); loadAccessCodes(); }
+  };
 
   const loadData = async () => {
     setLoadingData(true);
     try {
       const [{ data: logs }, { data: profiles }, { data: dailyScores }, { data: personas }] = await Promise.all([
         supabase.from("study_logs").select("*"),
-        supabase.from("profiles").select("id, matricola"),
+        supabase.from("profiles").select("id, matricola, university"),
         supabase.from("daily_scores").select("*"),
         supabase.from("student_personas").select("*"),
       ]);
 
-      const matricolaMap: Record<string, string> = {};
-      const universityMap: Record<string, string> = {};
+      const profileMap: Record<string, { matricola: string; university: string }> = {};
       (profiles || []).forEach((p: any) => {
-        matricolaMap[p.id] = p.matricola || "N/A";
+        profileMap[p.id] = { matricola: p.matricola || "N/A", university: p.university || "N/A" };
       });
-
-      // Get university from auth metadata via admin - we'll use profiles for now
-      // University is stored in user_metadata, but we can't access that from client
-      // We'll show it when available
 
       const personaMap: Record<string, any> = {};
       (personas || []).forEach((p: any) => {
@@ -79,11 +128,17 @@ const AdminPanel = () => {
       const studyDays: Record<string, Set<string>> = {};
 
       (logs || []).forEach((log: any) => {
+        // For university admins, only include students from their university
+        const studentUni = profileMap[log.user_id]?.university || "N/A";
+        if (adminRole === "university_admin" && adminUniversity) {
+          if (studentUni.toLowerCase() !== adminUniversity.toLowerCase()) return;
+        }
+
         if (!studentMap[log.user_id]) {
           studentMap[log.user_id] = {
             user_id: log.user_id,
-            matricola: matricolaMap[log.user_id] || "N/A",
-            university: "N/A",
+            matricola: profileMap[log.user_id]?.matricola || "N/A",
+            university: studentUni,
             total_sessions: 0,
             total_minutes: 0,
             subjects_studied: [],
@@ -140,6 +195,7 @@ const AdminPanel = () => {
 
       const scoreMap: Record<string, { sum_b: number; sum_c: number; sum_r: number; count: number }> = {};
       (dailyScores || []).forEach((ds: any) => {
+        if (!studentMap[ds.user_id]) return; // skip students not in our filtered set
         if (!scoreMap[ds.user_id]) scoreMap[ds.user_id] = { sum_b: 0, sum_c: 0, sum_r: 0, count: 0 };
         scoreMap[ds.user_id].sum_b += ds.burnout_risk;
         scoreMap[ds.user_id].sum_c += (ds.cognitive_readiness || 0);
@@ -186,7 +242,7 @@ const AdminPanel = () => {
     );
   }
 
-  if (!isAdmin) return null;
+  if (!adminRole) return null;
 
   const totalStudents = students.length;
   const totalSessions = students.reduce((a, s) => a + s.total_sessions, 0);
@@ -203,6 +259,10 @@ const AdminPanel = () => {
       )
     : students;
 
+  const panelTitle = adminRole === "university_admin" && adminUniversity
+    ? `${adminUniversity} – Admin Panel`
+    : "Admin Panel";
+
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="mx-auto max-w-4xl">
@@ -210,8 +270,15 @@ const AdminPanel = () => {
           <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <ShieldCheck className="h-6 w-6 text-primary" />
-          <h1 className="font-display text-2xl font-bold text-foreground">Admin Panel</h1>
+          {adminRole === "university_admin" ? (
+            <GraduationCap className="h-6 w-6 text-primary" />
+          ) : (
+            <ShieldCheck className="h-6 w-6 text-primary" />
+          )}
+          <h1 className="font-display text-2xl font-bold text-foreground">{panelTitle}</h1>
+          {adminRole === "university_admin" && (
+            <Badge variant="secondary" className="text-xs">University Admin</Badge>
+          )}
         </motion.div>
 
         {/* Summary Cards */}
@@ -270,8 +337,55 @@ const AdminPanel = () => {
 
         {/* Syllabus Management */}
         <div className="mt-8 border-t pt-6">
-          <SyllabusManager />
+          <SyllabusManager universityFilter={adminRole === "university_admin" ? adminUniversity : null} />
         </div>
+
+        {/* Access Code Management - Global Admin Only */}
+        {adminRole === "admin" && (
+          <div className="mt-8 border-t pt-6 space-y-4">
+            <div className="flex items-center gap-2">
+              <Key className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-bold text-foreground">University Access Codes</h2>
+            </div>
+
+            <div className="flex gap-2 items-end">
+              <div className="flex-1 space-y-1">
+                <Label className="text-xs">University Name</Label>
+                <Input placeholder="e.g. Università di Padova" value={newCodeUni} onChange={(e) => setNewCodeUni(e.target.value)} />
+              </div>
+              <div className="flex-1 space-y-1">
+                <Label className="text-xs">Access Code</Label>
+                <Input placeholder="e.g. UNIPD-2026" value={newCode} onChange={(e) => setNewCode(e.target.value)} />
+              </div>
+              <Button onClick={addAccessCode} size="sm" className="gap-1 shrink-0">
+                <Plus className="h-4 w-4" /> Add
+              </Button>
+            </div>
+
+            {accessCodes.length > 0 && (
+              <div className="space-y-2">
+                {accessCodes.map((ac) => (
+                  <Card key={ac.id}>
+                    <CardContent className="flex items-center justify-between p-3">
+                      <div>
+                        <p className="font-medium text-sm text-foreground">{ac.university_name}</p>
+                        <p className="text-xs text-muted-foreground font-mono">{ac.access_code}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={ac.is_active ? "default" : "secondary"} className="text-[10px]">
+                          {ac.is_active ? "Active" : "Inactive"}
+                        </Badge>
+                        <Button variant="ghost" size="icon" onClick={() => deleteAccessCode(ac.id)} className="h-8 w-8 text-destructive">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

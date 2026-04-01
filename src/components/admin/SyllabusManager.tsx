@@ -29,7 +29,7 @@ interface SyllabusEntry {
   created_at: string;
 }
 
-const SyllabusManager = () => {
+const SyllabusManager = ({ universityFilter }: { universityFilter?: string | null }) => {
   const { user } = useAuth();
   const [syllabi, setSyllabi] = useState<SyllabusEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,7 +37,7 @@ const SyllabusManager = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // Form state
-  const [universityName, setUniversityName] = useState("");
+  const [universityName, setUniversityName] = useState(universityFilter || "");
   const [courseName, setCourseName] = useState("");
   const [credits, setCredits] = useState("");
   const [year, setYear] = useState("");
@@ -52,10 +52,14 @@ const SyllabusManager = () => {
   }, []);
 
   const fetchSyllabi = async () => {
-    const { data, error } = await supabase
+    let query = supabase
       .from("university_syllabi")
       .select("*")
       .order("created_at", { ascending: false });
+    if (universityFilter) {
+      query = query.ilike("university_name", universityFilter);
+    }
+    const { data, error } = await query;
     if (error) {
       toast.error("Failed to load syllabi");
     } else {

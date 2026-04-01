@@ -13,6 +13,7 @@ import StudyLogForm from "./pages/StudyLogForm";
 import Leaderboard from "./pages/Leaderboard";
 import WeeklyGoalsHistory from "./pages/WeeklyGoalsHistory";
 import AdminPanel from "./pages/AdminPanel";
+import UniversitySignup from "./pages/UniversitySignup";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/weekly-goals" element={<WeeklyGoalsHistory />} />
             <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/university-signup" element={<UniversitySignup />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
