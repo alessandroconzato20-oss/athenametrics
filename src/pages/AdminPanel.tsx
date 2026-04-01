@@ -13,6 +13,7 @@ import { ArrowLeft, ShieldCheck, Users, BookOpen, Clock, BarChart3, Search, Acti
 import { toast } from "sonner";
 import StudentCard, { StudentStat, ScoreStat } from "@/components/admin/StudentCard";
 import SyllabusManager from "@/components/admin/SyllabusManager";
+import TopicSummaryTable, { TopicMetric } from "@/components/admin/TopicSummaryTable";
 
 type AdminRole = "admin" | "university_admin";
 
