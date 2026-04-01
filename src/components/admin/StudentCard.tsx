@@ -58,6 +58,10 @@ export interface StudentStat {
   avg_stress: number;
   avg_energy: number;
   avg_distraction: number;
+  avg_comprehension: number;
+  avg_confidence: number;
+  avg_revision_priority: number;
+  avg_teaching_readiness: number;
   last_active: string | null;
   persona: PersonaData | null;
   recent_sessions: RecentSession[];
