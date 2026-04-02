@@ -126,9 +126,19 @@ const HardestTopicsRanking: React.FC<Props> = ({ topics, masteryBySubtopic = {},
 
   if (topics.length === 0) return null;
 
-  // Build a lookup map for subtopic metrics: "subject|||topic" -> TopicMetric
-  const metricsMap = new Map<string, TopicMetric>();
-  subtopicMetrics.forEach(m => metricsMap.set(`${m.subject}|||${m.topic}`, m));
+  // Build a lookup map for course-level metrics: "subject" -> TopicMetric
+  // Study logs store topic = course name, so we key by subject (course name)
+  const courseMetricsMap = new Map<string, TopicMetric>();
+  subtopicMetrics.forEach(m => {
+    // Use subject as key since study logs topic = subject (course name)
+    if (!courseMetricsMap.has(m.subject)) {
+      courseMetricsMap.set(m.subject, m);
+    } else {
+      // Merge if multiple entries exist for same subject (shouldn't normally happen)
+      const existing = courseMetricsMap.get(m.subject)!;
+      if (m.sessions > existing.sessions) courseMetricsMap.set(m.subject, m);
+    }
+  });
 
   const toggle = (key: string) => {
     setExpanded(prev => {
@@ -227,13 +237,12 @@ const HardestTopicsRanking: React.FC<Props> = ({ topics, masteryBySubtopic = {},
                           >
                             {allSubtopics.map(st => {
                               const mKey = `${t.subject}|||${st}`;
-                              const metricKey = `${t.subject}|||${st}`;
                               return (
                                 <SubtopicRow
                                   key={st}
                                   name={st}
                                   mastery={masteryBySubtopic[mKey]}
-                                  metric={metricsMap.get(metricKey)}
+                                  metric={courseMetricsMap.get(t.subject)}
                                 />
                               );
                             })}
