@@ -430,7 +430,7 @@ const AdminPanel = () => {
         {/* Hardest Topics Ranking — prominent position */}
         {!loadingData && hardestTopics.length > 0 && (
           <div className="mb-6">
-            <HardestTopicsRanking topics={hardestTopics} masteryBySubtopic={masteryBySubtopic} />
+            <HardestTopicsRanking topics={hardestTopics} masteryBySubtopic={masteryBySubtopic} subtopicMetrics={topicMetrics} />
           </div>
         )}
 
