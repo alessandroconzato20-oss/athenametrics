@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      consent_logs: {
+        Row: {
+          consent_type: string
+          consented: boolean
+          created_at: string
+          id: string
+          ip_address: string | null
+          user_id: string
+        }
+        Insert: {
+          consent_type: string
+          consented?: boolean
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          user_id: string
+        }
+        Update: {
+          consent_type?: string
+          consented?: boolean
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_scores: {
         Row: {
           burnout_risk: number
@@ -466,6 +493,7 @@ export type Database = {
       }
     }
     Functions: {
+      delete_user_data: { Args: { _user_id: string }; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

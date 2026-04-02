@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useNavigate } from "react-router-dom";
-import { LogOut, Activity, BookOpen, Trophy, Plus, RefreshCcw, Target } from "lucide-react";
+import { LogOut, Activity, BookOpen, Trophy, Plus, RefreshCcw, Target, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import ScoreCard from "@/components/ScoreCard";
@@ -312,9 +312,14 @@ const Index = () => {
         {/* Header */}
         <div className="mb-5 flex items-start justify-between">
           <StreakBadge streak={streak} studySessions={totalSessions} />
-          <button onClick={signOut} className="rounded-xl p-2 text-muted-foreground hover:bg-muted transition-colors">
-            <LogOut className="h-5 w-5" />
-          </button>
+          <div className="flex gap-1">
+            <button onClick={() => navigate("/account")} className="rounded-xl p-2 text-muted-foreground hover:bg-muted transition-colors">
+              <Settings className="h-5 w-5" />
+            </button>
+            <button onClick={signOut} className="rounded-xl p-2 text-muted-foreground hover:bg-muted transition-colors">
+              <LogOut className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Hero action sentence */}

@@ -2,9 +2,11 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Stethoscope, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
@@ -18,15 +20,31 @@ const Signup = () => {
   const [university, setUniversity] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [consentGiven, setConsentGiven] = useState(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!year) { toast.error("Please select your year"); return; }
+    if (!consentGiven) { toast.error("You must agree to the Privacy Policy and Terms of Service"); return; }
     setIsLoading(true);
     try {
       await signUp(email, password, name, parseInt(year), matricola, university);
+
+      // Log consent after signup (best-effort, user may not be authed yet)
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          await supabase.from("consent_logs").insert([
+            { user_id: session.user.id, consent_type: "privacy_policy" },
+            { user_id: session.user.id, consent_type: "terms_of_service" },
+          ]);
+        }
+      } catch {
+        // Consent logging is best-effort during signup
+      }
+
       toast.success("Account created! Check your email to verify, then sign in.");
       navigate("/login");
     } catch (err: any) {
@@ -84,7 +102,25 @@ const Signup = () => {
               </SelectContent>
             </Select>
           </div>
-          <Button type="submit" disabled={isLoading} className="h-12 w-full rounded-xl bg-gradient-primary text-base font-semibold text-primary-foreground">
+
+          {/* GDPR Consent */}
+          <div className="flex items-start gap-2 pt-1">
+            <Checkbox
+              id="consent"
+              checked={consentGiven}
+              onCheckedChange={(checked) => setConsentGiven(checked === true)}
+              className="mt-0.5"
+            />
+            <label htmlFor="consent" className="text-sm text-muted-foreground leading-snug cursor-pointer">
+              I agree to the{" "}
+              <Link to="/privacy" className="text-primary hover:underline" target="_blank">Privacy Policy</Link>{" "}
+              and{" "}
+              <Link to="/terms" className="text-primary hover:underline" target="_blank">Terms of Service</Link>.
+              I understand how my data will be processed.
+            </label>
+          </div>
+
+          <Button type="submit" disabled={isLoading || !consentGiven} className="h-12 w-full rounded-xl bg-gradient-primary text-base font-semibold text-primary-foreground">
             {isLoading ? "Creating account..." : "Create Account"}
           </Button>
         </form>
