@@ -28,6 +28,7 @@ const AdminPanel = () => {
   const [scores, setScores] = useState<Record<string, ScoreStat>>({});
   const [topicMetrics, setTopicMetrics] = useState<TopicMetric[]>([]);
   const [hardestTopics, setHardestTopics] = useState<HardestTopicEntry[]>([]);
+  const [masteryBySubtopic, setMasteryBySubtopic] = useState<Record<string, { red: number; orange: number; green: number }>>({});
   const [loadingData, setLoadingData] = useState(true);
   const [search, setSearch] = useState("");
 
