@@ -237,13 +237,12 @@ const HardestTopicsRanking: React.FC<Props> = ({ topics, masteryBySubtopic = {},
                           >
                             {allSubtopics.map(st => {
                               const mKey = `${t.subject}|||${st}`;
-                              const metricKey = `${t.subject}|||${st}`;
                               return (
                                 <SubtopicRow
                                   key={st}
                                   name={st}
                                   mastery={masteryBySubtopic[mKey]}
-                                  metric={metricsMap.get(metricKey)}
+                                  metric={courseMetricsMap.get(t.subject)}
                                 />
                               );
                             })}
