@@ -25,6 +25,15 @@ const STUDY_METHODS = [
   { id: "lectures", label: "Lectures / Videos" },
 ];
 
+const STUDY_LOCATIONS = [
+  { id: "home", label: "🏠 Home" },
+  { id: "university", label: "🏫 University" },
+  { id: "library", label: "📚 Library" },
+  { id: "cafe", label: "☕ Café" },
+  { id: "outdoors", label: "🌳 Outdoors" },
+  { id: "other", label: "📍 Other" },
+];
+
 const levelLabels: Record<number, string> = { 1: "Very Low", 2: "Low", 3: "Medium", 4: "High", 5: "Very High" };
 
 const LevelPicker = ({ label, icon, value, onChange, color }: {
