@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import CookieConsent from "@/components/CookieConsent";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -14,6 +15,9 @@ import Leaderboard from "./pages/Leaderboard";
 import WeeklyGoalsHistory from "./pages/WeeklyGoalsHistory";
 import AdminPanel from "./pages/AdminPanel";
 import UniversitySignup from "./pages/UniversitySignup";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import AccountSettings from "./pages/AccountSettings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,8 +40,12 @@ const App = () => (
             <Route path="/weekly-goals" element={<WeeklyGoalsHistory />} />
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="/university-signup" element={<UniversitySignup />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/account" element={<AccountSettings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <CookieConsent />
         </BrowserRouter>
       </AuthProvider>
     </TooltipProvider>
