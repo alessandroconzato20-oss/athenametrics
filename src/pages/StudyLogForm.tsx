@@ -209,7 +209,31 @@ const StudyLogForm = () => {
               </div>
             </div>
 
-            <div className="rounded-2xl bg-card p-4 space-y-5 shadow-card">
+            {/* Study Location */}
+            <div className="space-y-3">
+              <Label className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-primary" />
+                Where did you study?
+              </Label>
+              <div className="grid grid-cols-3 gap-2">
+                {STUDY_LOCATIONS.map((loc) => (
+                  <motion.button
+                    key={loc.id}
+                    type="button"
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setStudyLocation(studyLocation === loc.id ? "" : loc.id)}
+                    className={`rounded-xl px-3 py-2.5 text-xs font-medium transition-all ${
+                      studyLocation === loc.id
+                        ? "bg-primary text-primary-foreground shadow-soft"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    }`}
+                  >
+                    {loc.label}
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+
               <LevelPicker label="Difficulty" icon={<Brain className="h-4 w-4 text-score-cognitive" />} value={difficulty} onChange={setDifficulty} color="bg-score-cognitive text-primary-foreground" />
               <LevelPicker label="Stress Level" icon={<AlertTriangle className="h-4 w-4 text-score-burnout" />} value={stress} onChange={setStress} color="bg-score-burnout text-primary-foreground" />
               <LevelPicker label="Distraction Level" icon={<Eye className="h-4 w-4 text-score-peak" />} value={distraction} onChange={setDistraction} color="bg-score-peak text-primary-foreground" />
