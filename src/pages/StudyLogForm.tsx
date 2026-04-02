@@ -131,7 +131,8 @@ const StudyLogForm = () => {
     const allMethods = [...selectedMethods.map(id => STUDY_METHODS.find(m => m.id === id)?.label || id)];
     if (otherMethod.trim()) allMethods.push(otherMethod.trim());
     const methodsNote = allMethods.length > 0 ? `[Methods: ${allMethods.join(", ")}]` : "";
-    const combinedNotes = [notes.trim(), methodsNote].filter(Boolean).join(" ") || null;
+    const locationNote = studyLocation ? `[Location: ${STUDY_LOCATIONS.find(l => l.id === studyLocation)?.label.replace(/^..\s/, '') || studyLocation}]` : "";
+    const combinedNotes = [notes.trim(), methodsNote, locationNote].filter(Boolean).join(" ") || null;
 
     setSaving(true);
     try {
