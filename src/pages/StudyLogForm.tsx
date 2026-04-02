@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Brain, Zap, AlertTriangle, Eye, GraduationCap, BookOpen } from "lucide-react";
+import { ArrowLeft, Brain, Zap, AlertTriangle, Eye, GraduationCap, BookOpen, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { getCoursesForYear, type Course } from "@/data/curriculum";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -23,6 +23,15 @@ const STUDY_METHODS = [
   { id: "practice-problems", label: "Practice Problems" },
   { id: "group-study", label: "Group Study" },
   { id: "lectures", label: "Lectures / Videos" },
+];
+
+const STUDY_LOCATIONS = [
+  { id: "home", label: "🏠 Home" },
+  { id: "university", label: "🏫 University" },
+  { id: "library", label: "📚 Library" },
+  { id: "cafe", label: "☕ Café" },
+  { id: "outdoors", label: "🌳 Outdoors" },
+  { id: "other", label: "📍 Other" },
 ];
 
 const levelLabels: Record<number, string> = { 1: "Very Low", 2: "Low", 3: "Medium", 4: "High", 5: "Very High" };
@@ -101,6 +110,7 @@ const StudyLogForm = () => {
   const [revisionPriority, setRevisionPriority] = useState(3);
   const [teachingReadiness, setTeachingReadiness] = useState(3);
   const [saving, setSaving] = useState(false);
+  const [studyLocation, setStudyLocation] = useState("");
 
   const courseObj = availableCourses.find(c => c.name === selectedCourse);
 
@@ -121,7 +131,8 @@ const StudyLogForm = () => {
     const allMethods = [...selectedMethods.map(id => STUDY_METHODS.find(m => m.id === id)?.label || id)];
     if (otherMethod.trim()) allMethods.push(otherMethod.trim());
     const methodsNote = allMethods.length > 0 ? `[Methods: ${allMethods.join(", ")}]` : "";
-    const combinedNotes = [notes.trim(), methodsNote].filter(Boolean).join(" ") || null;
+    const locationNote = studyLocation ? `[Location: ${STUDY_LOCATIONS.find(l => l.id === studyLocation)?.label.replace(/^..\s/, '') || studyLocation}]` : "";
+    const combinedNotes = [notes.trim(), methodsNote, locationNote].filter(Boolean).join(" ") || null;
 
     setSaving(true);
     try {
@@ -195,6 +206,31 @@ const StudyLogForm = () => {
               <div className="grid grid-cols-2 gap-3">
                 <Input type="number" min="0" max="12" placeholder="Hours" value={hours} onChange={(e) => setHours(e.target.value)} className="h-11 rounded-xl" />
                 <Input type="number" min="0" max="59" placeholder="Minutes" value={minutes} onChange={(e) => setMinutes(e.target.value)} className="h-11 rounded-xl" />
+              </div>
+            </div>
+
+            {/* Study Location */}
+            <div className="space-y-3">
+              <Label className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-primary" />
+                Where did you study?
+              </Label>
+              <div className="grid grid-cols-3 gap-2">
+                {STUDY_LOCATIONS.map((loc) => (
+                  <motion.button
+                    key={loc.id}
+                    type="button"
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setStudyLocation(studyLocation === loc.id ? "" : loc.id)}
+                    className={`rounded-xl px-3 py-2.5 text-xs font-medium transition-all ${
+                      studyLocation === loc.id
+                        ? "bg-primary text-primary-foreground shadow-soft"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    }`}
+                  >
+                    {loc.label}
+                  </motion.button>
+                ))}
               </div>
             </div>
 
