@@ -110,6 +110,7 @@ const StudyLogForm = () => {
   const [revisionPriority, setRevisionPriority] = useState(3);
   const [teachingReadiness, setTeachingReadiness] = useState(3);
   const [saving, setSaving] = useState(false);
+  const [studyLocation, setStudyLocation] = useState("");
 
   const courseObj = availableCourses.find(c => c.name === selectedCourse);
 
