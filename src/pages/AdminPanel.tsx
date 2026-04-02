@@ -335,6 +335,7 @@ const AdminPanel = () => {
       setScores(scoresResult);
       setTopicMetrics(topicMetricsResult);
       setHardestTopics(hardestResult);
+      setMasteryBySubtopic(masteryAgg);
     } catch {
       toast.error("Failed to load admin data");
     } finally {
