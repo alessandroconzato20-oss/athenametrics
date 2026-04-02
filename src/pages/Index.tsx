@@ -312,9 +312,14 @@ const Index = () => {
         {/* Header */}
         <div className="mb-5 flex items-start justify-between">
           <StreakBadge streak={streak} studySessions={totalSessions} />
-          <button onClick={signOut} className="rounded-xl p-2 text-muted-foreground hover:bg-muted transition-colors">
-            <LogOut className="h-5 w-5" />
-          </button>
+          <div className="flex gap-1">
+            <button onClick={() => navigate("/account")} className="rounded-xl p-2 text-muted-foreground hover:bg-muted transition-colors">
+              <Settings className="h-5 w-5" />
+            </button>
+            <button onClick={signOut} className="rounded-xl p-2 text-muted-foreground hover:bg-muted transition-colors">
+              <LogOut className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Hero action sentence */}
