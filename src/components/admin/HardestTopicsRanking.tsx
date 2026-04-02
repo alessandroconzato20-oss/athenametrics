@@ -1,13 +1,13 @@
-import React from "react";
-import { motion } from "framer-motion";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Flame, Brain, Zap, Eye, BookOpen, GraduationCap } from "lucide-react";
+import { Flame, Brain, Zap, Eye, BookOpen, GraduationCap, ChevronDown } from "lucide-react";
+import { getTopicsForCourse } from "@/data/courseTopics";
 
 export interface HardestTopicEntry {
   subject: string;
   topic: string;
-  /** Composite difficulty score 0-5 combining all metrics */
   composite_score: number;
   avg_difficulty: number;
   avg_stress: number;
@@ -16,7 +16,6 @@ export interface HardestTopicEntry {
   avg_revision_priority: number;
   avg_applicability: number;
   students_logged: number;
-  /** From topic_mastery: how many students marked it red/orange/green */
   mastery_red: number;
   mastery_orange: number;
   mastery_green: number;
@@ -24,6 +23,7 @@ export interface HardestTopicEntry {
 
 interface Props {
   topics: HardestTopicEntry[];
+  masteryBySubtopic?: Record<string, { red: number; orange: number; green: number }>;
 }
 
 const difficultyLabel = (score: number) => {
@@ -41,8 +41,51 @@ const MiniStat = ({ label, value, icon: Icon }: { label: string; value: string; 
   </div>
 );
 
-const HardestTopicsRanking: React.FC<Props> = ({ topics }) => {
+const STATUS_CONFIG: Record<string, { label: string; dot: string; text: string }> = {
+  red:    { label: "Needs Focus", dot: "bg-destructive", text: "text-destructive" },
+  orange: { label: "In Progress", dot: "bg-amber-500", text: "text-amber-500" },
+  green:  { label: "Confident",   dot: "bg-emerald-500", text: "text-emerald-500" },
+};
+
+const SubtopicRow = ({ name, mastery }: { name: string; mastery?: { red: number; orange: number; green: number } }) => {
+  const total = mastery ? mastery.red + mastery.orange + mastery.green : 0;
+  // Determine dominant status
+  let dominant: "red" | "orange" | "green" = "red";
+  if (mastery && total > 0) {
+    if (mastery.green >= mastery.red && mastery.green >= mastery.orange) dominant = "green";
+    else if (mastery.orange >= mastery.red) dominant = "orange";
+  }
+  const cfg = STATUS_CONFIG[dominant];
+
+  return (
+    <div className="flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-muted/30 transition-colors">
+      <div className={`h-2.5 w-2.5 shrink-0 rounded-full ${total > 0 ? cfg.dot : "bg-muted-foreground/30"}`} />
+      <p className="text-xs text-foreground truncate flex-1">{name}</p>
+      {total > 0 ? (
+        <div className="flex items-center gap-2 text-[10px] font-medium shrink-0">
+          <span className="flex items-center gap-0.5"><span className="h-1.5 w-1.5 rounded-full bg-destructive" />{mastery!.red}</span>
+          <span className="flex items-center gap-0.5"><span className="h-1.5 w-1.5 rounded-full bg-amber-500" />{mastery!.orange}</span>
+          <span className="flex items-center gap-0.5"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />{mastery!.green}</span>
+        </div>
+      ) : (
+        <span className="text-[10px] text-muted-foreground">No data</span>
+      )}
+    </div>
+  );
+};
+
+const HardestTopicsRanking: React.FC<Props> = ({ topics, masteryBySubtopic = {} }) => {
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
   if (topics.length === 0) return null;
+
+  const toggle = (key: string) => {
+    setExpanded(prev => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  };
 
   return (
     <div className="space-y-3">
@@ -52,16 +95,22 @@ const HardestTopicsRanking: React.FC<Props> = ({ topics }) => {
         <Badge variant="destructive" className="text-[10px]">Live</Badge>
       </div>
       <p className="text-xs text-muted-foreground">
-        Topics ranked by a composite difficulty score combining self-reported difficulty, stress, low comprehension, low confidence, and mastery status. Higher = harder.
+        Topics ranked by a composite difficulty score combining self-reported difficulty, stress, low comprehension, low confidence, and mastery status. Higher = harder. Expand to see subtopic mastery breakdown.
       </p>
 
       <div className="space-y-2">
         {topics.slice(0, 20).map((t, i) => {
           const dl = difficultyLabel(t.composite_score);
           const totalMastery = t.mastery_red + t.mastery_orange + t.mastery_green;
+          const key = `${t.subject}-${t.topic}`;
+          const isExpanded = expanded.has(key);
+
+          // Get subtopics from courseTopics for this subject
+          const allSubtopics = getTopicsForCourse(t.subject).filter(st => !st.startsWith("## "));
+
           return (
             <motion.div
-              key={`${t.subject}-${t.topic}`}
+              key={key}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.03 }}
@@ -107,6 +156,37 @@ const HardestTopicsRanking: React.FC<Props> = ({ topics }) => {
                           </div>
                         )}
                       </div>
+
+                      {/* Expand subtopics button */}
+                      {allSubtopics.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => toggle(key)}
+                          className="mt-2 flex items-center gap-1 text-[11px] text-primary font-medium hover:underline"
+                        >
+                          <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                            <ChevronDown className="h-3.5 w-3.5" />
+                          </motion.div>
+                          {isExpanded ? "Hide" : "Show"} {allSubtopics.length} subtopics
+                        </button>
+                      )}
+
+                      {/* Subtopics list */}
+                      <AnimatePresence>
+                        {isExpanded && allSubtopics.length > 0 && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="mt-2 space-y-0.5 border-t border-border/50 pt-2"
+                          >
+                            {allSubtopics.map(st => {
+                              const mKey = `${t.subject}|||${st}`;
+                              return <SubtopicRow key={st} name={st} mastery={masteryBySubtopic[mKey]} />;
+                            })}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
 
                     {/* Composite score */}
