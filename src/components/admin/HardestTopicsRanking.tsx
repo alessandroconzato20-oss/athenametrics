@@ -72,24 +72,26 @@ const SubtopicRow = ({ name, mastery, metric }: SubtopicRowProps) => {
   }
   const cfg = STATUS_CONFIG[dominant];
 
+  // Only show data if someone has logged mastery (not gray/untracked)
+  const hasActivity = total > 0;
+
   return (
-    <div className="rounded-lg border border-border/30 p-2 space-y-1.5">
-      {/* Header row */}
+    <div className={`rounded-lg border border-border/30 p-2 ${!hasActivity ? "opacity-50" : ""}`}>
       <div className="flex items-center gap-2">
-        <div className={`h-2.5 w-2.5 shrink-0 rounded-full ${total > 0 ? cfg.dot : "bg-muted-foreground/30"}`} />
-        <p className="text-xs font-medium text-foreground truncate flex-1">{name}</p>
-        {total > 0 ? (
+        <div className={`h-2.5 w-2.5 shrink-0 rounded-full ${hasActivity ? cfg.dot : "bg-muted-foreground/30"}`} />
+        <p className={`text-xs font-medium truncate flex-1 ${hasActivity ? "text-foreground" : "text-muted-foreground"}`}>{name}</p>
+        {hasActivity && (
           <div className="flex items-center gap-2 text-[10px] font-medium shrink-0">
             <span className="flex items-center gap-0.5"><span className="h-1.5 w-1.5 rounded-full bg-destructive" />{mastery!.red}</span>
             <span className="flex items-center gap-0.5"><span className="h-1.5 w-1.5 rounded-full bg-amber-500" />{mastery!.orange}</span>
             <span className="flex items-center gap-0.5"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />{mastery!.green}</span>
           </div>
-        ) : null}
+        )}
       </div>
 
-      {/* Difficulty insights row - only if study log data exists */}
-      {metric ? (
-        <div className="flex flex-wrap gap-x-3 gap-y-0.5 pl-4">
+      {/* Show difficulty insights only if mastery has been logged */}
+      {hasActivity && metric && (
+        <div className="flex flex-wrap gap-x-3 gap-y-0.5 pl-4 mt-1.5">
           <span className="text-[10px]">
             <span className="text-muted-foreground">Diff: </span>
             <span className={`font-semibold ${ratingColor(metric.avg_difficulty)}`}>{metric.avg_difficulty.toFixed(1)}</span>
@@ -114,8 +116,6 @@ const SubtopicRow = ({ name, mastery, metric }: SubtopicRowProps) => {
             ({metric.sessions} sessions, {metric.students_count} students)
           </span>
         </div>
-      ) : (
-        <p className="text-[10px] text-muted-foreground pl-4">No study log data</p>
       )}
     </div>
   );
