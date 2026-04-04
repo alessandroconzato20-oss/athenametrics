@@ -14,7 +14,7 @@ import HeroAction from "@/components/HeroAction";
 import TodaysInsight from "@/components/TodaysInsight";
 import DailyStudyPlan from "@/components/DailyStudyPlan";
 import MicroReward from "@/components/MicroReward";
-import WeeklyGoalsPopup from "@/components/WeeklyGoalsPopup";
+import DailyWellbeingCheckin from "@/components/DailyWellbeingCheckin";
 import { startOfWeek } from "date-fns";
 import {
   fetchHealthData,
@@ -162,7 +162,7 @@ const Index = () => {
   const [syncingHealth, setSyncingHealth] = useState(false);
   const [syncStatus, setSyncStatus] = useState("");
   const [reward, setReward] = useState<{ show: boolean; message: string; emoji: string }>({ show: false, message: "", emoji: "" });
-  const [showWeeklyGoals, setShowWeeklyGoals] = useState(false);
+  const [showWellbeingCheckin, setShowWellbeingCheckin] = useState(false);
   const [weeklyDailyBreakdown, setWeeklyDailyBreakdown] = useState<Record<string, string[]> | null>(null);
   const [streak, setStreak] = useState(0);
   const [totalSessions, setTotalSessions] = useState(0);
@@ -202,25 +202,35 @@ const Index = () => {
     computeStreak();
   }, [user]);
 
-  // Check if weekly goals popup should show (Monday or first visit this week)
+  // Check if daily wellbeing check-in was already done today
   useEffect(() => {
     if (!user) return;
-    const checkWeeklyGoals = async () => {
+    const checkWellbeing = async () => {
+      const today = format(new Date(), "yyyy-MM-dd");
+      const { data } = await (supabase.from("daily_wellbeing_checkins" as any)
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("checkin_date", today)
+        .maybeSingle() as any);
+      if (!data) {
+        setShowWellbeingCheckin(true);
+      }
+    };
+    checkWellbeing();
+
+    // Also load weekly goals breakdown
+    const loadWeeklyBreakdown = async () => {
       const weekStart = format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd");
       const { data } = await (supabase.from("weekly_goals" as any)
-        .select("id, daily_breakdown")
+        .select("daily_breakdown")
         .eq("user_id", user.id)
         .eq("week_start", weekStart)
         .maybeSingle() as any);
-      if (!data) {
-        // No goals set for this week — show popup
-        setShowWeeklyGoals(true);
-      } else {
-        // Goals already set — load breakdown for today's plan
+      if (data) {
         setWeeklyDailyBreakdown(data.daily_breakdown as Record<string, string[]>);
       }
     };
-    checkWeeklyGoals();
+    loadWeeklyBreakdown();
   }, [user]);
 
   useEffect(() => {
@@ -438,10 +448,9 @@ const Index = () => {
         onComplete={() => setReward(prev => ({ ...prev, show: false }))}
       />
 
-      <WeeklyGoalsPopup
-        open={showWeeklyGoals}
-        onClose={() => setShowWeeklyGoals(false)}
-        onGoalsConfirmed={(breakdown) => setWeeklyDailyBreakdown(breakdown)}
+      <DailyWellbeingCheckin
+        open={showWellbeingCheckin}
+        onClose={() => setShowWellbeingCheckin(false)}
       />
     </div>
   );
