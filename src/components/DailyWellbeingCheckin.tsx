@@ -12,26 +12,26 @@ interface DailyWellbeingCheckinProps {
 }
 
 const REST_OPTIONS = [
-  { value: 1, emoji: "😴", label: "Exhausted" },
-  { value: 2, emoji: "😐", label: "Tired" },
-  { value: 3, emoji: "🙂", label: "Okay" },
-  { value: 4, emoji: "😊", label: "Rested" },
-  { value: 5, emoji: "⚡", label: "Great" },
+  { value: 1, emoji: "😴", label: "Exhausted", effect: "Cognitive Readiness ↓↓ · Study Capacity ↓↓ · Retention ↓↓" },
+  { value: 2, emoji: "😐", label: "Tired", effect: "Moderate drop across all metrics" },
+  { value: 3, emoji: "🙂", label: "Okay", effect: "Neutral — we'll lean on your health data" },
+  { value: 4, emoji: "😊", label: "Rested", effect: "Slight boost to Readiness & Capacity" },
+  { value: 5, emoji: "⚡", label: "Great", effect: "Slight boost to Readiness & Capacity" },
 ];
 
 const STRESS_OPTIONS = [
-  { value: 1, emoji: "😌", label: "Calm" },
-  { value: 2, emoji: "😕", label: "Mild" },
-  { value: 3, emoji: "😟", label: "Stressed" },
-  { value: 4, emoji: "😰", label: "Very Stressed" },
+  { value: 1, emoji: "😌", label: "Calm", effect: "Burnout Risk ↓ · Cognitive Readiness ↑" },
+  { value: 2, emoji: "😕", label: "Mild", effect: "Slight increase to Burnout Risk" },
+  { value: 3, emoji: "😟", label: "Stressed", effect: "Burnout Risk ↑ · Cognitive Readiness ↓" },
+  { value: 4, emoji: "😰", label: "Very Stressed", effect: "Burnout Risk ↑↑ · Cognitive Readiness ↓↓" },
 ];
 
 const MOTIVATION_OPTIONS = [
-  { value: 1, emoji: "🚫", label: "Not at all" },
-  { value: 2, emoji: "😑", label: "Low" },
-  { value: 3, emoji: "😐", label: "Average" },
-  { value: 4, emoji: "💪", label: "Motivated" },
-  { value: 5, emoji: "🔥", label: "Very motivated" },
+  { value: 1, emoji: "🚫", label: "Not at all", effect: "Study Capacity ↓↓ · Burnout Risk ↑" },
+  { value: 2, emoji: "😑", label: "Low", effect: "Study Capacity ↓ · slight Burnout flag" },
+  { value: 3, emoji: "😐", label: "Average", effect: "Neutral — no adjustment" },
+  { value: 4, emoji: "💪", label: "Motivated", effect: "Study Capacity ↑" },
+  { value: 5, emoji: "🔥", label: "Very motivated", effect: "Study Capacity ↑ · Retention ↑" },
 ];
 
 const NIGHT_FACTORS = [
@@ -124,8 +124,14 @@ const DailyWellbeingCheckin = ({ open, onClose }: DailyWellbeingCheckinProps) =>
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent className="max-w-sm rounded-2xl p-0 overflow-hidden border-none [&>button]:hidden" onPointerDownOutside={(e) => e.preventDefault()}>
         <DialogTitle className="sr-only">Daily Wellbeing Check-in</DialogTitle>
+        {/* Intro */}
+        {step === 0 && (
+          <p className="px-5 pt-5 pb-1 text-sm text-muted-foreground">
+            Quick daily check-in — your answers shape your Cognitive Readiness, Study Capacity, Burnout Risk and Retention Outlook so your metrics reflect how you actually feel.
+          </p>
+        )}
         {/* Progress bar */}
-        <div className="flex gap-1 px-5 pt-5">
+        <div className="flex gap-1 px-5 pt-3">
           {[0, 1, 2, 3].map(i => (
             <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i <= step ? "bg-primary" : "bg-muted"}`} />
           ))}
@@ -145,21 +151,29 @@ const DailyWellbeingCheckin = ({ open, onClose }: DailyWellbeingCheckinProps) =>
                 <p className="text-base font-semibold text-foreground mb-4">
                   {STEPS[step].question}
                 </p>
-                <div className="flex flex-wrap gap-2">
-                  {STEPS[step].options.map(opt => (
-                    <button
-                      key={opt.value}
-                      onClick={() => STEPS[step].onSelect(opt.value)}
-                      className={`flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium transition-all border
-                        ${STEPS[step].selected === opt.value
-                          ? "border-primary bg-primary/10 text-primary shadow-sm"
-                          : "border-border bg-card text-muted-foreground hover:border-primary/40"
-                        }`}
-                    >
-                      <span className="text-lg">{opt.emoji}</span>
-                      {opt.label}
-                    </button>
-                  ))}
+                <div className="flex flex-col gap-2">
+                  {STEPS[step].options.map(opt => {
+                    const isSelected = STEPS[step].selected === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        onClick={() => STEPS[step].onSelect(opt.value)}
+                        className={`flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all border text-left
+                          ${isSelected
+                            ? "border-primary bg-primary/10 text-primary shadow-sm"
+                            : "border-border bg-card text-muted-foreground hover:border-primary/40"
+                          }`}
+                      >
+                        <span className="text-lg shrink-0">{opt.emoji}</span>
+                        <span className="flex flex-col">
+                          <span>{opt.label}</span>
+                          {isSelected && 'effect' in opt && (
+                            <span className="text-xs font-normal text-muted-foreground mt-0.5">{(opt as any).effect}</span>
+                          )}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </>
             ) : (
