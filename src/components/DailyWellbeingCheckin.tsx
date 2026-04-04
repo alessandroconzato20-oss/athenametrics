@@ -124,8 +124,14 @@ const DailyWellbeingCheckin = ({ open, onClose }: DailyWellbeingCheckinProps) =>
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent className="max-w-sm rounded-2xl p-0 overflow-hidden border-none [&>button]:hidden" onPointerDownOutside={(e) => e.preventDefault()}>
         <DialogTitle className="sr-only">Daily Wellbeing Check-in</DialogTitle>
+        {/* Intro */}
+        {step === 0 && (
+          <p className="px-5 pt-5 pb-1 text-sm text-muted-foreground">
+            Quick daily check-in — your answers shape your Cognitive Readiness, Study Capacity, Burnout Risk and Retention Outlook so your metrics reflect how you actually feel.
+          </p>
+        )}
         {/* Progress bar */}
-        <div className="flex gap-1 px-5 pt-5">
+        <div className="flex gap-1 px-5 pt-3">
           {[0, 1, 2, 3].map(i => (
             <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i <= step ? "bg-primary" : "bg-muted"}`} />
           ))}
