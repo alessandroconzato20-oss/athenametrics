@@ -448,10 +448,9 @@ const Index = () => {
         onComplete={() => setReward(prev => ({ ...prev, show: false }))}
       />
 
-      <WeeklyGoalsPopup
-        open={showWeeklyGoals}
-        onClose={() => setShowWeeklyGoals(false)}
-        onGoalsConfirmed={(breakdown) => setWeeklyDailyBreakdown(breakdown)}
+      <DailyWellbeingCheckin
+        open={showWellbeingCheckin}
+        onClose={() => setShowWellbeingCheckin(false)}
       />
     </div>
   );
