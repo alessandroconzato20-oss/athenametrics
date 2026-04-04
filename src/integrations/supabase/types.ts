@@ -71,6 +71,39 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_wellbeing_checkins: {
+        Row: {
+          checkin_date: string
+          created_at: string
+          id: string
+          motivation_level: number
+          night_factors: string[]
+          rest_level: number
+          stress_level: number
+          user_id: string
+        }
+        Insert: {
+          checkin_date?: string
+          created_at?: string
+          id?: string
+          motivation_level: number
+          night_factors?: string[]
+          rest_level: number
+          stress_level: number
+          user_id: string
+        }
+        Update: {
+          checkin_date?: string
+          created_at?: string
+          id?: string
+          motivation_level?: number
+          night_factors?: string[]
+          rest_level?: number
+          stress_level?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       library_members: {
         Row: {
           id: string
