@@ -162,7 +162,7 @@ const Index = () => {
   const [syncingHealth, setSyncingHealth] = useState(false);
   const [syncStatus, setSyncStatus] = useState("");
   const [reward, setReward] = useState<{ show: boolean; message: string; emoji: string }>({ show: false, message: "", emoji: "" });
-  const [showWeeklyGoals, setShowWeeklyGoals] = useState(false);
+  const [showWellbeingCheckin, setShowWellbeingCheckin] = useState(false);
   const [weeklyDailyBreakdown, setWeeklyDailyBreakdown] = useState<Record<string, string[]> | null>(null);
   const [streak, setStreak] = useState(0);
   const [totalSessions, setTotalSessions] = useState(0);
