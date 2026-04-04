@@ -14,7 +14,7 @@ import HeroAction from "@/components/HeroAction";
 import TodaysInsight from "@/components/TodaysInsight";
 import DailyStudyPlan from "@/components/DailyStudyPlan";
 import MicroReward from "@/components/MicroReward";
-import WeeklyGoalsPopup from "@/components/WeeklyGoalsPopup";
+import DailyWellbeingCheckin from "@/components/DailyWellbeingCheckin";
 import { startOfWeek } from "date-fns";
 import {
   fetchHealthData,
