@@ -202,25 +202,35 @@ const Index = () => {
     computeStreak();
   }, [user]);
 
-  // Check if weekly goals popup should show (Monday or first visit this week)
+  // Check if daily wellbeing check-in was already done today
   useEffect(() => {
     if (!user) return;
-    const checkWeeklyGoals = async () => {
+    const checkWellbeing = async () => {
+      const today = format(new Date(), "yyyy-MM-dd");
+      const { data } = await (supabase.from("daily_wellbeing_checkins" as any)
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("checkin_date", today)
+        .maybeSingle() as any);
+      if (!data) {
+        setShowWellbeingCheckin(true);
+      }
+    };
+    checkWellbeing();
+
+    // Also load weekly goals breakdown
+    const loadWeeklyBreakdown = async () => {
       const weekStart = format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd");
       const { data } = await (supabase.from("weekly_goals" as any)
-        .select("id, daily_breakdown")
+        .select("daily_breakdown")
         .eq("user_id", user.id)
         .eq("week_start", weekStart)
         .maybeSingle() as any);
-      if (!data) {
-        // No goals set for this week — show popup
-        setShowWeeklyGoals(true);
-      } else {
-        // Goals already set — load breakdown for today's plan
+      if (data) {
         setWeeklyDailyBreakdown(data.daily_breakdown as Record<string, string[]>);
       }
     };
-    checkWeeklyGoals();
+    loadWeeklyBreakdown();
   }, [user]);
 
   useEffect(() => {
