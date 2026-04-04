@@ -165,12 +165,7 @@ const DailyWellbeingCheckin = ({ open, onClose }: DailyWellbeingCheckinProps) =>
                           }`}
                       >
                         <span className="text-lg shrink-0">{opt.emoji}</span>
-                        <span className="flex flex-col">
-                          <span>{opt.label}</span>
-                          {isSelected && 'effect' in opt && (
-                            <span className="text-xs font-normal text-muted-foreground mt-0.5">{(opt as any).effect}</span>
-                          )}
-                        </span>
+                        <span>{opt.label}</span>
                       </button>
                     );
                   })}
