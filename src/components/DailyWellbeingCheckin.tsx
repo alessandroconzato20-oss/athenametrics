@@ -151,21 +151,29 @@ const DailyWellbeingCheckin = ({ open, onClose }: DailyWellbeingCheckinProps) =>
                 <p className="text-base font-semibold text-foreground mb-4">
                   {STEPS[step].question}
                 </p>
-                <div className="flex flex-wrap gap-2">
-                  {STEPS[step].options.map(opt => (
-                    <button
-                      key={opt.value}
-                      onClick={() => STEPS[step].onSelect(opt.value)}
-                      className={`flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium transition-all border
-                        ${STEPS[step].selected === opt.value
-                          ? "border-primary bg-primary/10 text-primary shadow-sm"
-                          : "border-border bg-card text-muted-foreground hover:border-primary/40"
-                        }`}
-                    >
-                      <span className="text-lg">{opt.emoji}</span>
-                      {opt.label}
-                    </button>
-                  ))}
+                <div className="flex flex-col gap-2">
+                  {STEPS[step].options.map(opt => {
+                    const isSelected = STEPS[step].selected === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        onClick={() => STEPS[step].onSelect(opt.value)}
+                        className={`flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all border text-left
+                          ${isSelected
+                            ? "border-primary bg-primary/10 text-primary shadow-sm"
+                            : "border-border bg-card text-muted-foreground hover:border-primary/40"
+                          }`}
+                      >
+                        <span className="text-lg shrink-0">{opt.emoji}</span>
+                        <span className="flex flex-col">
+                          <span>{opt.label}</span>
+                          {isSelected && 'effect' in opt && (
+                            <span className="text-xs font-normal text-muted-foreground mt-0.5">{(opt as any).effect}</span>
+                          )}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </>
             ) : (
