@@ -12,26 +12,26 @@ interface DailyWellbeingCheckinProps {
 }
 
 const REST_OPTIONS = [
-  { value: 1, emoji: "😴", label: "Exhausted", effect: "Cognitive Readiness ↓↓ · Study Capacity ↓↓ · Retention ↓↓" },
-  { value: 2, emoji: "😐", label: "Tired", effect: "Moderate drop across all metrics" },
-  { value: 3, emoji: "🙂", label: "Okay", effect: "Neutral — we'll lean on your health data" },
-  { value: 4, emoji: "😊", label: "Rested", effect: "Slight boost to Readiness & Capacity" },
-  { value: 5, emoji: "⚡", label: "Great", effect: "Slight boost to Readiness & Capacity" },
+  { value: 1, emoji: "😴", label: "Exhausted" },
+  { value: 2, emoji: "😐", label: "Tired" },
+  { value: 3, emoji: "🙂", label: "Okay" },
+  { value: 4, emoji: "😊", label: "Rested" },
+  { value: 5, emoji: "⚡", label: "Great" },
 ];
 
 const STRESS_OPTIONS = [
-  { value: 1, emoji: "😌", label: "Calm", effect: "Burnout Risk ↓ · Cognitive Readiness ↑" },
-  { value: 2, emoji: "😕", label: "Mild", effect: "Slight increase to Burnout Risk" },
-  { value: 3, emoji: "😟", label: "Stressed", effect: "Burnout Risk ↑ · Cognitive Readiness ↓" },
-  { value: 4, emoji: "😰", label: "Very Stressed", effect: "Burnout Risk ↑↑ · Cognitive Readiness ↓↓" },
+  { value: 1, emoji: "😌", label: "Calm" },
+  { value: 2, emoji: "😕", label: "Mild" },
+  { value: 3, emoji: "😟", label: "Stressed" },
+  { value: 4, emoji: "😰", label: "Very Stressed" },
 ];
 
 const MOTIVATION_OPTIONS = [
-  { value: 1, emoji: "🚫", label: "Not at all", effect: "Study Capacity ↓↓ · Burnout Risk ↑" },
-  { value: 2, emoji: "😑", label: "Low", effect: "Study Capacity ↓ · slight Burnout flag" },
-  { value: 3, emoji: "😐", label: "Average", effect: "Neutral — no adjustment" },
-  { value: 4, emoji: "💪", label: "Motivated", effect: "Study Capacity ↑" },
-  { value: 5, emoji: "🔥", label: "Very motivated", effect: "Study Capacity ↑ · Retention ↑" },
+  { value: 1, emoji: "🚫", label: "Not at all" },
+  { value: 2, emoji: "😑", label: "Low" },
+  { value: 3, emoji: "😐", label: "Average" },
+  { value: 4, emoji: "💪", label: "Motivated" },
+  { value: 5, emoji: "🔥", label: "Very motivated" },
 ];
 
 const NIGHT_FACTORS = [
