@@ -28,6 +28,15 @@ const STRESS_MODIFIERS: Record<number, { cr: number; br: number; sc: number; pea
   4: { cr: -0.28, br: +0.35, sc: -0.20, peakNarrowMin: 75 },  // Very Stressed (~2.5h)
 };
 
+// Q3: How motivated do you feel to study today?
+const MOTIVATION_MODIFIERS: Record<number, { sc: number; br: number; cr: number }> = {
+  1: { sc: -0.30, br: +0.25, cr: -0.05 }, // Not at all
+  2: { sc: -0.15, br: +0.12, cr: -0.03 }, // Low
+  3: { sc:  0.00, br:  0.00, cr:  0.00 }, // Average
+  4: { sc: +0.12, br: -0.08, cr: +0.03 }, // Motivated
+  5: { sc: +0.20, br: -0.15, cr: +0.05 }, // Very motivated
+};
+
 function clamp(val: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, val));
 }
@@ -54,11 +63,12 @@ export function applyCheckinModifiers(scores: ApexScores, checkin: CheckinData |
 
   const rest = REST_MODIFIERS[checkin.rest_level] ?? REST_MODIFIERS[3];
   const stress = STRESS_MODIFIERS[checkin.stress_level] ?? STRESS_MODIFIERS[2];
+  const motivation = MOTIVATION_MODIFIERS[checkin.motivation_level] ?? MOTIVATION_MODIFIERS[3];
 
-  // Combine Q1 + Q2 modifiers additively
-  const crMod = rest.cr + stress.cr;
-  const brMod = rest.br + stress.br;
-  const scMod = rest.sc + stress.sc;
+  // Combine Q1 + Q2 + Q3 modifiers additively
+  const crMod = rest.cr + stress.cr + motivation.cr;
+  const brMod = rest.br + stress.br + motivation.br;
+  const scMod = rest.sc + stress.sc + motivation.sc;
 
   const cr = clamp(Math.round(scores.cognitiveReadiness * (1 + crMod)), 0, 100);
   const bo = clamp(Math.round(scores.burnoutRisk * (1 + brMod)), 0, 100);
