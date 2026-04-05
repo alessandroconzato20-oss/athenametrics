@@ -63,7 +63,8 @@ function getStudyBlockRecommendation(scores: ApexScores) {
 }
 
 function buildScoresData(scores: ApexScores) {
-  const peakLabel = `${scores.peakStudyWindow.primary_start} – ${scores.peakStudyWindow.primary_end}`;
+  const isRest = scores.peakStudyWindow.primary_start === "Rest";
+  const peakLabel = isRest ? "Rest" : `${scores.peakStudyWindow.primary_start} – ${scores.peakStudyWindow.primary_end}`;
   const blockRec = getStudyBlockRecommendation(scores);
 
   return [
@@ -141,7 +142,7 @@ function buildScoresData(scores: ApexScores) {
       icon: "sun",
       reasoning: [
         `Chronotype: ${scores.peakStudyWindow.chronotype.replace("_", " ")}`,
-        `Secondary window: ${scores.peakStudyWindow.secondary_start} – ${scores.peakStudyWindow.secondary_end}`,
+        isRest ? "Secondary window: Rest" : `Secondary window: ${scores.peakStudyWindow.secondary_start} – ${scores.peakStudyWindow.secondary_end}`,
         `Confidence: ${scores.peakStudyWindow.confidence}`,
       ],
       factors: [
@@ -300,7 +301,7 @@ const Index = () => {
   const rawScores = useMemo(() => healthData ? calculateApexScores(healthData) : null, [healthData]);
   const scores = useMemo(() => rawScores ? applyCheckinModifiers(rawScores, checkinData, historicalCheckins) : null, [rawScores, checkinData, historicalCheckins]);
   const scoresData = useMemo(() => scores ? buildScoresData(scores) : [], [scores]);
-  const peakLabel = scores ? `${scores.peakStudyWindow.primary_start} – ${scores.peakStudyWindow.primary_end}` : "";
+  const peakLabel = scores ? (scores.peakStudyWindow.primary_start === "Rest" ? "Rest" : `${scores.peakStudyWindow.primary_start} – ${scores.peakStudyWindow.primary_end}`) : "";
 
   // Check for micro reward triggers
   useEffect(() => {
