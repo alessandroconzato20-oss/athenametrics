@@ -25,7 +25,7 @@ import {
   type AppleHealthData,
   type ApexScores,
 } from "@/services/healthkit";
-import { applyCheckinModifiers } from "@/algorithms/checkinModifiers";
+import { applyCheckinModifiers, type HistoricalCheckin } from "@/algorithms/checkinModifiers";
 import { format } from "date-fns";
 
 function getActionText(icon: string, numValue: number): string {
@@ -168,6 +168,7 @@ const Index = () => {
   const [streak, setStreak] = useState(0);
   const [totalSessions, setTotalSessions] = useState(0);
   const [checkinData, setCheckinData] = useState<{ rest_level: number; stress_level: number; motivation_level: number; night_factors: string[] } | null>(null);
+  const [historicalCheckins, setHistoricalCheckins] = useState<HistoricalCheckin[]>([]);
 
   // Compute streak and total sessions from study_logs
   useEffect(() => {
@@ -221,6 +222,17 @@ const Index = () => {
       }
     };
     checkWellbeing();
+
+    // Load historical checkins for rolling patterns (last 10 days)
+    const loadHistory = async () => {
+      const { data } = await (supabase.from("daily_wellbeing_checkins" as any)
+        .select("checkin_date,rest_level,stress_level,motivation_level,night_factors")
+        .eq("user_id", user.id)
+        .order("checkin_date", { ascending: false })
+        .limit(10) as any);
+      if (data) setHistoricalCheckins(data as HistoricalCheckin[]);
+    };
+    loadHistory();
 
     // Also load weekly goals breakdown
     const loadWeeklyBreakdown = async () => {
@@ -286,7 +298,7 @@ const Index = () => {
   };
 
   const rawScores = useMemo(() => healthData ? calculateApexScores(healthData) : null, [healthData]);
-  const scores = useMemo(() => rawScores ? applyCheckinModifiers(rawScores, checkinData) : null, [rawScores, checkinData]);
+  const scores = useMemo(() => rawScores ? applyCheckinModifiers(rawScores, checkinData, historicalCheckins) : null, [rawScores, checkinData, historicalCheckins]);
   const scoresData = useMemo(() => scores ? buildScoresData(scores) : [], [scores]);
   const peakLabel = scores ? `${scores.peakStudyWindow.primary_start} – ${scores.peakStudyWindow.primary_end}` : "";
 
