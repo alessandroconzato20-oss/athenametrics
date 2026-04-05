@@ -285,7 +285,8 @@ const Index = () => {
     }
   };
 
-  const scores = useMemo(() => healthData ? calculateApexScores(healthData) : null, [healthData]);
+  const rawScores = useMemo(() => healthData ? calculateApexScores(healthData) : null, [healthData]);
+  const scores = useMemo(() => rawScores ? applyCheckinModifiers(rawScores, checkinData) : null, [rawScores, checkinData]);
   const scoresData = useMemo(() => scores ? buildScoresData(scores) : [], [scores]);
   const peakLabel = scores ? `${scores.peakStudyWindow.primary_start} – ${scores.peakStudyWindow.primary_end}` : "";
 
