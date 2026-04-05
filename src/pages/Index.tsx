@@ -25,6 +25,7 @@ import {
   type AppleHealthData,
   type ApexScores,
 } from "@/services/healthkit";
+import { applyCheckinModifiers } from "@/algorithms/checkinModifiers";
 import { format } from "date-fns";
 
 function getActionText(icon: string, numValue: number): string {
