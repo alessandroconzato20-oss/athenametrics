@@ -25,6 +25,7 @@ import {
   type AppleHealthData,
   type ApexScores,
 } from "@/services/healthkit";
+import { applyCheckinModifiers } from "@/algorithms/checkinModifiers";
 import { format } from "date-fns";
 
 function getActionText(icon: string, numValue: number): string {
@@ -166,6 +167,7 @@ const Index = () => {
   const [weeklyDailyBreakdown, setWeeklyDailyBreakdown] = useState<Record<string, string[]> | null>(null);
   const [streak, setStreak] = useState(0);
   const [totalSessions, setTotalSessions] = useState(0);
+  const [checkinData, setCheckinData] = useState<{ rest_level: number; stress_level: number; motivation_level: number; night_factors: string[] } | null>(null);
 
   // Compute streak and total sessions from study_logs
   useEffect(() => {
@@ -208,12 +210,14 @@ const Index = () => {
     const checkWellbeing = async () => {
       const today = format(new Date(), "yyyy-MM-dd");
       const { data } = await (supabase.from("daily_wellbeing_checkins" as any)
-        .select("id")
+        .select("rest_level,stress_level,motivation_level,night_factors")
         .eq("user_id", user.id)
         .eq("checkin_date", today)
         .maybeSingle() as any);
       if (!data) {
         setShowWellbeingCheckin(true);
+      } else {
+        setCheckinData(data);
       }
     };
     checkWellbeing();
@@ -281,7 +285,8 @@ const Index = () => {
     }
   };
 
-  const scores = useMemo(() => healthData ? calculateApexScores(healthData) : null, [healthData]);
+  const rawScores = useMemo(() => healthData ? calculateApexScores(healthData) : null, [healthData]);
+  const scores = useMemo(() => rawScores ? applyCheckinModifiers(rawScores, checkinData) : null, [rawScores, checkinData]);
   const scoresData = useMemo(() => scores ? buildScoresData(scores) : [], [scores]);
   const peakLabel = scores ? `${scores.peakStudyWindow.primary_start} – ${scores.peakStudyWindow.primary_end}` : "";
 
@@ -450,7 +455,16 @@ const Index = () => {
 
       <DailyWellbeingCheckin
         open={showWellbeingCheckin}
-        onClose={() => setShowWellbeingCheckin(false)}
+        onClose={async () => {
+          setShowWellbeingCheckin(false);
+          const today = format(new Date(), "yyyy-MM-dd");
+          const { data } = await (supabase.from("daily_wellbeing_checkins" as any)
+            .select("rest_level,stress_level,motivation_level,night_factors")
+            .eq("user_id", user!.id)
+            .eq("checkin_date", today)
+            .maybeSingle() as any);
+          if (data) setCheckinData(data);
+        }}
       />
     </div>
   );
