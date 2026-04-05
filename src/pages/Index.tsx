@@ -167,6 +167,7 @@ const Index = () => {
   const [weeklyDailyBreakdown, setWeeklyDailyBreakdown] = useState<Record<string, string[]> | null>(null);
   const [streak, setStreak] = useState(0);
   const [totalSessions, setTotalSessions] = useState(0);
+  const [checkinData, setCheckinData] = useState<{ rest_level: number; stress_level: number; motivation_level: number; night_factors: string[] } | null>(null);
 
   // Compute streak and total sessions from study_logs
   useEffect(() => {
