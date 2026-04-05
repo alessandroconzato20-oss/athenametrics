@@ -28,6 +28,15 @@ const STRESS_MODIFIERS: Record<number, { cr: number; br: number; sc: number; pea
   4: { cr: -0.28, br: +0.35, sc: -0.20, peakNarrowMin: 75 },  // Very Stressed (~2.5h)
 };
 
+// Q3: How motivated do you feel to study today?
+const MOTIVATION_MODIFIERS: Record<number, { sc: number; br: number; cr: number }> = {
+  1: { sc: -0.30, br: +0.25, cr: -0.05 }, // Not at all
+  2: { sc: -0.15, br: +0.12, cr: -0.03 }, // Low
+  3: { sc:  0.00, br:  0.00, cr:  0.00 }, // Average
+  4: { sc: +0.12, br: -0.08, cr: +0.03 }, // Motivated
+  5: { sc: +0.20, br: -0.15, cr: +0.05 }, // Very motivated
+};
+
 function clamp(val: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, val));
 }
