@@ -455,7 +455,16 @@ const Index = () => {
 
       <DailyWellbeingCheckin
         open={showWellbeingCheckin}
-        onClose={() => setShowWellbeingCheckin(false)}
+        onClose={async () => {
+          setShowWellbeingCheckin(false);
+          const today = format(new Date(), "yyyy-MM-dd");
+          const { data } = await (supabase.from("daily_wellbeing_checkins" as any)
+            .select("rest_level,stress_level,motivation_level,night_factors")
+            .eq("user_id", user!.id)
+            .eq("checkin_date", today)
+            .maybeSingle() as any);
+          if (data) setCheckinData(data);
+        }}
       />
     </div>
   );
