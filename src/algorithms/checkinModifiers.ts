@@ -63,11 +63,12 @@ export function applyCheckinModifiers(scores: ApexScores, checkin: CheckinData |
 
   const rest = REST_MODIFIERS[checkin.rest_level] ?? REST_MODIFIERS[3];
   const stress = STRESS_MODIFIERS[checkin.stress_level] ?? STRESS_MODIFIERS[2];
+  const motivation = MOTIVATION_MODIFIERS[checkin.motivation_level] ?? MOTIVATION_MODIFIERS[3];
 
-  // Combine Q1 + Q2 modifiers additively
-  const crMod = rest.cr + stress.cr;
-  const brMod = rest.br + stress.br;
-  const scMod = rest.sc + stress.sc;
+  // Combine Q1 + Q2 + Q3 modifiers additively
+  const crMod = rest.cr + stress.cr + motivation.cr;
+  const brMod = rest.br + stress.br + motivation.br;
+  const scMod = rest.sc + stress.sc + motivation.sc;
 
   const cr = clamp(Math.round(scores.cognitiveReadiness * (1 + crMod)), 0, 100);
   const bo = clamp(Math.round(scores.burnoutRisk * (1 + brMod)), 0, 100);
