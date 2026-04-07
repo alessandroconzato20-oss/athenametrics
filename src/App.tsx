@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import CookieConsent from "@/components/CookieConsent";
+import GdprPrivacySheet from "@/components/GdprPrivacySheet";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/account" element={<AccountSettings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <GdprPrivacySheet />
           <CookieConsent />
         </BrowserRouter>
       </AuthProvider>
