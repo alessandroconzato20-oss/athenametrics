@@ -107,7 +107,7 @@ const DailyWellbeingCheckin = ({ open, onClose }: DailyWellbeingCheckinProps) =>
       onSelect: setRest,
     },
     {
-      question: "How stressed or anxious do you feel?",
+      question: "How stressed or anxious do you feel? (study & non-study related)",
       options: STRESS_OPTIONS,
       selected: stress,
       onSelect: setStress,
