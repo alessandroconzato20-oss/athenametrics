@@ -46,6 +46,7 @@ const App = () => (
             <Route path="/account" element={<AccountSettings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <GdprPrivacySheet />
           <CookieConsent />
         </BrowserRouter>
       </AuthProvider>
