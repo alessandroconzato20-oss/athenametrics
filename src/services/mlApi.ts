@@ -27,13 +27,16 @@ export interface TopicDifficultyResponse {
 export interface HeatmapCell {
   topicName: string;
   difficulty: number;
+  difficulty_label: string;
   avgScore: number;
   studentCount: number;
+  n_students: number;
 }
 
 export interface DifficultyHeatmapResponse {
   courseId: string;
   topics: HeatmapCell[];
+  last_updated: string;
 }
 
 export interface CognitiveReadinessResponse {
