@@ -15,6 +15,7 @@ import StudentCard, { StudentStat, ScoreStat } from "@/components/admin/StudentC
 import SyllabusManager from "@/components/admin/SyllabusManager";
 import TopicSummaryTable, { TopicMetric } from "@/components/admin/TopicSummaryTable";
 import HardestTopicsRanking, { HardestTopicEntry } from "@/components/admin/HardestTopicsRanking";
+import TopicDifficultyHeatmap from "@/components/admin/TopicDifficultyHeatmap";
 
 type AdminRole = "admin" | "university_admin";
 
@@ -433,6 +434,11 @@ const AdminPanel = () => {
             <HardestTopicsRanking topics={hardestTopics} masteryBySubtopic={masteryBySubtopic} subtopicMetrics={topicMetrics} />
           </div>
         )}
+
+        {/* Topic Difficulty Heatmap (ML API) */}
+        <div className="mb-6">
+          <TopicDifficultyHeatmap />
+        </div>
 
         {/* Search */}
         <div className="mb-4 relative">
