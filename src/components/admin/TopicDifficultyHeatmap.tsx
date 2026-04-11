@@ -71,9 +71,9 @@ const TopicDifficultyHeatmap = () => {
                 <SelectValue placeholder="Select a course" />
               </SelectTrigger>
               <SelectContent>
-                {(courses || []).map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.course_name}
+                {courses.map((c) => (
+                  <SelectItem key={c.name} value={c.name}>
+                    {c.name}
                   </SelectItem>
                 ))}
               </SelectContent>
