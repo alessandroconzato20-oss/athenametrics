@@ -16,7 +16,11 @@ import {
 } from "@/components/ui/select";
 import { RefreshCw, AlertTriangle, Flame } from "lucide-react";
 
-const TopicDifficultyHeatmap = () => {
+interface TopicDifficultyHeatmapProps {
+  universityId?: string | null;
+}
+
+const TopicDifficultyHeatmap = ({ universityId }: TopicDifficultyHeatmapProps) => {
   const [selectedCourse, setSelectedCourse] = useState<string>("");
 
   // Courses grouped by year from curriculum
@@ -40,7 +44,7 @@ const TopicDifficultyHeatmap = () => {
     dataUpdatedAt,
   } = useQuery({
     queryKey: ["ml", "difficultyHeatmap", selectedCourse],
-    queryFn: () => fetchDifficultyHeatmap(selectedCourse),
+    queryFn: () => fetchDifficultyHeatmap(selectedCourse, universityId ?? undefined),
     enabled: !!selectedCourse,
     retry: false,
   });

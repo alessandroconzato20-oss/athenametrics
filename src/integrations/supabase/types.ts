@@ -14,6 +14,85 @@ export type Database = {
   }
   public: {
     Tables: {
+      assessment_results: {
+        Row: {
+          assessed_at: string
+          course_name: string
+          created_at: string
+          id: string
+          max_score: number
+          score: number
+          university_id: string | null
+          user_id: string
+        }
+        Insert: {
+          assessed_at?: string
+          course_name: string
+          created_at?: string
+          id?: string
+          max_score?: number
+          score: number
+          university_id?: string | null
+          user_id: string
+        }
+        Update: {
+          assessed_at?: string
+          course_name?: string
+          created_at?: string
+          id?: string
+          max_score?: number
+          score?: number
+          university_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_results_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      biometric_snapshots: {
+        Row: {
+          created_at: string
+          data: Json
+          id: string
+          recorded_at: string
+          snapshot_type: string
+          university_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json
+          id?: string
+          recorded_at?: string
+          snapshot_type: string
+          university_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          id?: string
+          recorded_at?: string
+          snapshot_type?: string
+          university_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "biometric_snapshots_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consent_logs: {
         Row: {
           consent_type: string
@@ -21,6 +100,7 @@ export type Database = {
           created_at: string
           id: string
           ip_address: string | null
+          university_id: string | null
           user_id: string
         }
         Insert: {
@@ -29,6 +109,7 @@ export type Database = {
           created_at?: string
           id?: string
           ip_address?: string | null
+          university_id?: string | null
           user_id: string
         }
         Update: {
@@ -37,9 +118,18 @@ export type Database = {
           created_at?: string
           id?: string
           ip_address?: string | null
+          university_id?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "consent_logs_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       daily_scores: {
         Row: {
@@ -49,6 +139,7 @@ export type Database = {
           id: string
           retention_outlook: number | null
           score_date: string
+          university_id: string | null
           user_id: string
         }
         Insert: {
@@ -58,6 +149,7 @@ export type Database = {
           id?: string
           retention_outlook?: number | null
           score_date?: string
+          university_id?: string | null
           user_id: string
         }
         Update: {
@@ -67,9 +159,18 @@ export type Database = {
           id?: string
           retention_outlook?: number | null
           score_date?: string
+          university_id?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "daily_scores_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       daily_wellbeing_checkins: {
         Row: {
@@ -80,6 +181,7 @@ export type Database = {
           night_factors: string[]
           rest_level: number
           stress_level: number
+          university_id: string | null
           user_id: string
         }
         Insert: {
@@ -90,6 +192,7 @@ export type Database = {
           night_factors?: string[]
           rest_level: number
           stress_level: number
+          university_id?: string | null
           user_id: string
         }
         Update: {
@@ -100,9 +203,18 @@ export type Database = {
           night_factors?: string[]
           rest_level?: number
           stress_level?: number
+          university_id?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "daily_wellbeing_checkins_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       library_members: {
         Row: {
@@ -133,12 +245,51 @@ export type Database = {
           },
         ]
       }
+      ml_predictions: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          id: string
+          prediction_data: Json
+          prediction_type: string
+          university_id: string | null
+          user_id: string
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          id?: string
+          prediction_data?: Json
+          prediction_type: string
+          university_id?: string | null
+          user_id: string
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          id?: string
+          prediction_data?: Json
+          prediction_type?: string
+          university_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ml_predictions_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
           id: string
           matricola: string | null
           university: string | null
+          university_id: string | null
           username: string
         }
         Insert: {
@@ -146,6 +297,7 @@ export type Database = {
           id: string
           matricola?: string | null
           university?: string | null
+          university_id?: string | null
           username: string
         }
         Update: {
@@ -153,9 +305,18 @@ export type Database = {
           id?: string
           matricola?: string | null
           university?: string | null
+          university_id?: string | null
           username?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       student_personas: {
         Row: {
@@ -170,6 +331,7 @@ export type Database = {
           social_preference: string | null
           stress_management: string | null
           study_style: string | null
+          university_id: string | null
           updated_at: string
           user_id: string
           weekly_study_hours: string | null
@@ -186,6 +348,7 @@ export type Database = {
           social_preference?: string | null
           stress_management?: string | null
           study_style?: string | null
+          university_id?: string | null
           updated_at?: string
           user_id: string
           weekly_study_hours?: string | null
@@ -202,11 +365,20 @@ export type Database = {
           social_preference?: string | null
           stress_management?: string | null
           study_style?: string | null
+          university_id?: string | null
           updated_at?: string
           user_id?: string
           weekly_study_hours?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "student_personas_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       study_libraries: {
         Row: {
@@ -249,6 +421,7 @@ export type Database = {
           subject: string
           teaching_readiness: number | null
           topic: string
+          university_id: string | null
           user_id: string
         }
         Insert: {
@@ -267,6 +440,7 @@ export type Database = {
           subject: string
           teaching_readiness?: number | null
           topic: string
+          university_id?: string | null
           user_id: string
         }
         Update: {
@@ -285,9 +459,18 @@ export type Database = {
           subject?: string
           teaching_readiness?: number | null
           topic?: string
+          university_id?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "study_logs_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       study_schedule: {
         Row: {
@@ -298,6 +481,7 @@ export type Database = {
           schedule_date: string
           start_time: string | null
           title: string
+          university_id: string | null
           updated_at: string
           user_id: string
         }
@@ -309,6 +493,7 @@ export type Database = {
           schedule_date: string
           start_time?: string | null
           title: string
+          university_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -320,10 +505,54 @@ export type Database = {
           schedule_date?: string
           start_time?: string | null
           title?: string
+          university_id?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "study_schedule_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      survey_responses: {
+        Row: {
+          created_at: string
+          id: string
+          responses: Json
+          survey_type: string
+          university_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          responses?: Json
+          survey_type: string
+          university_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          responses?: Json
+          survey_type?: string
+          university_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_responses_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       topic_mastery: {
         Row: {
@@ -332,6 +561,7 @@ export type Database = {
           id: string
           status: string
           topic_name: string
+          university_id: string | null
           updated_at: string
           user_id: string
         }
@@ -341,6 +571,7 @@ export type Database = {
           id?: string
           status?: string
           topic_name: string
+          university_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -350,8 +581,35 @@ export type Database = {
           id?: string
           status?: string
           topic_name?: string
+          university_id?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topic_mastery_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      universities: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
         }
         Relationships: []
       }
@@ -437,6 +695,7 @@ export type Database = {
           feedback_type: string
           id: string
           reason: string | null
+          university_id: string | null
           user_id: string
         }
         Insert: {
@@ -445,6 +704,7 @@ export type Database = {
           feedback_type: string
           id?: string
           reason?: string | null
+          university_id?: string | null
           user_id: string
         }
         Update: {
@@ -453,9 +713,18 @@ export type Database = {
           feedback_type?: string
           id?: string
           reason?: string | null
+          university_id?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_feedback_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -483,6 +752,7 @@ export type Database = {
           goals: Json
           id: string
           status: string
+          university_id: string | null
           updated_at: string
           user_id: string
           week_start: string
@@ -494,6 +764,7 @@ export type Database = {
           goals?: Json
           id?: string
           status?: string
+          university_id?: string | null
           updated_at?: string
           user_id: string
           week_start: string
@@ -505,11 +776,20 @@ export type Database = {
           goals?: Json
           id?: string
           status?: string
+          university_id?: string | null
           updated_at?: string
           user_id?: string
           week_start?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "weekly_goals_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -527,6 +807,7 @@ export type Database = {
     }
     Functions: {
       delete_user_data: { Args: { _user_id: string }; Returns: undefined }
+      get_user_university_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

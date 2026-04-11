@@ -105,36 +105,46 @@ async function mlFetch<T>(path: string): Promise<T> {
 
 // ---------- Public functions ----------
 
-export function fetchTopicDifficulty(studentId: string, courseId: string, topicName: string) {
-  return mlFetch<TopicDifficultyResponse>(
-    `/topic-difficulty?studentId=${enc(studentId)}&courseId=${enc(courseId)}&topicName=${enc(topicName)}`
-  );
+export function fetchTopicDifficulty(studentId: string, courseId: string, topicName: string, universityId?: string) {
+  let url = `/topic-difficulty?studentId=${enc(studentId)}&courseId=${enc(courseId)}&topicName=${enc(topicName)}`;
+  if (universityId) url += `&universityId=${enc(universityId)}`;
+  return mlFetch<TopicDifficultyResponse>(url);
 }
 
-export function fetchDifficultyHeatmap(courseId: string) {
-  return mlFetch<DifficultyHeatmapResponse>(`/difficulty-heatmap?courseId=${enc(courseId)}`);
+export function fetchDifficultyHeatmap(courseId: string, universityId?: string) {
+  let url = `/difficulty-heatmap?courseId=${enc(courseId)}`;
+  if (universityId) url += `&universityId=${enc(universityId)}`;
+  return mlFetch<DifficultyHeatmapResponse>(url);
 }
 
-export function fetchCognitiveReadiness(studentId: string) {
-  return mlFetch<CognitiveReadinessResponse>(`/cognitive-readiness?studentId=${enc(studentId)}`);
+export function fetchCognitiveReadiness(studentId: string, universityId?: string) {
+  let url = `/cognitive-readiness?studentId=${enc(studentId)}`;
+  if (universityId) url += `&universityId=${enc(universityId)}`;
+  return mlFetch<CognitiveReadinessResponse>(url);
 }
 
-export function fetchAtRiskStudent(studentId: string, courseId: string) {
-  return mlFetch<AtRiskStudentResponse>(
-    `/at-risk-student?studentId=${enc(studentId)}&courseId=${enc(courseId)}`
-  );
+export function fetchAtRiskStudent(studentId: string, courseId: string, universityId?: string) {
+  let url = `/at-risk-student?studentId=${enc(studentId)}&courseId=${enc(courseId)}`;
+  if (universityId) url += `&universityId=${enc(universityId)}`;
+  return mlFetch<AtRiskStudentResponse>(url);
 }
 
-export function fetchCohortRisk(courseId: string) {
-  return mlFetch<CohortRiskResponse>(`/cohort-risk?courseId=${enc(courseId)}`);
+export function fetchCohortRisk(courseId: string, universityId?: string) {
+  let url = `/cohort-risk?courseId=${enc(courseId)}`;
+  if (universityId) url += `&universityId=${enc(universityId)}`;
+  return mlFetch<CohortRiskResponse>(url);
 }
 
-export function fetchStudentCluster(studentId: string) {
-  return mlFetch<StudentClusterResponse>(`/student-cluster?studentId=${enc(studentId)}`);
+export function fetchStudentCluster(studentId: string, universityId?: string) {
+  let url = `/student-cluster?studentId=${enc(studentId)}`;
+  if (universityId) url += `&universityId=${enc(universityId)}`;
+  return mlFetch<StudentClusterResponse>(url);
 }
 
-export function fetchCohortClusters(courseId: string) {
-  return mlFetch<CohortClustersResponse>(`/cohort-clusters?courseId=${enc(courseId)}`);
+export function fetchCohortClusters(courseId: string, universityId?: string) {
+  let url = `/cohort-clusters?courseId=${enc(courseId)}`;
+  if (universityId) url += `&universityId=${enc(universityId)}`;
+  return mlFetch<CohortClustersResponse>(url);
 }
 
 const enc = encodeURIComponent;
