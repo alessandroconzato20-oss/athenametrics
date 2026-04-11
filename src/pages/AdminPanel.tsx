@@ -443,6 +443,11 @@ const AdminPanel = () => {
           <TopicDifficultyHeatmap universityId={adminUniversityId} />
         </div>
 
+        {/* At-Risk Students Panel */}
+        <div className="mb-6">
+          <AtRiskStudentsPanel universityId={adminUniversityId} />
+        </div>
+
         {/* Search */}
         <div className="mb-4 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
