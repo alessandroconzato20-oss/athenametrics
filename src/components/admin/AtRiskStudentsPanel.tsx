@@ -109,10 +109,6 @@ const AtRiskStudentsPanel: React.FC<Props> = ({ universityId }) => {
 
         // Build self-confidence map from latest confidence survey or study log confidence
         const selfConf: Record<string, number> = {};
-        userLogs.forEach((l: any) => {
-          // We don't have per-course confidence in study_logs directly mapped to exams
-          // Use subject-level from surveys if available
-        });
         userSurveys.filter((sv: any) => sv.survey_type === "exam_confidence").forEach((sv: any) => {
           const r = sv.responses as any;
           if (r && typeof r === "object") {
