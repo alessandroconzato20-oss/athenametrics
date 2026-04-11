@@ -216,6 +216,44 @@ export type Database = {
           },
         ]
       }
+      exam_passes: {
+        Row: {
+          course_name: string
+          created_at: string
+          id: string
+          passed_at: string
+          university_id: string | null
+          user_id: string
+          year: number
+        }
+        Insert: {
+          course_name: string
+          created_at?: string
+          id?: string
+          passed_at?: string
+          university_id?: string | null
+          user_id: string
+          year: number
+        }
+        Update: {
+          course_name?: string
+          created_at?: string
+          id?: string
+          passed_at?: string
+          university_id?: string | null
+          user_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_passes_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       library_members: {
         Row: {
           id: string
