@@ -24,6 +24,7 @@ const AdminPanel = () => {
   const navigate = useNavigate();
   const [adminRole, setAdminRole] = useState<AdminRole | null>(null);
   const [adminUniversity, setAdminUniversity] = useState<string | null>(null);
+  const [adminUniversityId, setAdminUniversityId] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
   const [students, setStudents] = useState<StudentStat[]>([]);
   const [scores, setScores] = useState<Record<string, ScoreStat>>({});
@@ -54,8 +55,9 @@ const AdminPanel = () => {
       if (isUniAdmin) {
         setAdminRole("university_admin");
         // Get their university from profile
-        const { data: profile } = await supabase.from("profiles").select("university").eq("id", user.id).single();
+        const { data: profile } = await supabase.from("profiles").select("university, university_id").eq("id", user.id).single();
         setAdminUniversity(profile?.university || null);
+        setAdminUniversityId((profile as any)?.university_id || null);
         setChecking(false);
         return;
       }
@@ -437,7 +439,7 @@ const AdminPanel = () => {
 
         {/* Topic Difficulty Heatmap (ML API) */}
         <div className="mb-6">
-          <TopicDifficultyHeatmap />
+          <TopicDifficultyHeatmap universityId={adminUniversityId} />
         </div>
 
         {/* Search */}
