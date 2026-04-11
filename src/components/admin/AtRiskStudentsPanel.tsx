@@ -66,12 +66,14 @@ const AtRiskStudentsPanel: React.FC<Props> = ({ universityId }) => {
         { data: studyLogs },
         { data: checkins },
         { data: surveys },
+        { data: examPasses },
       ] = await Promise.all([
         supabase.from("profiles").select("id, username, matricola, university_id"),
         supabase.from("assessment_results").select("*"),
         supabase.from("study_logs").select("studied_at, duration_minutes, subject, topic, user_id"),
         supabase.from("daily_wellbeing_checkins").select("checkin_date, stress_level, user_id"),
         supabase.from("survey_responses").select("survey_type, responses, created_at, user_id"),
+        supabase.from("exam_passes").select("user_id, course_name"),
       ]);
 
       const uniProfiles = (profiles || []).filter((p: any) => p.university_id === universityId);
