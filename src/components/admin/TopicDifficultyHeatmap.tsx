@@ -8,7 +8,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -17,16 +19,17 @@ import { RefreshCw, AlertTriangle, Flame } from "lucide-react";
 const TopicDifficultyHeatmap = () => {
   const [selectedCourse, setSelectedCourse] = useState<string>("");
 
-  // Deduplicated course list from curriculum
-  const courses = useMemo(() => {
-    const seen = new Set<string>();
-    return curriculum
-      .flatMap((s) => s.courses)
-      .filter((c) => {
-        if (seen.has(c.name)) return false;
-        seen.add(c.name);
-        return true;
-      });
+  // Courses grouped by year from curriculum
+  const coursesByYear = useMemo(() => {
+    const years = new Map<number, string[]>();
+    for (const sem of curriculum) {
+      if (!years.has(sem.year)) years.set(sem.year, []);
+      const list = years.get(sem.year)!;
+      for (const c of sem.courses) {
+        if (!list.includes(c.name)) list.push(c.name);
+      }
+    }
+    return Array.from(years.entries()).sort((a, b) => a[0] - b[0]);
   }, []);
   const {
     data: heatmap,
@@ -71,10 +74,15 @@ const TopicDifficultyHeatmap = () => {
                 <SelectValue placeholder="Select a course" />
               </SelectTrigger>
               <SelectContent>
-                {courses.map((c) => (
-                  <SelectItem key={c.name} value={c.name}>
-                    {c.name}
-                  </SelectItem>
+                {coursesByYear.map(([year, courseNames]) => (
+                  <SelectGroup key={year}>
+                    <SelectLabel>Year {year}</SelectLabel>
+                    {courseNames.map((name) => (
+                      <SelectItem key={name} value={name}>
+                        {name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
                 ))}
               </SelectContent>
             </Select>
