@@ -154,7 +154,7 @@ function buildScoresData(scores: ApexScores) {
 }
 
 const Index = () => {
-  const { user, signOut, displayName, loading: authLoading } = useAuth();
+  const { user, signOut, displayName, loading: authLoading, universityId } = useAuth();
   const navigate = useNavigate();
   const [selectedScore, setSelectedScore] = useState<any>(null);
   const [healthConnected, setHealthConnected] = useState(false);
@@ -325,7 +325,8 @@ const Index = () => {
         burnout_risk: scores.burnoutRisk,
         cognitive_readiness: scores.cognitiveReadiness,
         retention_outlook: scores.retentionOutlook,
-      }, { onConflict: "user_id,score_date" })
+        university_id: universityId,
+      } as any, { onConflict: "user_id,score_date" })
       .then(({ error }) => { if (error) console.error("Failed to save daily score:", error); });
   }, [scores, user]);
 
