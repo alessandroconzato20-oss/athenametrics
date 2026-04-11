@@ -15,6 +15,7 @@ import TodaysInsight from "@/components/TodaysInsight";
 import DailyStudyPlan from "@/components/DailyStudyPlan";
 import MicroReward from "@/components/MicroReward";
 import DailyWellbeingCheckin from "@/components/DailyWellbeingCheckin";
+import ExamChecklist from "@/components/ExamChecklist";
 import { startOfWeek } from "date-fns";
 import {
   fetchHealthData,
@@ -454,6 +455,11 @@ const Index = () => {
           </div>
         )}
 
+
+        {/* Exam Progress Checklist */}
+        <div className="mb-6">
+          <ExamChecklist />
+        </div>
 
         <WeeklyChallenges />
       </div>

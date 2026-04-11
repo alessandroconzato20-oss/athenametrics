@@ -100,6 +100,8 @@ export interface StudentInput {
   studyLogs: StudyLogRecord[];
   wellbeingCheckins: WellbeingRecord[];
   surveys: SurveyRecord[];
+  /** Exam names the student has self-reported as passed (from exam_passes table) */
+  passedExamNames: Set<string>;
   // biometric averages (pre-computed or null)
   avgHrv14d: number | null;
   hrvBaseline: number | null;
@@ -134,11 +136,15 @@ export function computeStudentRisk(s: StudentInput): AtRiskStudent {
   let rawScore = 0;
 
   // ── Build blocking exam status ──
+  // Use exam_passes (self-reported checklist) as primary source, fall back to assessment scores
   const blockingExams: BlockingExamStatus[] = ALL_BLOCKING_EXAMS.map((exam) => {
     const attempts = s.assessments.filter(
       (a) => a.course_name.toLowerCase() === exam.toLowerCase()
     );
-    const passed = attempts.some((a) => a.score / a.max_score >= 0.6); // 60% = pass
+    // Passed if student checked it off OR scored ≥60% on an attempt
+    const passedViaChecklist = s.passedExamNames.has(exam);
+    const passedViaScore = attempts.some((a) => a.score / a.max_score >= 0.6);
+    const passed = passedViaChecklist || passedViaScore;
     const bestScore = attempts.length > 0
       ? Math.max(...attempts.map((a) => (a.score / a.max_score) * 100))
       : null;
