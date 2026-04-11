@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchDifficultyHeatmap, ApiError } from "@/services/mlApi";
-import { supabase } from "@/integrations/supabase/client";
+import { curriculum } from "@/data/curriculum";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,26 +17,17 @@ import { RefreshCw, AlertTriangle, Flame } from "lucide-react";
 const TopicDifficultyHeatmap = () => {
   const [selectedCourse, setSelectedCourse] = useState<string>("");
 
-  // Fetch courses from university_syllabi
-  const { data: courses } = useQuery({
-    queryKey: ["admin-courses-list"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("university_syllabi")
-        .select("id, course_name")
-        .eq("status", "approved")
-        .order("course_name");
-      if (error) throw error;
-      // Deduplicate by course_name
-      const seen = new Set<string>();
-      return (data || []).filter((c) => {
-        if (seen.has(c.course_name)) return false;
-        seen.add(c.course_name);
+  // Deduplicated course list from curriculum
+  const courses = useMemo(() => {
+    const seen = new Set<string>();
+    return curriculum
+      .flatMap((s) => s.courses)
+      .filter((c) => {
+        if (seen.has(c.name)) return false;
+        seen.add(c.name);
         return true;
       });
-    },
-  });
-
+  }, []);
   const {
     data: heatmap,
     isLoading,
