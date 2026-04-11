@@ -66,7 +66,7 @@ const LevelPicker = ({ label, icon, value, onChange, color }: {
 );
 
 const StudyLogForm = () => {
-  const { user } = useAuth();
+  const { user, universityId } = useAuth();
   const navigate = useNavigate();
 
   const userYear = user?.user_metadata?.year || 1;
@@ -150,6 +150,7 @@ const StudyLogForm = () => {
         revision_priority: revisionPriority,
         teaching_readiness: teachingReadiness,
         notes: combinedNotes,
+        university_id: universityId,
       } as any);
       if (error) throw error;
       toast.success("Study session logged! 🎉");
