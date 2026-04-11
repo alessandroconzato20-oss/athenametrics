@@ -16,6 +16,7 @@ import SyllabusManager from "@/components/admin/SyllabusManager";
 import TopicSummaryTable, { TopicMetric } from "@/components/admin/TopicSummaryTable";
 import HardestTopicsRanking, { HardestTopicEntry } from "@/components/admin/HardestTopicsRanking";
 import TopicDifficultyHeatmap from "@/components/admin/TopicDifficultyHeatmap";
+import AtRiskStudentsPanel from "@/components/admin/AtRiskStudentsPanel";
 
 type AdminRole = "admin" | "university_admin";
 
@@ -440,6 +441,11 @@ const AdminPanel = () => {
         {/* Topic Difficulty Heatmap (ML API) */}
         <div className="mb-6">
           <TopicDifficultyHeatmap universityId={adminUniversityId} />
+        </div>
+
+        {/* At-Risk Students Panel */}
+        <div className="mb-6">
+          <AtRiskStudentsPanel universityId={adminUniversityId} />
         </div>
 
         {/* Search */}
