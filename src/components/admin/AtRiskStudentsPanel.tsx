@@ -158,6 +158,7 @@ const AtRiskStudentsPanel: React.FC<Props> = ({ universityId }) => {
           hrvBaseline: null,
           avgSleepHours14d: null,
           selfConfidence: selfConf,
+          passedExamNames: userPassedExams,
           cohortAvgMinutes: cohortAvg,
         };
 
