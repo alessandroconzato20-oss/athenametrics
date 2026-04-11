@@ -86,6 +86,13 @@ const AtRiskStudentsPanel: React.FC<Props> = ({ universityId }) => {
       const minuteValues = Object.values(allUserMinutes);
       const cohortAvg = minuteValues.length > 0 ? minuteValues.reduce((a, b) => a + b, 0) / minuteValues.length : 0;
 
+      // Build exam passes lookup per user
+      const examPassesByUser: Record<string, Set<string>> = {};
+      (examPasses || []).forEach((ep: any) => {
+        if (!examPassesByUser[ep.user_id]) examPassesByUser[ep.user_id] = new Set();
+        examPassesByUser[ep.user_id].add(ep.course_name);
+      });
+
       const results: AtRiskStudent[] = uniProfiles.map((profile: any) => {
         const uid = profile.id;
 
@@ -93,6 +100,7 @@ const AtRiskStudentsPanel: React.FC<Props> = ({ universityId }) => {
         const userLogs = (studyLogs || []).filter((l: any) => l.user_id === uid);
         const userCheckins = (checkins || []).filter((c: any) => c.user_id === uid);
         const userSurveys = (surveys || []).filter((sv: any) => sv.user_id === uid);
+        const userPassedExams = examPassesByUser[uid] || new Set<string>();
 
         // Infer year from assessments (rough: which courses they've attempted)
         const courseNames = new Set(userAssessments.map((a: any) => a.course_name));
