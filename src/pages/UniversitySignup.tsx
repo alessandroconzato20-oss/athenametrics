@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { GraduationCap, Eye, EyeOff } from "lucide-react";
+import { GraduationCap, Eye, EyeOff, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 
 const UniversitySignup = () => {
@@ -17,8 +17,19 @@ const UniversitySignup = () => {
   const [accessCode, setAccessCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [generatedKey, setGeneratedKey] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
+
+  const handleCopy = async () => {
+    if (generatedKey) {
+      await navigator.clipboard.writeText(generatedKey);
+      setCopied(true);
+      toast.success("Key copied to clipboard!");
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,26 +39,21 @@ const UniversitySignup = () => {
     }
     setIsLoading(true);
     try {
-      // First sign up the user
       await signUp(email, password, name, 0, "", university);
-
       toast.info("Verifying access code...");
 
-      // Sign in to get the user ID, then verify the code
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (signInError) {
-        // If email confirmation is required, we can't sign in yet
-        toast.success("Account created! Please verify your email, then sign in. Your access code will be verified on first login.");
+        toast.success("Account created! Please verify your email, then sign in. Your university key will be generated on first login.");
         navigate("/login");
         return;
       }
 
       if (signInData.user) {
-        // Verify access code and assign role
         const { data: valid, error: verifyError } = await supabase.rpc("verify_university_code", {
           _user_id: signInData.user.id,
           _university_name: university,
@@ -55,17 +61,28 @@ const UniversitySignup = () => {
         });
 
         if (verifyError || !valid) {
-          toast.error("Invalid access code for this university. Your account was created but you won't have admin access.");
+          toast.error("Invalid access code for this university.");
           await supabase.auth.signOut();
           navigate("/login");
           return;
         }
 
-        // Also update profile with university
         await supabase.from("profiles").update({ university } as any).eq("id", signInData.user.id);
 
-        toast.success("University admin account created successfully!");
-        navigate("/admin");
+        // Fetch the auto-generated login key
+        const { data: keyData } = await supabase
+          .from("university_login_keys")
+          .select("login_key")
+          .eq("user_id", signInData.user.id)
+          .single();
+
+        if (keyData?.login_key) {
+          setGeneratedKey(keyData.login_key);
+          toast.success("Account created! Save your university key below.");
+        } else {
+          toast.success("University admin account created!");
+          navigate("/admin");
+        }
       }
     } catch (err: any) {
       toast.error(err.message || "Failed to sign up");
@@ -73,6 +90,41 @@ const UniversitySignup = () => {
       setIsLoading(false);
     }
   };
+
+  if (generatedKey) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-md text-center">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", delay: 0.1 }}
+            className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-green-100 dark:bg-green-900/30"
+          >
+            <Check className="h-10 w-10 text-green-600" />
+          </motion.div>
+
+          <h1 className="font-display text-2xl font-bold text-foreground mb-2">Account Created!</h1>
+          <p className="text-muted-foreground mb-8">Save your university key — you'll need it to sign in. It rotates every week.</p>
+
+          <div className="rounded-2xl border-2 border-primary/30 bg-primary/5 p-6 mb-6">
+            <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wider font-semibold">Your University Key</p>
+            <p className="font-mono text-4xl font-bold tracking-[0.3em] text-primary">{generatedKey}</p>
+            <p className="text-xs text-muted-foreground mt-3">Valid for 7 days from now</p>
+          </div>
+
+          <Button onClick={handleCopy} variant="outline" className="w-full h-11 rounded-xl mb-4">
+            {copied ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+            {copied ? "Copied!" : "Copy Key"}
+          </Button>
+
+          <Button onClick={() => navigate("/admin")} className="w-full h-12 rounded-xl bg-gradient-primary text-base font-semibold text-primary-foreground">
+            Go to Admin Panel →
+          </Button>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -82,7 +134,7 @@ const UniversitySignup = () => {
             <GraduationCap className="h-8 w-8 text-primary-foreground" />
           </motion.div>
           <h1 className="font-display text-3xl font-bold text-foreground">University Admin</h1>
-          <p className="mt-2 text-muted-foreground">Register as a university administrator to manage your institution's syllabi and monitor student progress.</p>
+          <p className="mt-2 text-muted-foreground">Register as a university administrator. You'll receive a unique login key after registration.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -91,8 +143,9 @@ const UniversitySignup = () => {
             <Input id="name" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} required className="h-12 rounded-xl" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">University Email</Label>
-            <Input id="email" type="email" placeholder="you@university.edu" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-12 rounded-xl" />
+            <Label htmlFor="email">Email</Label>
+            <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-12 rounded-xl" />
+            <p className="text-xs text-muted-foreground">Used only for account recovery. You'll sign in with your university key.</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
@@ -110,9 +163,7 @@ const UniversitySignup = () => {
           <div className="space-y-2">
             <Label htmlFor="accessCode">Access Code</Label>
             <Input id="accessCode" placeholder="Enter your institution's access code" value={accessCode} onChange={(e) => setAccessCode(e.target.value)} required className="h-12 rounded-xl" />
-            <p className="text-xs text-muted-foreground">
-              Contact your CoFactor representative to obtain your institution's access code.
-            </p>
+            <p className="text-xs text-muted-foreground">Contact your CoFactor representative to obtain your institution's access code.</p>
           </div>
           <Button type="submit" disabled={isLoading} className="h-12 w-full rounded-xl bg-gradient-primary text-base font-semibold text-primary-foreground">
             {isLoading ? "Creating account..." : "Register as University Admin"}
@@ -121,7 +172,7 @@ const UniversitySignup = () => {
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Already have an account?{" "}
-          <Link to="/login" className="font-medium text-primary hover:underline">Sign in</Link>
+          <Link to="/university-login" className="font-medium text-primary hover:underline">Sign in</Link>
         </p>
         <p className="mt-2 text-center text-sm text-muted-foreground">
           Are you a student?{" "}

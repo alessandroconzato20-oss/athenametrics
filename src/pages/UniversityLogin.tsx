@@ -1,26 +1,51 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { GraduationCap, Eye, EyeOff } from "lucide-react";
+import { GraduationCap, Eye, EyeOff, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 
 const UniversityLogin = () => {
-  const [email, setEmail] = useState("");
+  const [loginKey, setLoginKey] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { signIn } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!loginKey.trim() || !password.trim()) {
+      toast.error("Please fill in all fields");
+      return;
+    }
     setIsLoading(true);
     try {
-      await signIn(email, password);
+      // Look up email by login key
+      const { data: email, error: lookupError } = await supabase.rpc(
+        "lookup_email_by_login_key",
+        { _login_key: loginKey.trim().toUpperCase() }
+      );
+
+      if (lookupError || !email) {
+        toast.error("Invalid or expired university key. Keys rotate weekly — contact your administrator.");
+        return;
+      }
+
+      // Sign in with the resolved email + password
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) {
+        toast.error("Invalid password");
+        return;
+      }
+
+      toast.success("Signed in successfully!");
       navigate("/admin");
     } catch (err: any) {
       toast.error(err.message || "Failed to sign in");
@@ -47,24 +72,52 @@ const UniversityLogin = () => {
             <GraduationCap className="h-8 w-8 text-primary-foreground" />
           </motion.div>
           <h1 className="font-display text-3xl font-bold text-foreground">University Staff</h1>
-          <p className="mt-2 text-muted-foreground">Sign in to access your university's admin panel.</p>
+          <p className="mt-2 text-muted-foreground">Sign in with your university key and personal password.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">University Email</Label>
-            <Input id="email" type="email" placeholder="you@university.edu" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-12 rounded-xl" />
+            <Label htmlFor="loginKey">University Key</Label>
+            <div className="relative">
+              <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="loginKey"
+                placeholder="e.g. A3F9B21C"
+                value={loginKey}
+                onChange={(e) => setLoginKey(e.target.value.toUpperCase())}
+                required
+                className="h-12 rounded-xl pl-10 font-mono tracking-widest uppercase"
+                maxLength={8}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">Your key rotates weekly. Check with your institution if expired.</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
             <div className="relative">
-              <Input id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required className="h-12 rounded-xl pr-11" />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="h-12 rounded-xl pr-11"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
           </div>
-          <Button type="submit" disabled={isLoading} className="h-12 w-full rounded-xl bg-gradient-primary text-base font-semibold text-primary-foreground">
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="h-12 w-full rounded-xl bg-gradient-primary text-base font-semibold text-primary-foreground"
+          >
             {isLoading ? "Signing in..." : "Sign In to Admin Panel"}
           </Button>
         </form>

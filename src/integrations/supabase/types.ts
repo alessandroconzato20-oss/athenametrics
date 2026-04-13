@@ -678,6 +678,33 @@ export type Database = {
         }
         Relationships: []
       }
+      university_login_keys: {
+        Row: {
+          created_at: string
+          id: string
+          login_key: string
+          user_id: string
+          valid_from: string
+          valid_until: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          login_key: string
+          user_id: string
+          valid_from?: string
+          valid_until?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          login_key?: string
+          user_id?: string
+          valid_from?: string
+          valid_until?: string
+        }
+        Relationships: []
+      }
       university_syllabi: {
         Row: {
           course_name: string
@@ -845,6 +872,10 @@ export type Database = {
     }
     Functions: {
       delete_user_data: { Args: { _user_id: string }; Returns: undefined }
+      generate_login_key_for_user: {
+        Args: { _user_id: string }
+        Returns: string
+      }
       get_user_university_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
@@ -861,6 +892,11 @@ export type Database = {
         Args: { _invite_code: string; _user_id: string }
         Returns: string
       }
+      lookup_email_by_login_key: {
+        Args: { _login_key: string }
+        Returns: string
+      }
+      rotate_all_login_keys: { Args: never; Returns: undefined }
       verify_university_code: {
         Args: {
           _access_code: string
