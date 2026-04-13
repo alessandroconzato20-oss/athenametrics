@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { GraduationCap, Eye, EyeOff, KeyRound } from "lucide-react";
+import { GraduationCap, Eye, EyeOff, KeyRound, Mail, Copy, Check, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 const UniversityLogin = () => {
