@@ -104,8 +104,8 @@ const UniversityLogin = () => {
     }
   };
 
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+
+  // Key revealed screen after first-time login
   // Key revealed screen after first-time login
   if (revealedKey) {
     return (
