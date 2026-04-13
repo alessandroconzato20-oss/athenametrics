@@ -5,10 +5,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Stethoscope, Eye, EyeOff } from "lucide-react";
+import { GraduationCap, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
-const Login = () => {
+const UniversityLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -21,7 +21,7 @@ const Login = () => {
     setIsLoading(true);
     try {
       await signIn(email, password);
-      navigate("/");
+      navigate("/admin");
     } catch (err: any) {
       toast.error(err.message || "Failed to sign in");
     } finally {
@@ -44,15 +44,15 @@ const Login = () => {
             transition={{ type: "spring", delay: 0.2 }}
             className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-primary"
           >
-            <Stethoscope className="h-8 w-8 text-primary-foreground" />
+            <GraduationCap className="h-8 w-8 text-primary-foreground" />
           </motion.div>
-          <h1 className="font-display text-3xl font-bold text-foreground">CoFactor Student</h1>
-          <p className="mt-2 text-muted-foreground">Welcome back. Let's optimise your day.</p>
+          <h1 className="font-display text-3xl font-bold text-foreground">University Staff</h1>
+          <p className="mt-2 text-muted-foreground">Sign in to access your university's admin panel.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">University Email</Label>
             <Input id="email" type="email" placeholder="you@university.edu" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-12 rounded-xl" />
           </div>
           <div className="space-y-2">
@@ -65,7 +65,7 @@ const Login = () => {
             </div>
           </div>
           <Button type="submit" disabled={isLoading} className="h-12 w-full rounded-xl bg-gradient-primary text-base font-semibold text-primary-foreground">
-            {isLoading ? "Signing in..." : "Sign In"}
+            {isLoading ? "Signing in..." : "Sign In to Admin Panel"}
           </Button>
         </form>
 
@@ -75,22 +75,22 @@ const Login = () => {
           transition={{ delay: 0.4 }}
           className="mt-8 rounded-2xl border border-primary/20 bg-primary/5 p-5 text-center"
         >
-          <p className="mb-2 text-sm font-medium text-foreground">New to CoFactor?</p>
-          <p className="mb-4 text-xs text-muted-foreground">Join Humanitas students already optimising their study performance 🚀</p>
-          <Link to="/signup">
+          <p className="mb-2 text-sm font-medium text-foreground">New university staff member?</p>
+          <p className="mb-4 text-xs text-muted-foreground">Register your institution to manage syllabi and monitor student progress 🎓</p>
+          <Link to="/university-signup">
             <Button variant="outline" className="w-full h-11 rounded-xl border-primary text-primary font-semibold hover:bg-primary hover:text-primary-foreground transition-colors">
-              Create your free account →
+              Register as University Admin →
             </Button>
           </Link>
         </motion.div>
 
-        <p className="mt-4 text-center text-sm text-muted-foreground">
-          University staff?{" "}
-          <Link to="/university-login" className="font-medium text-primary hover:underline">Access the admin panel →</Link>
+        <p className="mt-6 text-center text-sm text-muted-foreground">
+          Are you a student?{" "}
+          <Link to="/login" className="font-medium text-primary hover:underline">Student sign in</Link>
         </p>
       </motion.div>
     </div>
   );
 };
 
-export default Login;
+export default UniversityLogin;
