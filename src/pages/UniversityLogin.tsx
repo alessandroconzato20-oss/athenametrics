@@ -11,9 +11,61 @@ import { toast } from "sonner";
 const UniversityLogin = () => {
   const [loginKey, setLoginKey] = useState("");
   const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isFirstTime, setIsFirstTime] = useState(false);
+  const [revealedKey, setRevealedKey] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
+
+  const handleCopyKey = async () => {
+    if (revealedKey) {
+      await navigator.clipboard.writeText(revealedKey);
+      setCopied(true);
+      toast.success("Key copied to clipboard!");
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleFirstTimeLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || !password.trim()) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+
+      if (signInError) {
+        toast.error("Invalid email or password");
+        return;
+      }
+
+      // Fetch their login key
+      const { data: keyData } = await supabase
+        .from("university_login_keys")
+        .select("login_key")
+        .eq("user_id", signInData.user.id)
+        .single();
+
+      if (keyData?.login_key) {
+        setRevealedKey(keyData.login_key);
+        toast.success("Here's your university key! Save it for future logins.");
+      } else {
+        toast.error("No university key found for this account. Contact your administrator.");
+        await supabase.auth.signOut();
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to sign in");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +75,6 @@ const UniversityLogin = () => {
     }
     setIsLoading(true);
     try {
-      // Look up email by login key
       const { data: email, error: lookupError } = await supabase.rpc(
         "lookup_email_by_login_key",
         { _login_key: loginKey.trim().toUpperCase() }
@@ -34,7 +85,6 @@ const UniversityLogin = () => {
         return;
       }
 
-      // Sign in with the resolved email + password
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
