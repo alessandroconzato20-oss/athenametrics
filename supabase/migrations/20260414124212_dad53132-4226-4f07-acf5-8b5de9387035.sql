@@ -1,0 +1,1 @@
+ALTER TABLE public.exam_passes ADD COLUMN grade numeric NULL;
