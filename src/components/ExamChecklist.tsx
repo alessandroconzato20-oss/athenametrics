@@ -185,9 +185,12 @@ const ExamChecklist: React.FC = () => {
                     animate={{ opacity: 1 }}
                     className="pl-4 pr-2 pb-2 space-y-0.5"
                   >
-                    <div className="flex items-center justify-between px-3 pb-1">
-                      <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Exam</span>
-                      <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mr-1">Grade</span>
+                    <div className="flex items-center px-3 pb-1">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="w-4 shrink-0" />
+                        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Exam</span>
+                      </div>
+                      <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider shrink-0 min-w-[28px] text-center">Grade</span>
                     </div>
                     {courses.map((course) => {
                       const passed = passedExams.has(course.name);
