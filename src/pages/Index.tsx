@@ -474,11 +474,6 @@ const Index = () => {
         )}
 
 
-        {/* Exam Progress Checklist */}
-        <div className="mb-6">
-          <ExamChecklist />
-        </div>
-
         <WeeklyChallenges />
       </div>
 
