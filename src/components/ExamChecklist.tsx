@@ -16,11 +16,12 @@ import { YEAR1_BLOCKING_EXAMS, YEAR2_BLOCKING_EXAMS } from "@/algorithms/humanit
 const ExamChecklist: React.FC = () => {
   const { user, universityId } = useAuth();
   const [passedExams, setPassedExams] = useState<Set<string>>(new Set());
+  const [grades, setGrades] = useState<Record<string, number | null>>({});
   const [loading, setLoading] = useState(true);
   const [togglingExam, setTogglingExam] = useState<string | null>(null);
   const [openYears, setOpenYears] = useState<Set<number>>(new Set());
+  const [editingGrade, setEditingGrade] = useState<string | null>(null);
 
-  // Group all courses by year (unique)
   const coursesByYear = useMemo(() => {
     const years = new Map<number, { name: string; credits: number }[]>();
     for (const sem of curriculum) {
@@ -33,16 +34,18 @@ const ExamChecklist: React.FC = () => {
     return Array.from(years.entries()).sort((a, b) => a[0] - b[0]);
   }, []);
 
-  // Load passed exams
   useEffect(() => {
     if (!user) return;
     const load = async () => {
       const { data } = await supabase
         .from("exam_passes")
-        .select("course_name")
-        .eq("user_id", user.id);
+        .select("course_name,grade" as any)
+        .eq("user_id", user.id) as any;
       if (data) {
         setPassedExams(new Set(data.map((d: any) => d.course_name)));
+        const g: Record<string, number | null> = {};
+        data.forEach((d: any) => { g[d.course_name] = d.grade ?? null; });
+        setGrades(g);
       }
       setLoading(false);
     };
@@ -52,11 +55,9 @@ const ExamChecklist: React.FC = () => {
   const toggleExam = async (courseName: string, year: number) => {
     if (!user || togglingExam) return;
     setTogglingExam(courseName);
-
     const isPassed = passedExams.has(courseName);
 
     if (isPassed) {
-      // Remove
       const { error } = await supabase
         .from("exam_passes")
         .delete()
@@ -65,14 +66,10 @@ const ExamChecklist: React.FC = () => {
       if (error) {
         toast.error("Failed to update");
       } else {
-        setPassedExams((prev) => {
-          const next = new Set(prev);
-          next.delete(courseName);
-          return next;
-        });
+        setPassedExams((prev) => { const next = new Set(prev); next.delete(courseName); return next; });
+        setGrades((prev) => { const next = { ...prev }; delete next[courseName]; return next; });
       }
     } else {
-      // Insert
       const { error } = await supabase
         .from("exam_passes")
         .insert({
@@ -88,6 +85,25 @@ const ExamChecklist: React.FC = () => {
       }
     }
     setTogglingExam(null);
+  };
+
+  const saveGrade = async (courseName: string, value: string) => {
+    if (!user) return;
+    const num = parseInt(value, 10);
+    const grade = isNaN(num) ? null : Math.min(31, Math.max(0, num));
+
+    const { error } = await (supabase
+      .from("exam_passes")
+      .update({ grade } as any)
+      .eq("user_id", user.id)
+      .eq("course_name", courseName) as any);
+
+    if (error) {
+      toast.error("Failed to save grade");
+    } else {
+      setGrades((prev) => ({ ...prev, [courseName]: grade }));
+    }
+    setEditingGrade(null);
   };
 
   const toggleYear = (year: number) => {
@@ -129,7 +145,6 @@ const ExamChecklist: React.FC = () => {
           </Badge>
         </div>
 
-        {/* Progress bar */}
         <div className="mt-2 h-2 w-full rounded-full bg-muted overflow-hidden">
           <motion.div
             className="h-full rounded-full bg-gradient-to-r from-primary to-primary/70"
@@ -174,28 +189,61 @@ const ExamChecklist: React.FC = () => {
                       const passed = passedExams.has(course.name);
                       const blocking = isBlockingExam(course.name);
                       const toggling = togglingExam === course.name;
+                      const grade = grades[course.name];
+                      const isEditing = editingGrade === course.name;
 
                       return (
-                        <button
+                        <div
                           key={course.name}
-                          onClick={() => toggleExam(course.name, year)}
-                          disabled={toggling}
-                          className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors ${
-                            passed
-                              ? "bg-primary/5 hover:bg-primary/10"
-                              : "hover:bg-muted/50"
+                          className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 transition-colors ${
+                            passed ? "bg-primary/5 hover:bg-primary/10" : "hover:bg-muted/50"
                           } ${toggling ? "opacity-50" : ""}`}
                         >
-                          <Checkbox
-                            checked={passed}
-                            className="pointer-events-none shrink-0"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <p className={`text-sm ${passed ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                              {course.name}
-                            </p>
-                            <p className="text-[10px] text-muted-foreground">{course.credits} CFU</p>
-                          </div>
+                          <button
+                            onClick={() => toggleExam(course.name, year)}
+                            disabled={toggling}
+                            className="flex items-center gap-3 flex-1 min-w-0 text-left"
+                          >
+                            <Checkbox
+                              checked={passed}
+                              className="pointer-events-none shrink-0"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-sm ${passed ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                                {course.name}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground">{course.credits} CFU</p>
+                            </div>
+                          </button>
+
+                          {/* Grade chip */}
+                          {passed && (
+                            isEditing ? (
+                              <input
+                                autoFocus
+                                type="number"
+                                min={18}
+                                max={31}
+                                defaultValue={grade ?? ""}
+                                placeholder="—"
+                                className="w-10 h-6 text-center text-xs rounded border border-primary/30 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                                onBlur={(e) => saveGrade(course.name, e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") saveGrade(course.name, (e.target as HTMLInputElement).value);
+                                  if (e.key === "Escape") setEditingGrade(null);
+                                }}
+                              />
+                            ) : (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setEditingGrade(course.name); }}
+                                className="shrink-0 rounded-md border border-border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors tabular-nums min-w-[28px] text-center"
+                                title="Add grade"
+                              >
+                                {grade != null ? (grade === 31 ? "30L" : grade) : "—"}
+                              </button>
+                            )
+                          )}
+
                           {blocking && !passed && (
                             <Badge variant="outline" className="text-[9px] border-destructive/40 text-destructive shrink-0">
                               Blocking
@@ -206,7 +254,7 @@ const ExamChecklist: React.FC = () => {
                               ✓ Blocking
                             </Badge>
                           )}
-                        </button>
+                        </div>
                       );
                     })}
                   </motion.div>
