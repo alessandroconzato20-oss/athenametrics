@@ -2,7 +2,8 @@ import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useNavigate } from "react-router-dom";
-import { LogOut, Activity, BookOpen, Trophy, Plus, RefreshCcw, Target, Settings, GraduationCap, ChevronDown } from "lucide-react";
+import { LogOut, Activity, BookOpen, Trophy, Plus, RefreshCcw, Target, Settings, GraduationCap, ChevronDown, Info } from "lucide-react";
+import OnboardingGuide from "@/components/OnboardingGuide";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -173,6 +174,21 @@ const Index = () => {
   const [checkinData, setCheckinData] = useState<{ rest_level: number; stress_level: number; motivation_level: number; night_factors: string[] } | null>(null);
   const [historicalCheckins, setHistoricalCheckins] = useState<HistoricalCheckin[]>([]);
   const [examOpen, setExamOpen] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Show onboarding guide on first ever login
+  useEffect(() => {
+    if (!user) return;
+    const key = `cofactor_onboarded_${user.id}`;
+    if (!localStorage.getItem(key)) {
+      setShowOnboarding(true);
+    }
+  }, [user]);
+
+  const closeOnboarding = () => {
+    if (user) localStorage.setItem(`cofactor_onboarded_${user.id}`, "1");
+    setShowOnboarding(false);
+  };
 
   // Compute streak and total sessions from study_logs
   useEffect(() => {
@@ -345,6 +361,13 @@ const Index = () => {
         <div className="mb-5 flex items-start justify-between">
           <StreakBadge streak={streak} studySessions={totalSessions} />
           <div className="flex gap-1">
+            <button
+              onClick={() => setShowOnboarding(true)}
+              aria-label="How to use this app"
+              className="rounded-xl p-2 text-muted-foreground hover:bg-muted transition-colors"
+            >
+              <Info className="h-5 w-5" />
+            </button>
             <button onClick={() => navigate("/account")} className="rounded-xl p-2 text-muted-foreground hover:bg-muted transition-colors">
               <Settings className="h-5 w-5" />
             </button>
@@ -469,8 +492,10 @@ const Index = () => {
                 studyBlockRecommendation: blockRec!,
               } : null}
               weeklyGoalsTasks={weeklyDailyBreakdown}
-            />
-          </div>
+      />
+
+      <OnboardingGuide open={showOnboarding} onClose={closeOnboarding} />
+    </div>
         )}
 
 
