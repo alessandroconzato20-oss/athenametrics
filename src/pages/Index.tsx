@@ -492,8 +492,10 @@ const Index = () => {
                 studyBlockRecommendation: blockRec!,
               } : null}
               weeklyGoalsTasks={weeklyDailyBreakdown}
-            />
-          </div>
+      />
+
+      <OnboardingGuide open={showOnboarding} onClose={closeOnboarding} />
+    </div>
         )}
 
 
