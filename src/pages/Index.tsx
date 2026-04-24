@@ -174,6 +174,21 @@ const Index = () => {
   const [checkinData, setCheckinData] = useState<{ rest_level: number; stress_level: number; motivation_level: number; night_factors: string[] } | null>(null);
   const [historicalCheckins, setHistoricalCheckins] = useState<HistoricalCheckin[]>([]);
   const [examOpen, setExamOpen] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Show onboarding guide on first ever login
+  useEffect(() => {
+    if (!user) return;
+    const key = `cofactor_onboarded_${user.id}`;
+    if (!localStorage.getItem(key)) {
+      setShowOnboarding(true);
+    }
+  }, [user]);
+
+  const closeOnboarding = () => {
+    if (user) localStorage.setItem(`cofactor_onboarded_${user.id}`, "1");
+    setShowOnboarding(false);
+  };
 
   // Compute streak and total sessions from study_logs
   useEffect(() => {
