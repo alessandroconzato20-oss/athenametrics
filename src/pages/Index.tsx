@@ -517,7 +517,7 @@ const Index = () => {
       />
 
       <DailyWellbeingCheckin
-        open={showWellbeingCheckin}
+        open={showWellbeingCheckin && !onboardingPending}
         onClose={async () => {
           setShowWellbeingCheckin(false);
           const today = format(new Date(), "yyyy-MM-dd");
