@@ -175,6 +175,7 @@ const Index = () => {
   const [historicalCheckins, setHistoricalCheckins] = useState<HistoricalCheckin[]>([]);
   const [examOpen, setExamOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingPending, setOnboardingPending] = useState(true);
 
   // Show onboarding guide on first ever login
   useEffect(() => {
@@ -182,12 +183,16 @@ const Index = () => {
     const key = `cofactor_onboarded_${user.id}`;
     if (!localStorage.getItem(key)) {
       setShowOnboarding(true);
+      setOnboardingPending(true);
+    } else {
+      setOnboardingPending(false);
     }
   }, [user]);
 
   const closeOnboarding = () => {
     if (user) localStorage.setItem(`cofactor_onboarded_${user.id}`, "1");
     setShowOnboarding(false);
+    setOnboardingPending(false);
   };
 
   // Compute streak and total sessions from study_logs
