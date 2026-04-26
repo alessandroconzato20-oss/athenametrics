@@ -62,25 +62,25 @@ const Signup = () => {
         src={athenaLogo}
         alt=""
         aria-hidden="true"
-        className="pointer-events-none select-none absolute -left-32 top-16 h-72 w-72 opacity-[0.07] object-contain hidden md:block"
+        className="pointer-events-none select-none absolute -left-32 top-32 h-72 w-72 opacity-[0.07] object-contain hidden md:block"
       />
       <img
         src={athenaLogo}
         alt=""
         aria-hidden="true"
-        className="pointer-events-none select-none absolute -left-20 bottom-10 h-64 w-64 opacity-[0.07] object-contain hidden md:block"
+        className="pointer-events-none select-none absolute -left-20 bottom-8 h-64 w-64 opacity-[0.07] object-contain hidden md:block"
       />
       <img
         src={athenaLogo}
         alt=""
         aria-hidden="true"
-        className="pointer-events-none select-none absolute -right-28 top-24 h-80 w-80 opacity-[0.07] object-contain hidden md:block"
+        className="pointer-events-none select-none absolute -right-28 top-10 h-80 w-80 opacity-[0.07] object-contain hidden md:block"
       />
       <img
         src={athenaLogo}
         alt=""
         aria-hidden="true"
-        className="pointer-events-none select-none absolute -right-24 bottom-20 h-72 w-72 opacity-[0.07] object-contain hidden md:block"
+        className="pointer-events-none select-none absolute -right-24 bottom-32 h-72 w-72 opacity-[0.07] object-contain hidden md:block"
       />
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="relative z-10 w-full max-w-md">
