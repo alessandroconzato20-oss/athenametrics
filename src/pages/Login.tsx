@@ -42,9 +42,9 @@ const Login = () => {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", delay: 0.2 }}
-            className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-primary"
+            className="mx-auto mb-4 flex h-24 w-24 items-center justify-center"
           >
-            <Stethoscope className="h-8 w-8 text-primary-foreground" />
+            <img src={athenaLogo} alt="Athena Metrics" className="h-24 w-24 object-contain" />
           </motion.div>
           <h1 className="font-display text-3xl font-bold text-foreground">Athena Metrics</h1>
           <p className="mt-2 text-muted-foreground">Welcome back. Let's optimise your day.</p>
