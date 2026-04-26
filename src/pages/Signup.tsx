@@ -61,7 +61,7 @@ const Signup = () => {
           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }} className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-primary">
             <Stethoscope className="h-8 w-8 text-primary-foreground" />
           </motion.div>
-          <h1 className="font-display text-3xl font-bold text-foreground">Join CoFactor</h1>
+          <h1 className="font-display text-3xl font-bold text-foreground">Join Athena Metrics</h1>
           <p className="mt-2 text-muted-foreground">Start optimising your student life today.</p>
         </div>
 

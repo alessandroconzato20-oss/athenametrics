@@ -34,7 +34,7 @@ serve(async (req) => {
       notes: typeof l.notes === "string" ? l.notes.slice(0, 500) : null,
     }));
 
-    const systemPrompt = `You are an AI study coach for a university student using "CoFactor Student" app. Analyze their study session logs and provide personalized insights.
+    const systemPrompt = `You are an AI study coach for a university student using "Athena Metrics" app. Analyze their study session logs and provide personalized insights.
 
 Your analysis should cover:
 1. **Pattern Recognition**: Identify when they study best (time of day, energy levels, etc.)

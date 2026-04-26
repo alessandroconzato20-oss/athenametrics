@@ -21,7 +21,7 @@ interface QuizQuestion {
 const questions: QuizQuestion[] = [
   {
     id: "goals",
-    question: "What are your main goals with CoFactor Student?",
+    question: "What are your main goals with Athena Metrics?",
     type: "multi",
     maxSelect: 3,
     options: [
@@ -209,7 +209,7 @@ const PersonaQuiz = () => {
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-primary">
             <Sparkles className="h-6 w-6 text-primary-foreground" />
           </div>
-          <h1 className="font-display text-2xl font-bold text-foreground">Let's personalise CoFactor</h1>
+          <h1 className="font-display text-2xl font-bold text-foreground">Let's personalise Athena Metrics</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {step + 1} of {questions.length} ·{" "}
             {current.type === "multi"
