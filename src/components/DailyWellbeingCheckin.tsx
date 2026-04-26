@@ -77,6 +77,7 @@ const DailyWellbeingCheckin = ({ open, onClose }: DailyWellbeingCheckinProps) =>
       .from("daily_wellbeing_checkins" as any)
       .upsert({
         user_id: user.id,
+        university_id: universityId,
         checkin_date: new Date().toISOString().split("T")[0],
         rest_level: rest,
         stress_level: stress,
