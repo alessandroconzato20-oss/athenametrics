@@ -26,7 +26,7 @@ function HealSparkle({ x, y }: { x: number; y: number }) {
           <line
             key={i}
             x1={x} y1={y} x2={x2} y2={y2}
-            stroke={i % 2 === 0 ? "#FFD700" : "hsl(162, 63%, 41%)"}
+            stroke={i % 2 === 0 ? "#FFD700" : "hsl(215, 78%, 48%)"}
             strokeWidth="2.5"
             strokeLinecap="round"
             strokeDasharray="0 27"
@@ -36,7 +36,7 @@ function HealSparkle({ x, y }: { x: number; y: number }) {
       })}
       <circle cx={x} cy={y} r="7" fill="#FFD700"
         style={{ animation: "apexRay 0.7s ease-out forwards" }} />
-      <circle cx={x} cy={y} r="18" fill="none" stroke="hsl(162, 63%, 41%)" strokeWidth="2.5"
+      <circle cx={x} cy={y} r="18" fill="none" stroke="hsl(215, 78%, 48%)" strokeWidth="2.5"
         style={{ animation: "apexRing 0.85s ease-out forwards", transformOrigin: `${x}px ${y}px` }} />
     </g>
   );
