@@ -58,17 +58,17 @@ const Signup = () => {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full max-w-md">
-        <div className="mb-6 flex flex-col items-center text-center">
+        <div className="mb-10 flex flex-col items-center text-center">
           <motion.img
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", delay: 0.15 }}
             src={athenaLogo}
             alt="Athena Metrics"
-            className="mb-3 h-14 w-14 object-contain"
+            className="mb-6 h-20 w-20 object-contain"
           />
-          <h1 className="font-display text-2xl font-bold text-foreground tracking-wide">JOIN ATHENA METRICS</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Start optimising your student life today.</p>
+          <h1 className="font-display text-3xl font-bold text-foreground leading-tight">Build the foundation of understanding.</h1>
+          <p className="mt-2 text-3xl font-bold text-muted-foreground leading-tight">Join Athena Metrics.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

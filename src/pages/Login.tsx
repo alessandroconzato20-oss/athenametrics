@@ -38,17 +38,17 @@ const Login = () => {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <div className="mb-6 flex flex-col items-center text-center">
+        <div className="mb-10 flex flex-col items-center text-center">
           <motion.img
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", delay: 0.15 }}
             src={athenaLogo}
             alt="Athena Metrics"
-            className="mb-3 h-14 w-14 object-contain"
+            className="mb-6 h-20 w-20 object-contain"
           />
-          <h1 className="font-display text-2xl font-bold text-foreground tracking-wide">ATHENA METRICS</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Welcome back. Let's optimise your day.</p>
+          <h1 className="font-display text-3xl font-bold text-foreground leading-tight">Good to see you again.</h1>
+          <p className="mt-2 text-3xl font-bold text-muted-foreground leading-tight">Learning never pauses.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
