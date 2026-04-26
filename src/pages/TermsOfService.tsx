@@ -17,17 +17,17 @@ const TermsOfService = () => (
       <div className="prose prose-sm dark:prose-invert max-w-none space-y-6">
         <section>
           <h2 className="text-xl font-semibold text-foreground">1. Acceptance of Terms</h2>
-          <p className="text-muted-foreground">By creating an account or using CoFactor, you agree to these Terms of Service and our Privacy Policy. If you do not agree, do not use the service.</p>
+          <p className="text-muted-foreground">By creating an account or using Athena Metrics, you agree to these Terms of Service and our Privacy Policy. If you do not agree, do not use the service.</p>
         </section>
 
         <section>
           <h2 className="text-xl font-semibold text-foreground">2. Description of Service</h2>
-          <p className="text-muted-foreground">CoFactor is a study-tracking and wellness platform for university students. It provides study logging, health-based cognitive insights, AI-generated study plans, and collaborative leaderboards.</p>
+          <p className="text-muted-foreground">Athena Metrics is a study-tracking and wellness platform for university students. It provides study logging, health-based cognitive insights, AI-generated study plans, and collaborative leaderboards.</p>
         </section>
 
         <section>
           <h2 className="text-xl font-semibold text-foreground">3. Eligibility</h2>
-          <p className="text-muted-foreground">You must be at least 16 years old to use CoFactor. If you are under 18, you confirm that you have parental or guardian consent.</p>
+          <p className="text-muted-foreground">You must be at least 16 years old to use Athena Metrics. If you are under 18, you confirm that you have parental or guardian consent.</p>
         </section>
 
         <section>
@@ -52,7 +52,7 @@ const TermsOfService = () => (
 
         <section>
           <h2 className="text-xl font-semibold text-foreground">6. Health Data Disclaimer</h2>
-          <p className="text-muted-foreground">CoFactor is not a medical application. Health-based insights (cognitive readiness, burnout risk, etc.) are estimates derived from general wellness data and should not be used as medical advice. Always consult a healthcare professional for medical concerns.</p>
+          <p className="text-muted-foreground">Athena Metrics is not a medical application. Health-based insights (cognitive readiness, burnout risk, etc.) are estimates derived from general wellness data and should not be used as medical advice. Always consult a healthcare professional for medical concerns.</p>
         </section>
 
         <section>
@@ -62,7 +62,7 @@ const TermsOfService = () => (
 
         <section>
           <h2 className="text-xl font-semibold text-foreground">8. Intellectual Property</h2>
-          <p className="text-muted-foreground">All content, design, and technology of CoFactor are owned by us. Your study data remains yours. By using the service, you grant us a limited license to process your data as described in our Privacy Policy.</p>
+          <p className="text-muted-foreground">All content, design, and technology of Athena Metrics are owned by us. Your study data remains yours. By using the service, you grant us a limited license to process your data as described in our Privacy Policy.</p>
         </section>
 
         <section>
@@ -72,7 +72,7 @@ const TermsOfService = () => (
 
         <section>
           <h2 className="text-xl font-semibold text-foreground">10. Limitation of Liability</h2>
-          <p className="text-muted-foreground">CoFactor is provided "as is" without warranties. We are not liable for any indirect, incidental, or consequential damages arising from your use of the service.</p>
+          <p className="text-muted-foreground">Athena Metrics is provided "as is" without warranties. We are not liable for any indirect, incidental, or consequential damages arising from your use of the service.</p>
         </section>
 
         <section>

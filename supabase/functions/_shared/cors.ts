@@ -1,4 +1,4 @@
-// Shared CORS + JWT helpers for CoFactor edge functions
+// Shared CORS + JWT helpers for Athena Metrics edge functions
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 // Allow-list of trusted origins. Update if you publish to additional domains.

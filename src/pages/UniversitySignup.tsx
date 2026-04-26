@@ -163,7 +163,7 @@ const UniversitySignup = () => {
           <div className="space-y-2">
             <Label htmlFor="accessCode">Access Code</Label>
             <Input id="accessCode" placeholder="Enter your institution's access code" value={accessCode} onChange={(e) => setAccessCode(e.target.value)} required className="h-12 rounded-xl" />
-            <p className="text-xs text-muted-foreground">Contact your CoFactor representative to obtain your institution's access code.</p>
+            <p className="text-xs text-muted-foreground">Contact your Athena Metrics representative to obtain your institution's access code.</p>
           </div>
           <Button type="submit" disabled={isLoading} className="h-12 w-full rounded-xl bg-gradient-primary text-base font-semibold text-primary-foreground">
             {isLoading ? "Creating account..." : "Register as University Admin"}

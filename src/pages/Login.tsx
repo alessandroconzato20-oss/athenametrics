@@ -5,8 +5,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Stethoscope, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import athenaLogo from "@/assets/athena-logo.png";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -42,11 +43,11 @@ const Login = () => {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", delay: 0.2 }}
-            className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-primary"
+            className="mx-auto mb-4 flex h-24 w-24 items-center justify-center"
           >
-            <Stethoscope className="h-8 w-8 text-primary-foreground" />
+            <img src={athenaLogo} alt="Athena Metrics" className="h-24 w-24 object-contain" />
           </motion.div>
-          <h1 className="font-display text-3xl font-bold text-foreground">CoFactor Student</h1>
+          <h1 className="font-display text-3xl font-bold text-foreground">Athena Metrics</h1>
           <p className="mt-2 text-muted-foreground">Welcome back. Let's optimise your day.</p>
         </div>
 
@@ -75,7 +76,7 @@ const Login = () => {
           transition={{ delay: 0.4 }}
           className="mt-8 rounded-2xl border border-primary/20 bg-primary/5 p-5 text-center"
         >
-          <p className="mb-2 text-sm font-medium text-foreground">New to CoFactor?</p>
+          <p className="mb-2 text-sm font-medium text-foreground">New to Athena Metrics?</p>
           <p className="mb-4 text-xs text-muted-foreground">Join Humanitas students already optimising their study performance 🚀</p>
           <Link to="/signup">
             <Button variant="outline" className="w-full h-11 rounded-xl border-primary text-primary font-semibold hover:bg-primary hover:text-primary-foreground transition-colors">

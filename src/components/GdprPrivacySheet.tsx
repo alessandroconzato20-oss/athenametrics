@@ -22,7 +22,7 @@ const GdprPrivacySheet = () => {
           <SheetHeader className="text-left mb-6">
             <SheetTitle className="text-xl font-bold">Privacy Policy</SheetTitle>
             <SheetDescription>
-              How CoFactor protects your personal data — fully compliant with the EU General Data Protection Regulation (GDPR)
+              How Athena Metrics protects your personal data — fully compliant with the EU General Data Protection Regulation (GDPR)
             </SheetDescription>
           </SheetHeader>
 
@@ -30,13 +30,13 @@ const GdprPrivacySheet = () => {
             {/* Your Privacy Matters */}
             <Section icon={<Shield className="h-5 w-5 text-primary" />} title="Your Privacy Matters">
               <p>
-                At CoFactor ("we", "us", "our"), we take the privacy and security of your personal information extremely seriously. This Privacy Policy explains how we collect, use, store, and protect your personal data in compliance with the{" "}
+                At Athena Metrics ("we", "us", "our"), we take the privacy and security of your personal information extremely seriously. This Privacy Policy explains how we collect, use, store, and protect your personal data in compliance with the{" "}
                 <strong>EU General Data Protection Regulation (GDPR — Regulation (EU) 2016/679)</strong>, the{" "}
                 <strong>ePrivacy Directive (2002/58/EC)</strong>, and other applicable European data protection legislation.
               </p>
-              <p>This policy applies to all users of the CoFactor application ("the App"), including the web application and any associated mobile applications.</p>
+              <p>This policy applies to all users of the Athena Metrics application ("the App"), including the web application and any associated mobile applications.</p>
               <p>
-                <strong>Data Controller:</strong> CoFactor<br />
+                <strong>Data Controller:</strong> Athena Metrics<br />
                 <strong>Contact Email:</strong>{" "}
                 <a href="mailto:privacy@cofactorstudent.com" className="text-primary hover:underline">privacy@cofactorstudent.com</a><br />
                 <strong>Data Protection Officer (DPO):</strong>{" "}
@@ -103,7 +103,7 @@ const GdprPrivacySheet = () => {
               <ul className="list-disc pl-5 space-y-2">
                 <li><strong>Cloud Infrastructure</strong> — our database and backend services are hosted on EU-based servers with GDPR-compliant providers</li>
                 <li><strong>AI Processing</strong> — study analysis uses AI models; only anonymized data (not personal identifiers) is sent for analysis</li>
-                <li><strong>University Administrators</strong> — aggregated study metrics shared only if your university uses CoFactor</li>
+                <li><strong>University Administrators</strong> — aggregated study metrics shared only if your university uses Athena Metrics</li>
               </ul>
             </Section>
 
@@ -153,7 +153,7 @@ const GdprPrivacySheet = () => {
 
             {/* Children */}
             <Section icon={<Baby className="h-5 w-5 text-primary" />} title="Children's Privacy (Art. 8 GDPR)">
-              <p>CoFactor is not intended for use by children under the age of 16. We do not knowingly collect personal data from children. If we become aware that we have collected data from a child under 16 without parental consent, we will delete it immediately.</p>
+              <p>Athena Metrics is not intended for use by children under the age of 16. We do not knowingly collect personal data from children. If we become aware that we have collected data from a child under 16 without parental consent, we will delete it immediately.</p>
             </Section>
 
             {/* Data Breach */}

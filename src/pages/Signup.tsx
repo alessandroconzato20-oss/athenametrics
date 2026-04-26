@@ -8,8 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Stethoscope, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import athenaLogo from "@/assets/athena-logo.png";
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -58,10 +59,10 @@ const Signup = () => {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }} className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-primary">
-            <Stethoscope className="h-8 w-8 text-primary-foreground" />
+          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }} className="mx-auto mb-4 flex h-24 w-24 items-center justify-center">
+            <img src={athenaLogo} alt="Athena Metrics" className="h-24 w-24 object-contain" />
           </motion.div>
-          <h1 className="font-display text-3xl font-bold text-foreground">Join CoFactor</h1>
+          <h1 className="font-display text-3xl font-bold text-foreground">Join Athena Metrics</h1>
           <p className="mt-2 text-muted-foreground">Start optimising your student life today.</p>
         </div>
 
