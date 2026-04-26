@@ -1,7 +1,13 @@
 project_id = "rqihvaznphesanzvmdco"
 
 [functions.analyze-habits]
-verify_jwt = false
+verify_jwt = true
 
 [functions.daily-plan]
-verify_jwt = false
+verify_jwt = true
+
+[functions.parse-syllabus]
+verify_jwt = true
+
+[functions.ml-proxy]
+verify_jwt = true

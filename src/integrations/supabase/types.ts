@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_access_log: {
+        Row: {
+          action: string
+          admin_user_id: string
+          context: Json
+          created_at: string
+          id: string
+          target_user_id: string | null
+          university_id: string | null
+        }
+        Insert: {
+          action: string
+          admin_user_id: string
+          context?: Json
+          created_at?: string
+          id?: string
+          target_user_id?: string | null
+          university_id?: string | null
+        }
+        Update: {
+          action?: string
+          admin_user_id?: string
+          context?: Json
+          created_at?: string
+          id?: string
+          target_user_id?: string | null
+          university_id?: string | null
+        }
+        Relationships: []
+      }
       assessment_results: {
         Row: {
           assessed_at: string
@@ -220,6 +250,7 @@ export type Database = {
         Row: {
           course_name: string
           created_at: string
+          cum_laude: boolean
           grade: number | null
           id: string
           passed_at: string
@@ -230,6 +261,7 @@ export type Database = {
         Insert: {
           course_name: string
           created_at?: string
+          cum_laude?: boolean
           grade?: number | null
           id?: string
           passed_at?: string
@@ -240,6 +272,7 @@ export type Database = {
         Update: {
           course_name?: string
           created_at?: string
+          cum_laude?: boolean
           grade?: number | null
           id?: string
           passed_at?: string
@@ -329,6 +362,11 @@ export type Database = {
           created_at: string
           id: string
           matricola: string | null
+          onboarded_at: string | null
+          trial_arm: string | null
+          trial_consent_at: string | null
+          trial_consent_version: string | null
+          trial_status: string
           university: string | null
           university_id: string | null
           username: string
@@ -337,6 +375,11 @@ export type Database = {
           created_at?: string
           id: string
           matricola?: string | null
+          onboarded_at?: string | null
+          trial_arm?: string | null
+          trial_consent_at?: string | null
+          trial_consent_version?: string | null
+          trial_status?: string
           university?: string | null
           university_id?: string | null
           username: string
@@ -345,6 +388,11 @@ export type Database = {
           created_at?: string
           id?: string
           matricola?: string | null
+          onboarded_at?: string | null
+          trial_arm?: string | null
+          trial_consent_at?: string | null
+          trial_consent_version?: string | null
+          trial_status?: string
           university?: string | null
           university_id?: string | null
           username?: string
