@@ -46,7 +46,7 @@ const NIGHT_FACTORS = [
 type Step = 0 | 1 | 2 | 3;
 
 const DailyWellbeingCheckin = ({ open, onClose }: DailyWellbeingCheckinProps) => {
-  const { user } = useAuth();
+  const { user, universityId } = useAuth();
   const [step, setStep] = useState<Step>(0);
   const [rest, setRest] = useState<number | null>(null);
   const [stress, setStress] = useState<number | null>(null);
