@@ -15,13 +15,13 @@
     --popover: 0 0% 100%;
     --popover-foreground: 200 25% 10%;
 
-    --primary: 162 63% 41%;
+    --primary: 215 78% 48%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 200 25% 95%;
     --secondary-foreground: 200 25% 15%;
 
-    --muted: 160 15% 93%;
+    --muted: 210 20% 93%;
     --muted-foreground: 200 10% 45%;
 
     --accent: 38 92% 60%;
@@ -30,24 +30,24 @@
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 160 15% 88%;
-    --input: 160 15% 88%;
-    --ring: 162 63% 41%;
+    --border: 210 20% 88%;
+    --input: 210 20% 88%;
+    --ring: 215 78% 48%;
 
     --radius: 1rem;
 
-    --score-cognitive: 162 63% 41%;
+    --score-cognitive: 215 78% 48%;
     --score-study: 220 75% 55%;
     --score-burnout: 0 72% 55%;
     --score-retention: 270 60% 55%;
     --score-peak: 38 92% 55%;
     --goals-purple: 270 50% 30%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(162 63% 41%), hsl(180 55% 45%));
+    --gradient-primary: linear-gradient(135deg, hsl(215 78% 48%), hsl(200 75% 55%));
     --gradient-warm: linear-gradient(135deg, hsl(38 92% 60%), hsl(25 90% 55%));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(150 20% 97%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(210 20% 97%));
 
-    --shadow-soft: 0 4px 20px -4px hsl(162 63% 41% / 0.12);
+    --shadow-soft: 0 4px 20px -4px hsl(215 78% 48% / 0.15);
     --shadow-card: 0 2px 12px -2px hsl(200 25% 10% / 0.06);
     --shadow-elevated: 0 8px 30px -6px hsl(200 25% 10% / 0.1);
 
