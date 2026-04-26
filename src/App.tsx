@@ -9,6 +9,7 @@ import GdprPrivacySheet from "@/components/GdprPrivacySheet";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import Welcome from "./pages/Welcome";
 import PersonaQuiz from "./pages/PersonaQuiz";
 import StudyLogs from "./pages/StudyLogs";
 import StudyLogForm from "./pages/StudyLogForm";
