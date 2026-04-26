@@ -355,7 +355,7 @@ const Index = () => {
   }, [scores, user]);
 
   if (authLoading) return null;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/welcome" replace />;
 
   const blockRec = scores ? getStudyBlockRecommendation(scores) : null;
 
