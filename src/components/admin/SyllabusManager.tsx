@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import {
   Upload, FileText, Trash2, CheckCircle, Clock, XCircle,
-  ChevronDown, ChevronUp, Sparkles, GraduationCap, Loader2
+  ChevronDown, ChevronUp, Sparkles, GraduationCap, Loader2,
+  Eye
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -202,6 +203,19 @@ const SyllabusManager = ({ universityFilter }: { universityFilter?: string | nul
       toast.success("Syllabus deleted");
       fetchSyllabi();
     }
+  };
+
+  const viewPdf = async (pdfPath: string) => {
+    const { data, error } = await supabase.storage
+      .from("syllabi")
+      .createSignedUrl(pdfPath, 300); // 5 minutes expiry
+    
+    if (error || !data) {
+      toast.error("Failed to load PDF");
+      return;
+    }
+    
+    window.open(data.signedUrl, "_blank");
   };
 
   const statusIcon = (status: string) => {
@@ -413,6 +427,16 @@ const SyllabusManager = ({ universityFilter }: { universityFilter?: string | nul
                       )}
 
                       <div className="flex gap-2">
+                        {s.pdf_path && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => viewPdf(s.pdf_path!)}
+                            className="gap-1"
+                          >
+                            <Eye className="h-3 w-3" /> View PDF
+                          </Button>
+                        )}
                         <Button
                           size="sm"
                           variant={s.status === "approved" ? "outline" : "default"}
