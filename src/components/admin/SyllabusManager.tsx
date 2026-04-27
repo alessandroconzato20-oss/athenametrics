@@ -427,6 +427,16 @@ const SyllabusManager = ({ universityFilter }: { universityFilter?: string | nul
                       )}
 
                       <div className="flex gap-2">
+                        {s.pdf_path && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => viewPdf(s.pdf_path!)}
+                            className="gap-1"
+                          >
+                            <Eye className="h-3 w-3" /> View PDF
+                          </Button>
+                        )}
                         <Button
                           size="sm"
                           variant={s.status === "approved" ? "outline" : "default"}
