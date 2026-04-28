@@ -1,5 +1,6 @@
 // src/algorithms/apexScores.ts
 // All inputs sourced from Apple HealthKit only
+// v2.0.0 — HRV unavailable mode (Capacitor plugin lacks HKQuantityTypeIdentifierHeartRateVariabilitySDNN)
 
 export interface AppleHealthData {
   hrv_today: number;
@@ -22,6 +23,10 @@ export interface AppleHealthData {
   resting_hr_7d: number[];
   sleep_quality_7d: number[];
 }
+
+// Toggle when the HealthKit plugin gains HRV SDNN support.
+// When false, weights redistribute to non-HRV signals (no fabricated HRV proxy).
+export const HRV_AVAILABLE = false;
 
 // ─────────────────────────────────────────────
 // HELPERS
@@ -56,37 +61,57 @@ function minutesToTime(mins: number): string {
   return `${h12}:${m.toString().padStart(2, "0")} ${suffix}`;
 }
 
+// Inverted-U sleep duration curve: peak at 7.5–8.5h, <3h = 0
+function sleepDurationScore(hours: number): number {
+  if (hours <= 3) return 0;
+  if (hours >= 7.5 && hours <= 8.5) return 100;
+  if (hours < 7.5) {
+    // 3h → 0, 7.5h → 100
+    return clamp(((hours - 3) / (7.5 - 3)) * 100, 0, 100);
+  }
+  // >8.5h: gradual decline; 11h → 0
+  return clamp(100 - ((hours - 8.5) / (11 - 8.5)) * 100, 0, 100);
+}
+
 // ─────────────────────────────────────────────
 // 1. COGNITIVE READINESS  (0–100)
 // ─────────────────────────────────────────────
 
 export function getCognitiveReadiness(d: AppleHealthData): number {
-  const hrvRatio = d.hrv_today / d.hrv_baseline_30d;
-  const hrv_score = normalize(hrvRatio, 0.5, 1.4) * 100;
-
-  const sleepQuality = (d.sleep_rem_percent / 20) * 0.6 + (d.sleep_deep_percent / 18) * 0.4;
+  // Sleep quality with new ceilings: REM 22%, SWS (deep) 20%
+  const sleepQuality =
+    clamp(d.sleep_rem_percent / 22, 0, 1) * 0.6 +
+    clamp(d.sleep_deep_percent / 20, 0, 1) * 0.4;
   const sleep_quality_score = clamp(sleepQuality * 100, 0, 100);
 
-  const durationScore =
-    d.sleep_duration_hours >= 6 && d.sleep_duration_hours <= 9.5
-      ? normalize(d.sleep_duration_hours, 5, 8.5) * 100
-      : d.sleep_duration_hours < 6
-      ? normalize(d.sleep_duration_hours, 3, 6) * 60
-      : normalize(9.5 - (d.sleep_duration_hours - 9.5), 0, 9.5) * 90;
+  const durationScore = sleepDurationScore(d.sleep_duration_hours);
 
   const hrDelta = d.resting_hr_today - d.resting_hr_baseline_30d;
-  const rhr_score = clamp(100 - (hrDelta * 5), 0, 100);
+  const rhr_score = clamp(100 - (hrDelta * 3), 0, 100);
 
   const spo2_score = d.spo2_percent >= 97
     ? 100
     : normalize(d.spo2_percent, 90, 97) * 100;
 
+  if (HRV_AVAILABLE) {
+    const hrvRatio = d.hrv_today / d.hrv_baseline_30d;
+    const hrv_score = normalize(hrvRatio, 0.5, 1.4) * 100;
+    const score =
+      hrv_score * 0.35 +
+      sleep_quality_score * 0.25 +
+      durationScore * 0.20 +
+      rhr_score * 0.15 +
+      spo2_score * 0.05;
+    return Math.round(clamp(score, 0, 100));
+  }
+
+  // HRV unavailable — redistributed weights
+  // Sleep Quality 0.40, Sleep Duration 0.35, RHR 0.15, SpO2 0.10
   const score =
-    hrv_score * 0.35 +
-    sleep_quality_score * 0.25 +
-    durationScore * 0.20 +
+    sleep_quality_score * 0.40 +
+    durationScore * 0.35 +
     rhr_score * 0.15 +
-    spo2_score * 0.05;
+    spo2_score * 0.10;
 
   return Math.round(clamp(score, 0, 100));
 }
@@ -106,7 +131,7 @@ export function getStudyCapacity(
   d: AppleHealthData,
   cognitiveReadiness: number
 ): StudyCapacity {
-  const MAX_HOURS = 9;
+  const MAX_HOURS = 8;
 
   const cr_factor = cognitiveReadiness / 100;
 
@@ -141,24 +166,33 @@ export function getStudyCapacity(
 // ─────────────────────────────────────────────
 
 export function getBurnoutRisk(d: AppleHealthData): number {
-  const hrv_slope = trendSlope(d.hrv_7d);
-  const hrv_baseline_avg = d.hrv_7d.reduce((a, b) => a + b, 0) / d.hrv_7d.length;
-  const hrv_trend_score = clamp(50 - (hrv_slope / hrv_baseline_avg) * 500, 0, 100);
-
   const hr_slope = trendSlope(d.resting_hr_7d);
-  const hr_trend_score = clamp(50 + (hr_slope * 20), 0, 100);
+  const hr_trend_score = clamp(50 + (hr_slope * 12), 0, 100);
 
   const sleep_slope = trendSlope(d.sleep_quality_7d);
-  const sleep_trend_score = clamp(50 - (sleep_slope * 3), 0, 100);
+  const sleep_trend_score = clamp(50 - (sleep_slope * 5), 0, 100);
 
   const resp_delta = d.respiratory_rate_bpm - d.respiratory_rate_baseline_30d;
   const resp_score = clamp(50 + (resp_delta * 12), 0, 100);
 
+  if (HRV_AVAILABLE) {
+    const hrv_slope = trendSlope(d.hrv_7d);
+    const hrv_baseline_avg = d.hrv_7d.reduce((a, b) => a + b, 0) / d.hrv_7d.length;
+    const hrv_trend_score = clamp(50 - (hrv_slope / hrv_baseline_avg) * 300, 0, 100);
+
+    const risk =
+      hrv_trend_score * 0.35 +
+      hr_trend_score * 0.25 +
+      sleep_trend_score * 0.25 +
+      resp_score * 0.15;
+    return Math.round(clamp(risk, 0, 100));
+  }
+
+  // HRV unavailable — redistribute HRV's 0.35 weight: HR +0.20, Sleep +0.10, Resp +0.05
   const risk =
-    hrv_trend_score * 0.35 +
-    hr_trend_score * 0.25 +
-    sleep_trend_score * 0.25 +
-    resp_score * 0.15;
+    hr_trend_score * 0.45 +
+    sleep_trend_score * 0.35 +
+    resp_score * 0.20;
 
   return Math.round(clamp(risk, 0, 100));
 }
@@ -176,9 +210,6 @@ export function getRetentionOutlook(
       ? 100
       : normalize(d.sleep_rem_percent, 10, 20) * 100;
 
-  const hrvRatio = d.hrv_today / d.hrv_baseline_30d;
-  const hrv_score = normalize(hrvRatio, 0.55, 1.35) * 100;
-
   const timing_score = normalize(60 - d.sleep_timing_variance_7d, 0, 60) * 100;
 
   const deep_score =
@@ -186,11 +217,22 @@ export function getRetentionOutlook(
       ? 100
       : normalize(d.sleep_deep_percent, 8, 18) * 100;
 
+  if (HRV_AVAILABLE) {
+    const hrvRatio = d.hrv_today / d.hrv_baseline_30d;
+    const hrv_score = normalize(hrvRatio, 0.55, 1.35) * 100;
+    const outlook =
+      rem_score * 0.40 +
+      hrv_score * 0.25 +
+      timing_score * 0.20 +
+      deep_score * 0.15;
+    return Math.round(clamp(outlook, 0, 100));
+  }
+
+  // HRV unavailable — redistribute the 0.25 HRV weight to REM/timing/deep
   const outlook =
-    rem_score * 0.40 +
-    hrv_score * 0.25 +
-    timing_score * 0.20 +
-    deep_score * 0.15;
+    rem_score * 0.50 +
+    timing_score * 0.30 +
+    deep_score * 0.20;
 
   return Math.round(clamp(outlook, 0, 100));
 }
@@ -213,10 +255,11 @@ export interface PeakWindow {
 export function getPeakStudyWindow(d: AppleHealthData): PeakWindow {
   const wakeTime = d.sleep_end_time_minutes;
 
+  // Updated chronotype boundaries: Early < 6:00 (360), Night Owl > 8:30 (510)
   const chronotype: Chronotype =
-    wakeTime < 390
+    wakeTime < 360
       ? "early_bird"
-      : wakeTime > 480
+      : wakeTime > 510
       ? "night_owl"
       : "intermediate";
 
@@ -228,8 +271,12 @@ export function getPeakStudyWindow(d: AppleHealthData): PeakWindow {
 
   const offsets = peakOffsets[chronotype];
 
-  const hrvRatio = d.hrv_today / d.hrv_baseline_30d;
-  const hvr_shift = hrvRatio >= 0.9 ? 0 : Math.round((0.9 - hrvRatio) * 120);
+  // No HRV-based shift when HRV unavailable
+  let hvr_shift = 0;
+  if (HRV_AVAILABLE) {
+    const hrvRatio = d.hrv_today / d.hrv_baseline_30d;
+    hvr_shift = hrvRatio >= 0.9 ? 0 : Math.round((0.9 - hrvRatio) * 120);
+  }
 
   const p1_start = wakeTime + offsets.p1_start + hvr_shift;
   const p1_end = p1_start + offsets.p1_dur;
