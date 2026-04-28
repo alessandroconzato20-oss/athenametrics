@@ -135,18 +135,23 @@ Generate my personalized study plan for today, referencing my actual courses and
 
     if (!response.ok) {
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limited, try again shortly." }), {
-          status: 429,
+        return new Response(JSON.stringify({ error: "Rate limited, try again shortly.", fallback: true }), {
+          status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted." }), {
-          status: 402,
+        return new Response(JSON.stringify({ error: "AI credits exhausted.", fallback: true }), {
+          status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      throw new Error(`AI gateway error: ${response.status}`);
+      const errText = await response.text().catch(() => "");
+      console.error("AI gateway error:", response.status, errText);
+      return new Response(JSON.stringify({ error: `AI gateway error: ${response.status}`, fallback: true }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const data = await response.json();
