@@ -19,6 +19,13 @@ const REST_OPTIONS = [
   { value: 5, emoji: "⚡", label: "Great" },
 ];
 
+const STUDY_WINDOW_OPTIONS: { value: "within_30" | "1_2h" | "3plus" | "not_today"; emoji: string; label: string }[] = [
+  { value: "within_30", emoji: "⏱️", label: "Within 30 min" },
+  { value: "1_2h",      emoji: "🕐", label: "1–2 hours" },
+  { value: "3plus",     emoji: "🕒", label: "3+ hours" },
+  { value: "not_today", emoji: "🚫", label: "Not today" },
+];
+
 const STRESS_OPTIONS = [
   { value: 1, emoji: "😌", label: "Calm" },
   { value: 2, emoji: "😕", label: "Mild" },
@@ -43,15 +50,30 @@ const NIGHT_FACTORS = [
   { id: "normal", emoji: "✅", label: "Normal night" },
 ];
 
-type Step = 0 | 1 | 2 | 3;
+const EXERCISE_TYPES: { value: "cardio" | "strength" | "walking"; emoji: string; label: string }[] = [
+  { value: "cardio",   emoji: "🏃", label: "Cardio" },
+  { value: "strength", emoji: "🏋️", label: "Strength" },
+  { value: "walking",  emoji: "🚶", label: "Walking" },
+];
+
+const EXERCISE_DURATIONS = [15, 30, 45, 60, 90];
+
+// 6 steps: rest, study-window, stress, motivation, night-factors, exercise
+type Step = 0 | 1 | 2 | 3 | 4 | 5;
+type StudyWindow = "within_30" | "1_2h" | "3plus" | "not_today";
+type ExerciseType = "cardio" | "strength" | "walking";
 
 const DailyWellbeingCheckin = ({ open, onClose }: DailyWellbeingCheckinProps) => {
   const { user, universityId } = useAuth();
   const [step, setStep] = useState<Step>(0);
   const [rest, setRest] = useState<number | null>(null);
+  const [studyWindow, setStudyWindow] = useState<StudyWindow | null>(null);
   const [stress, setStress] = useState<number | null>(null);
   const [motivation, setMotivation] = useState<number | null>(null);
   const [nightFactors, setNightFactors] = useState<string[]>([]);
+  const [didExercise, setDidExercise] = useState<boolean | null>(null);
+  const [exerciseType, setExerciseType] = useState<ExerciseType | null>(null);
+  const [exerciseDuration, setExerciseDuration] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
 
   const toggleNightFactor = (id: string) => {
@@ -66,12 +88,11 @@ const DailyWellbeingCheckin = ({ open, onClose }: DailyWellbeingCheckinProps) =>
   };
 
   const handleNext = async () => {
-    if (step < 3) {
+    if (step < 5) {
       setStep((step + 1) as Step);
       return;
     }
-    // Save
-    if (!user || rest === null || stress === null || motivation === null) return;
+    if (!user || rest === null || stress === null || motivation === null || studyWindow === null || didExercise === null) return;
     setSaving(true);
     const { error } = await supabase
       .from("daily_wellbeing_checkins" as any)
@@ -83,6 +104,10 @@ const DailyWellbeingCheckin = ({ open, onClose }: DailyWellbeingCheckinProps) =>
         stress_level: stress,
         motivation_level: motivation,
         night_factors: nightFactors,
+        study_plan_window: studyWindow,
+        did_exercise: didExercise,
+        exercise_type: didExercise ? exerciseType : null,
+        exercise_duration_minutes: didExercise ? exerciseDuration : null,
       } as any, { onConflict: "user_id,checkin_date" } as any);
     setSaving(false);
     if (error) {
@@ -94,46 +119,36 @@ const DailyWellbeingCheckin = ({ open, onClose }: DailyWellbeingCheckinProps) =>
 
   const canProceed = () => {
     if (step === 0) return rest !== null;
-    if (step === 1) return stress !== null;
-    if (step === 2) return motivation !== null;
-    if (step === 3) return nightFactors.length > 0;
+    if (step === 1) return studyWindow !== null;
+    if (step === 2) return stress !== null;
+    if (step === 3) return motivation !== null;
+    if (step === 4) return nightFactors.length > 0;
+    if (step === 5) {
+      if (didExercise === null) return false;
+      if (didExercise === false) return true;
+      return exerciseType !== null && exerciseDuration !== null;
+    }
     return false;
   };
 
-  const STEPS = [
-    {
-      question: "How rested do you feel right now?",
-      options: REST_OPTIONS,
-      selected: rest,
-      onSelect: setRest,
-    },
-    {
-      question: "How stressed or anxious do you feel? (study & non-study related)",
-      options: STRESS_OPTIONS,
-      selected: stress,
-      onSelect: setStress,
-    },
-    {
-      question: "How motivated do you feel to study today?",
-      options: MOTIVATION_OPTIONS,
-      selected: motivation,
-      onSelect: setMotivation,
-    },
-  ];
+  const SIMPLE_STEPS = [
+    { question: "How rested do you feel right now?", options: REST_OPTIONS, selected: rest, onSelect: setRest },
+    null, // step 1 — study window (custom)
+    { question: "How stressed or anxious do you feel? (study & non-study related)", options: STRESS_OPTIONS, selected: stress, onSelect: setStress },
+    { question: "How motivated do you feel to study today?", options: MOTIVATION_OPTIONS, selected: motivation, onSelect: setMotivation },
+  ] as const;
 
   return (
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent className="max-w-sm rounded-2xl p-0 overflow-hidden border-none [&>button]:hidden" onPointerDownOutside={(e) => e.preventDefault()}>
         <DialogTitle className="sr-only">Daily Wellbeing Check-in</DialogTitle>
-        {/* Intro */}
         {step === 0 && (
           <p className="px-5 pt-5 pb-1 text-sm text-muted-foreground">
             Quick daily check-in — your answers shape your Cognitive Readiness, Study Capacity, Burnout Risk and Retention Outlook so your metrics reflect how you actually feel.
           </p>
         )}
-        {/* Progress bar */}
         <div className="flex gap-1 px-5 pt-3">
-          {[0, 1, 2, 3].map(i => (
+          {[0, 1, 2, 3, 4, 5].map(i => (
             <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i <= step ? "bg-primary" : "bg-muted"}`} />
           ))}
         </div>
@@ -147,18 +162,46 @@ const DailyWellbeingCheckin = ({ open, onClose }: DailyWellbeingCheckinProps) =>
             transition={{ duration: 0.2 }}
             className="px-5 pb-5 pt-3"
           >
-            {step < 3 ? (
+            {/* Steps 0, 2, 3 — simple single-select */}
+            {(step === 0 || step === 2 || step === 3) && (() => {
+              const cfg = SIMPLE_STEPS[step]!;
+              return (
+                <>
+                  <p className="text-base font-semibold text-foreground mb-4">{cfg.question}</p>
+                  <div className="flex flex-col gap-2">
+                    {cfg.options.map(opt => {
+                      const isSelected = cfg.selected === opt.value;
+                      return (
+                        <button
+                          key={opt.value}
+                          onClick={() => cfg.onSelect(opt.value)}
+                          className={`flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all border text-left
+                            ${isSelected
+                              ? "border-primary bg-primary/10 text-primary shadow-sm"
+                              : "border-border bg-card text-muted-foreground hover:border-primary/40"
+                            }`}
+                        >
+                          <span className="text-lg shrink-0">{opt.emoji}</span>
+                          <span>{opt.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              );
+            })()}
+
+            {/* Step 1 — study plan window */}
+            {step === 1 && (
               <>
-                <p className="text-base font-semibold text-foreground mb-4">
-                  {STEPS[step].question}
-                </p>
+                <p className="text-base font-semibold text-foreground mb-4">When do you plan to start studying today?</p>
                 <div className="flex flex-col gap-2">
-                  {STEPS[step].options.map(opt => {
-                    const isSelected = STEPS[step].selected === opt.value;
+                  {STUDY_WINDOW_OPTIONS.map(opt => {
+                    const isSelected = studyWindow === opt.value;
                     return (
                       <button
                         key={opt.value}
-                        onClick={() => STEPS[step].onSelect(opt.value)}
+                        onClick={() => setStudyWindow(opt.value)}
                         className={`flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all border text-left
                           ${isSelected
                             ? "border-primary bg-primary/10 text-primary shadow-sm"
@@ -172,11 +215,12 @@ const DailyWellbeingCheckin = ({ open, onClose }: DailyWellbeingCheckinProps) =>
                   })}
                 </div>
               </>
-            ) : (
+            )}
+
+            {/* Step 4 — night factors */}
+            {step === 4 && (
               <>
-                <p className="text-base font-semibold text-foreground mb-1">
-                  Did anything affect your night?
-                </p>
+                <p className="text-base font-semibold text-foreground mb-1">Did anything affect your night?</p>
                 <p className="text-xs text-muted-foreground mb-4">Select all that apply</p>
                 <div className="flex flex-wrap gap-2">
                   {NIGHT_FACTORS.map(opt => {
@@ -200,6 +244,86 @@ const DailyWellbeingCheckin = ({ open, onClose }: DailyWellbeingCheckinProps) =>
               </>
             )}
 
+            {/* Step 5 — exercise */}
+            {step === 5 && (
+              <>
+                <p className="text-base font-semibold text-foreground mb-4">Did you exercise today?</p>
+                <div className="flex gap-2 mb-4">
+                  {[
+                    { v: true,  emoji: "💪", label: "Yes" },
+                    { v: false, emoji: "🚫", label: "No" },
+                  ].map(opt => {
+                    const isSelected = didExercise === opt.v;
+                    return (
+                      <button
+                        key={String(opt.v)}
+                        onClick={() => {
+                          setDidExercise(opt.v);
+                          if (!opt.v) {
+                            setExerciseType(null);
+                            setExerciseDuration(null);
+                          }
+                        }}
+                        className={`flex-1 flex items-center justify-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all border
+                          ${isSelected
+                            ? "border-primary bg-primary/10 text-primary shadow-sm"
+                            : "border-border bg-card text-muted-foreground hover:border-primary/40"
+                          }`}
+                      >
+                        <span className="text-lg">{opt.emoji}</span>
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {didExercise === true && (
+                  <>
+                    <p className="text-sm font-semibold text-foreground mb-2">Type</p>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {EXERCISE_TYPES.map(opt => {
+                        const isSelected = exerciseType === opt.value;
+                        return (
+                          <button
+                            key={opt.value}
+                            onClick={() => setExerciseType(opt.value)}
+                            className={`flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium transition-all border
+                              ${isSelected
+                                ? "border-primary bg-primary/10 text-primary shadow-sm"
+                                : "border-border bg-card text-muted-foreground hover:border-primary/40"
+                              }`}
+                          >
+                            <span className="text-lg">{opt.emoji}</span>
+                            {opt.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <p className="text-sm font-semibold text-foreground mb-2">Duration</p>
+                    <div className="flex flex-wrap gap-2">
+                      {EXERCISE_DURATIONS.map(min => {
+                        const isSelected = exerciseDuration === min;
+                        return (
+                          <button
+                            key={min}
+                            onClick={() => setExerciseDuration(min)}
+                            className={`rounded-full px-3.5 py-2 text-sm font-medium transition-all border
+                              ${isSelected
+                                ? "border-primary bg-primary/10 text-primary shadow-sm"
+                                : "border-border bg-card text-muted-foreground hover:border-primary/40"
+                              }`}
+                          >
+                            {min} min
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+
             <div className="mt-5 flex gap-2">
               {step > 0 && (
                 <Button variant="outline" size="sm" className="rounded-full" onClick={() => setStep((step - 1) as Step)}>
@@ -212,7 +336,7 @@ const DailyWellbeingCheckin = ({ open, onClose }: DailyWellbeingCheckinProps) =>
                 disabled={!canProceed() || saving}
                 onClick={handleNext}
               >
-                {saving ? "Saving…" : step === 3 ? "Done" : "Next"}
+                {saving ? "Saving…" : step === 5 ? "Done" : "Next"}
               </Button>
             </div>
           </motion.div>

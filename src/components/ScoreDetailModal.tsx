@@ -85,6 +85,12 @@ const ScoreDetailModal = ({ score, onClose }: ScoreDetailModalProps) => {
             ))}
           </div>
 
+          {(score.icon === "brain" || score.icon === "alert" || score.icon === "book") && (
+            <p className="mt-4 text-xs text-muted-foreground/80 italic leading-relaxed">
+              ⓘ Estimated without HRV — your device's HealthKit integration doesn't yet expose Heart Rate Variability, so this score uses redistributed weights across sleep quality, sleep duration, resting heart rate, and SpO₂. Accuracy will improve once HRV becomes available.
+            </p>
+          )}
+
           {score.icon === "alert" && (
             <div className="mt-5">
               <BurnoutTrendChart />
