@@ -206,33 +206,45 @@ export type Database = {
         Row: {
           checkin_date: string
           created_at: string
+          did_exercise: boolean | null
+          exercise_duration_minutes: number | null
+          exercise_type: string | null
           id: string
           motivation_level: number
           night_factors: string[]
           rest_level: number
           stress_level: number
+          study_plan_window: string | null
           university_id: string | null
           user_id: string
         }
         Insert: {
           checkin_date?: string
           created_at?: string
+          did_exercise?: boolean | null
+          exercise_duration_minutes?: number | null
+          exercise_type?: string | null
           id?: string
           motivation_level: number
           night_factors?: string[]
           rest_level: number
           stress_level: number
+          study_plan_window?: string | null
           university_id?: string | null
           user_id: string
         }
         Update: {
           checkin_date?: string
           created_at?: string
+          did_exercise?: boolean | null
+          exercise_duration_minutes?: number | null
+          exercise_type?: string | null
           id?: string
           motivation_level?: number
           night_factors?: string[]
           rest_level?: number
           stress_level?: number
+          study_plan_window?: string | null
           university_id?: string | null
           user_id?: string
         }
