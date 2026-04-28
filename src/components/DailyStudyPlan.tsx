@@ -105,7 +105,19 @@ const DailyStudyPlan = ({ scores, weeklyGoalsTasks }: DailyStudyPlanProps) => {
         },
       });
       if (error) throw error;
-      if (data?.plan) {
+      if (data?.fallback || !data?.plan) {
+        // AI unavailable (credits exhausted, rate limit, etc.) — use local fallback
+        const fallback = getFallbackPlan(scores);
+        const todayGoalTasks = getTodayGoalTasks();
+        const goalItems: PlanItem[] = todayGoalTasks.map(task => ({
+          time: "Weekly Goal",
+          task,
+          reason: "From your weekly goals",
+          done: false,
+        }));
+        setPlan([...goalItems, ...fallback]);
+        setGenerated(true);
+      } else if (data?.plan) {
         let items: PlanItem[] = data.plan.map((p: any) => ({ ...p, done: false }));
         // Inject weekly goal tasks for today
         const todayGoalTasks = getTodayGoalTasks();
