@@ -86,7 +86,8 @@ const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbein
   const [stress, setStress] = useState<number | null>(null);
   const [motivation, setMotivation] = useState<number | null>(null);
   const [nightFactors, setNightFactors] = useState<string[]>([]);
-  const [didExercise, setDidExercise] = useState<boolean | null>(null);
+  // null = unanswered, true = yes, false = no, "not_yet" = haven't yet (treated as no for scoring)
+  const [didExercise, setDidExercise] = useState<boolean | "not_yet" | null>(null);
   const [exerciseType, setExerciseType] = useState<ExerciseType | null>(null);
   const [exerciseDuration, setExerciseDuration] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
