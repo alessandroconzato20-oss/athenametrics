@@ -21,12 +21,14 @@ import ExamChecklist from "@/components/ExamChecklist";
 import { startOfWeek } from "date-fns";
 import {
   fetchHealthData,
+  fetchTodaysWorkout,
   calculateApexScores,
   requestHealthPermissions,
   isHealthAvailable,
   DEFAULT_HEALTH_DATA,
   type AppleHealthData,
   type ApexScores,
+  type DetectedWorkout,
 } from "@/services/healthkit";
 import { applyCheckinModifiers, type HistoricalCheckin } from "@/algorithms/checkinModifiers";
 import { format } from "date-fns";
@@ -176,6 +178,7 @@ const Index = () => {
   const [examOpen, setExamOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingPending, setOnboardingPending] = useState(true);
+  const [detectedWorkout, setDetectedWorkout] = useState<DetectedWorkout | null>(null);
 
   // Show onboarding guide on first ever login
   useEffect(() => {
@@ -278,8 +281,9 @@ const Index = () => {
     async function init() {
       const available = await isHealthAvailable();
       setHealthAvailable(available);
-      const data = await fetchHealthData();
+      const [data, workout] = await Promise.all([fetchHealthData(), fetchTodaysWorkout()]);
       setHealthData(data);
+      setDetectedWorkout(workout);
       if (available) {
         const isFallbackData = JSON.stringify(data) === JSON.stringify(DEFAULT_HEALTH_DATA);
         setHealthConnected(!isFallbackData);
@@ -306,8 +310,9 @@ const Index = () => {
         setSyncStatus("Apple Health access was not granted. Enable it in iPhone Settings > Health.");
         return;
       }
-      const data = await fetchHealthData();
+      const [data, workout] = await Promise.all([fetchHealthData(), fetchTodaysWorkout()]);
       setHealthData(data);
+      setDetectedWorkout(workout);
       const isFallbackData = JSON.stringify(data) === JSON.stringify(DEFAULT_HEALTH_DATA);
       setSyncStatus(
         isFallbackData
@@ -517,6 +522,7 @@ const Index = () => {
       />
 
       <DailyWellbeingCheckin
+        detectedWorkout={detectedWorkout}
         open={showWellbeingCheckin && !onboardingPending}
         onClose={async () => {
           setShowWellbeingCheckin(false);

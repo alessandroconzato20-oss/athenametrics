@@ -6,9 +6,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 
+interface DetectedWorkoutLite {
+  category: "cardio" | "strength" | "walking";
+  durationMinutes: number;
+  rawName?: string;
+}
+
 interface DailyWellbeingCheckinProps {
   open: boolean;
   onClose: () => void;
+  /**
+   * If provided, skip Q5 entirely and persist this workout instead.
+   * Sourced from HealthKit HKWorkoutType (Apple Watch / fitness apps).
+   */
+  detectedWorkout?: DetectedWorkoutLite | null;
 }
 
 const REST_OPTIONS = [
@@ -63,8 +74,12 @@ type Step = 0 | 1 | 2 | 3 | 4 | 5;
 type StudyWindow = "within_30" | "1_2h" | "3plus" | "not_today";
 type ExerciseType = "cardio" | "strength" | "walking";
 
-const DailyWellbeingCheckin = ({ open, onClose }: DailyWellbeingCheckinProps) => {
+const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbeingCheckinProps) => {
   const { user, universityId } = useAuth();
+  const hasDetectedWorkout = !!detectedWorkout;
+  // When HealthKit has already given us a workout, the exercise step (5) is skipped.
+  const lastStep: Step = hasDetectedWorkout ? 4 : 5;
+  const totalSteps = hasDetectedWorkout ? 5 : 6;
   const [step, setStep] = useState<Step>(0);
   const [rest, setRest] = useState<number | null>(null);
   const [studyWindow, setStudyWindow] = useState<StudyWindow | null>(null);
@@ -88,11 +103,16 @@ const DailyWellbeingCheckin = ({ open, onClose }: DailyWellbeingCheckinProps) =>
   };
 
   const handleNext = async () => {
-    if (step < 5) {
+    if (step < lastStep) {
       setStep((step + 1) as Step);
       return;
     }
-    if (!user || rest === null || stress === null || motivation === null || studyWindow === null || didExercise === null) return;
+    if (!user || rest === null || stress === null || motivation === null || studyWindow === null) return;
+    // Resolve exercise: prefer HealthKit-detected workout; fall back to user input.
+    const finalDidExercise = hasDetectedWorkout ? true : didExercise;
+    const finalExerciseType = hasDetectedWorkout ? detectedWorkout!.category : (didExercise ? exerciseType : null);
+    const finalExerciseDuration = hasDetectedWorkout ? detectedWorkout!.durationMinutes : (didExercise ? exerciseDuration : null);
+    if (finalDidExercise === null) return;
     setSaving(true);
     const { error } = await supabase
       .from("daily_wellbeing_checkins" as any)
@@ -105,9 +125,9 @@ const DailyWellbeingCheckin = ({ open, onClose }: DailyWellbeingCheckinProps) =>
         motivation_level: motivation,
         night_factors: nightFactors,
         study_plan_window: studyWindow,
-        did_exercise: didExercise,
-        exercise_type: didExercise ? exerciseType : null,
-        exercise_duration_minutes: didExercise ? exerciseDuration : null,
+        did_exercise: finalDidExercise,
+        exercise_type: finalDidExercise ? finalExerciseType : null,
+        exercise_duration_minutes: finalDidExercise ? finalExerciseDuration : null,
       } as any, { onConflict: "user_id,checkin_date" } as any);
     setSaving(false);
     if (error) {
@@ -124,6 +144,7 @@ const DailyWellbeingCheckin = ({ open, onClose }: DailyWellbeingCheckinProps) =>
     if (step === 3) return motivation !== null;
     if (step === 4) return nightFactors.length > 0;
     if (step === 5) {
+      // Only reachable when no HealthKit workout was detected
       if (didExercise === null) return false;
       if (didExercise === false) return true;
       return exerciseType !== null && exerciseDuration !== null;
@@ -148,7 +169,7 @@ const DailyWellbeingCheckin = ({ open, onClose }: DailyWellbeingCheckinProps) =>
           </p>
         )}
         <div className="flex gap-1 px-5 pt-3">
-          {[0, 1, 2, 3, 4, 5].map(i => (
+          {Array.from({ length: totalSteps }).map((_, i) => (
             <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i <= step ? "bg-primary" : "bg-muted"}`} />
           ))}
         </div>
@@ -336,7 +357,7 @@ const DailyWellbeingCheckin = ({ open, onClose }: DailyWellbeingCheckinProps) =>
                 disabled={!canProceed() || saving}
                 onClick={handleNext}
               >
-                {saving ? "Saving…" : step === 5 ? "Done" : "Next"}
+                {saving ? "Saving…" : step === lastStep ? "Done" : "Next"}
               </Button>
             </div>
           </motion.div>

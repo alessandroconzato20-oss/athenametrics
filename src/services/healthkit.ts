@@ -29,7 +29,105 @@ const QUERY_SAMPLE_TYPES = {
   oxygenSaturation: "oxygenSaturation",
   vo2Max: "vo2Max",
   respiratoryRate: "respiratoryRate",
+  workout: "workoutType",
 } as const;
+
+// ── HealthKit workout → check-in modifier mapping ──
+// Maps HKWorkoutActivityType names (as returned by @perfood/capacitor-healthkit)
+// to our 3 modifier buckets. Names below are taken from the plugin's Swift
+// `returnWorkoutActivityTypeValueDictionnary` mapping.
+export type ExerciseCategory = "cardio" | "strength" | "walking";
+
+const WORKOUT_NAME_TO_CATEGORY: Record<string, ExerciseCategory> = {
+  // Cardio
+  running: "cardio",
+  cycling: "cardio",
+  swimming: "cardio",
+  rowing: "cardio",
+  elliptical: "cardio",
+  stairs: "cardio",
+  stairClimbing: "cardio",
+  jumpRope: "cardio",
+  highIntensityIntervalTraining: "cardio",
+  kickboxing: "cardio",
+  boxing: "cardio",
+  dance: "cardio",
+  danceInspiredTraining: "cardio",
+  soccer: "cardio",
+  basketball: "cardio",
+  tennis: "cardio",
+  squash: "cardio",
+  racquetball: "cardio",
+  badminton: "cardio",
+  volleyball: "cardio",
+  handball: "cardio",
+  hockey: "cardio",
+  rugby: "cardio",
+  americanFootball: "cardio",
+  australianFootball: "cardio",
+  // Strength
+  traditionalStrengthTraining: "strength",
+  functionalStrengthTraining: "strength",
+  coreTraining: "strength",
+  crossTraining: "strength",
+  pilates: "strength",
+  yoga: "strength",
+  flexibility: "strength",
+  gymnastics: "strength",
+  climbing: "strength",
+  // Walking (and lower-intensity)
+  walking: "walking",
+  hiking: "walking",
+  mindAndBody: "walking",
+};
+
+export interface DetectedWorkout {
+  category: ExerciseCategory;
+  durationMinutes: number;
+  rawName: string;
+}
+
+/**
+ * Query Apple Health for the most recent workout in the last 24h.
+ * Returns null on web, no permission, or no sample.
+ */
+export async function fetchTodaysWorkout(): Promise<DetectedWorkout | null> {
+  if (!Capacitor.isNativePlatform()) return null;
+  const now = new Date();
+  const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  try {
+    const samples = await querySample(QUERY_SAMPLE_TYPES.workout, yesterday, now);
+    if (!samples || samples.length === 0) return null;
+
+    // Sum total minutes per category, prefer the dominant category, fall back to most recent.
+    const byCategory: Record<ExerciseCategory, number> = { cardio: 0, strength: 0, walking: 0 };
+    let lastName = "";
+    for (const s of samples) {
+      const name: string = String(s.workoutActivityName || "").trim();
+      const start = new Date(s.startDate).getTime();
+      const end = new Date(s.endDate).getTime();
+      if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) continue;
+      const minutes = (end - start) / 60000;
+      const category = WORKOUT_NAME_TO_CATEGORY[name];
+      if (!category) continue;
+      byCategory[category] += minutes;
+      lastName = name;
+    }
+
+    const totals = Object.entries(byCategory) as [ExerciseCategory, number][];
+    const [topCategory, topMinutes] = totals.reduce((a, b) => (b[1] > a[1] ? b : a));
+    if (topMinutes <= 0) return null;
+
+    return {
+      category: topCategory,
+      durationMinutes: Math.round(topMinutes),
+      rawName: lastName,
+    };
+  } catch (e) {
+    console.error("fetchTodaysWorkout failed:", e);
+    return null;
+  }
+}
 
 // Default preview / fallback data matching the new AppleHealthData interface
 export const DEFAULT_HEALTH_DATA: AppleHealthData = {
