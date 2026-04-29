@@ -6,9 +6,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 
+interface DetectedWorkoutLite {
+  category: "cardio" | "strength" | "walking";
+  durationMinutes: number;
+  rawName?: string;
+}
+
 interface DailyWellbeingCheckinProps {
   open: boolean;
   onClose: () => void;
+  /**
+   * If provided, skip Q5 entirely and persist this workout instead.
+   * Sourced from HealthKit HKWorkoutType (Apple Watch / fitness apps).
+   */
+  detectedWorkout?: DetectedWorkoutLite | null;
 }
 
 const REST_OPTIONS = [
