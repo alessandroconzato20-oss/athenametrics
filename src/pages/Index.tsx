@@ -310,8 +310,9 @@ const Index = () => {
         setSyncStatus("Apple Health access was not granted. Enable it in iPhone Settings > Health.");
         return;
       }
-      const data = await fetchHealthData();
+      const [data, workout] = await Promise.all([fetchHealthData(), fetchTodaysWorkout()]);
       setHealthData(data);
+      setDetectedWorkout(workout);
       const isFallbackData = JSON.stringify(data) === JSON.stringify(DEFAULT_HEALTH_DATA);
       setSyncStatus(
         isFallbackData
