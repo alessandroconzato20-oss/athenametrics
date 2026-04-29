@@ -103,11 +103,16 @@ const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbein
   };
 
   const handleNext = async () => {
-    if (step < 5) {
+    if (step < lastStep) {
       setStep((step + 1) as Step);
       return;
     }
-    if (!user || rest === null || stress === null || motivation === null || studyWindow === null || didExercise === null) return;
+    if (!user || rest === null || stress === null || motivation === null || studyWindow === null) return;
+    // Resolve exercise: prefer HealthKit-detected workout; fall back to user input.
+    const finalDidExercise = hasDetectedWorkout ? true : didExercise;
+    const finalExerciseType = hasDetectedWorkout ? detectedWorkout!.category : (didExercise ? exerciseType : null);
+    const finalExerciseDuration = hasDetectedWorkout ? detectedWorkout!.durationMinutes : (didExercise ? exerciseDuration : null);
+    if (finalDidExercise === null) return;
     setSaving(true);
     const { error } = await supabase
       .from("daily_wellbeing_checkins" as any)
@@ -120,9 +125,9 @@ const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbein
         motivation_level: motivation,
         night_factors: nightFactors,
         study_plan_window: studyWindow,
-        did_exercise: didExercise,
-        exercise_type: didExercise ? exerciseType : null,
-        exercise_duration_minutes: didExercise ? exerciseDuration : null,
+        did_exercise: finalDidExercise,
+        exercise_type: finalDidExercise ? finalExerciseType : null,
+        exercise_duration_minutes: finalDidExercise ? finalExerciseDuration : null,
       } as any, { onConflict: "user_id,checkin_date" } as any);
     setSaving(false);
     if (error) {
@@ -139,6 +144,7 @@ const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbein
     if (step === 3) return motivation !== null;
     if (step === 4) return nightFactors.length > 0;
     if (step === 5) {
+      // Only reachable when no HealthKit workout was detected
       if (didExercise === null) return false;
       if (didExercise === false) return true;
       return exerciseType !== null && exerciseDuration !== null;
