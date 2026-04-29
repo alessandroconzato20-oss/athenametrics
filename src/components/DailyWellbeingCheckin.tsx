@@ -86,7 +86,8 @@ const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbein
   const [stress, setStress] = useState<number | null>(null);
   const [motivation, setMotivation] = useState<number | null>(null);
   const [nightFactors, setNightFactors] = useState<string[]>([]);
-  const [didExercise, setDidExercise] = useState<boolean | null>(null);
+  // null = unanswered, true = yes, false = no, "not_yet" = haven't yet (treated as no for scoring)
+  const [didExercise, setDidExercise] = useState<boolean | "not_yet" | null>(null);
   const [exerciseType, setExerciseType] = useState<ExerciseType | null>(null);
   const [exerciseDuration, setExerciseDuration] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
@@ -109,9 +110,12 @@ const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbein
     }
     if (!user || rest === null || stress === null || motivation === null || studyWindow === null) return;
     // Resolve exercise: prefer HealthKit-detected workout; fall back to user input.
-    const finalDidExercise = hasDetectedWorkout ? true : didExercise;
-    const finalExerciseType = hasDetectedWorkout ? detectedWorkout!.category : (didExercise ? exerciseType : null);
-    const finalExerciseDuration = hasDetectedWorkout ? detectedWorkout!.durationMinutes : (didExercise ? exerciseDuration : null);
+    // Resolve exercise: prefer HealthKit-detected workout; fall back to user input.
+    // "not_yet" is treated as no exercise for today's score (same as false).
+    const exerciseTrue = didExercise === true;
+    const finalDidExercise = hasDetectedWorkout ? true : (didExercise === null ? null : exerciseTrue);
+    const finalExerciseType = hasDetectedWorkout ? detectedWorkout!.category : (exerciseTrue ? exerciseType : null);
+    const finalExerciseDuration = hasDetectedWorkout ? detectedWorkout!.durationMinutes : (exerciseTrue ? exerciseDuration : null);
     if (finalDidExercise === null) return;
     setSaving(true);
     const { error } = await supabase
@@ -146,7 +150,7 @@ const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbein
     if (step === 5) {
       // Only reachable when no HealthKit workout was detected
       if (didExercise === null) return false;
-      if (didExercise === false) return true;
+      if (didExercise === false || didExercise === "not_yet") return true;
       return exerciseType !== null && exerciseDuration !== null;
     }
     return false;
@@ -269,10 +273,11 @@ const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbein
             {step === 5 && (
               <>
                 <p className="text-base font-semibold text-foreground mb-4">Did you exercise today?</p>
-                <div className="flex gap-2 mb-4">
+                <div className="flex flex-col gap-2 mb-4">
                   {[
-                    { v: true,  emoji: "💪", label: "Yes" },
-                    { v: false, emoji: "🚫", label: "No" },
+                    { v: true as const,      emoji: "💪", label: "Yes" },
+                    { v: "not_yet" as const, emoji: "⏳", label: "Not yet — might later" },
+                    { v: false as const,     emoji: "🚫", label: "No" },
                   ].map(opt => {
                     const isSelected = didExercise === opt.v;
                     return (
@@ -280,12 +285,12 @@ const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbein
                         key={String(opt.v)}
                         onClick={() => {
                           setDidExercise(opt.v);
-                          if (!opt.v) {
+                          if (opt.v !== true) {
                             setExerciseType(null);
                             setExerciseDuration(null);
                           }
                         }}
-                        className={`flex-1 flex items-center justify-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all border
+                        className={`flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all border text-left
                           ${isSelected
                             ? "border-primary bg-primary/10 text-primary shadow-sm"
                             : "border-border bg-card text-muted-foreground hover:border-primary/40"
