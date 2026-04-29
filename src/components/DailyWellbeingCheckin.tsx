@@ -273,10 +273,11 @@ const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbein
             {step === 5 && (
               <>
                 <p className="text-base font-semibold text-foreground mb-4">Did you exercise today?</p>
-                <div className="flex gap-2 mb-4">
+                <div className="flex flex-col gap-2 mb-4">
                   {[
-                    { v: true,  emoji: "💪", label: "Yes" },
-                    { v: false, emoji: "🚫", label: "No" },
+                    { v: true as const,      emoji: "💪", label: "Yes" },
+                    { v: "not_yet" as const, emoji: "⏳", label: "Not yet — might later" },
+                    { v: false as const,     emoji: "🚫", label: "No" },
                   ].map(opt => {
                     const isSelected = didExercise === opt.v;
                     return (
@@ -284,12 +285,12 @@ const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbein
                         key={String(opt.v)}
                         onClick={() => {
                           setDidExercise(opt.v);
-                          if (!opt.v) {
+                          if (opt.v !== true) {
                             setExerciseType(null);
                             setExerciseDuration(null);
                           }
                         }}
-                        className={`flex-1 flex items-center justify-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all border
+                        className={`flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all border text-left
                           ${isSelected
                             ? "border-primary bg-primary/10 text-primary shadow-sm"
                             : "border-border bg-card text-muted-foreground hover:border-primary/40"
