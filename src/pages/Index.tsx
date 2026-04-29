@@ -522,6 +522,7 @@ const Index = () => {
       />
 
       <DailyWellbeingCheckin
+        detectedWorkout={detectedWorkout}
         open={showWellbeingCheckin && !onboardingPending}
         onClose={async () => {
           setShowWellbeingCheckin(false);
