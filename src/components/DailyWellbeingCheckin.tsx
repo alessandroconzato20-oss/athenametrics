@@ -150,7 +150,7 @@ const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbein
     if (step === 5) {
       // Only reachable when no HealthKit workout was detected
       if (didExercise === null) return false;
-      if (didExercise === false) return true;
+      if (didExercise === false || didExercise === "not_yet") return true;
       return exerciseType !== null && exerciseDuration !== null;
     }
     return false;
