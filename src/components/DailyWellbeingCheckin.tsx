@@ -110,9 +110,12 @@ const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbein
     }
     if (!user || rest === null || stress === null || motivation === null || studyWindow === null) return;
     // Resolve exercise: prefer HealthKit-detected workout; fall back to user input.
-    const finalDidExercise = hasDetectedWorkout ? true : didExercise;
-    const finalExerciseType = hasDetectedWorkout ? detectedWorkout!.category : (didExercise ? exerciseType : null);
-    const finalExerciseDuration = hasDetectedWorkout ? detectedWorkout!.durationMinutes : (didExercise ? exerciseDuration : null);
+    // Resolve exercise: prefer HealthKit-detected workout; fall back to user input.
+    // "not_yet" is treated as no exercise for today's score (same as false).
+    const exerciseTrue = didExercise === true;
+    const finalDidExercise = hasDetectedWorkout ? true : (didExercise === null ? null : exerciseTrue);
+    const finalExerciseType = hasDetectedWorkout ? detectedWorkout!.category : (exerciseTrue ? exerciseType : null);
+    const finalExerciseDuration = hasDetectedWorkout ? detectedWorkout!.durationMinutes : (exerciseTrue ? exerciseDuration : null);
     if (finalDidExercise === null) return;
     setSaving(true);
     const { error } = await supabase
