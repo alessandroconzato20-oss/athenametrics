@@ -74,8 +74,12 @@ type Step = 0 | 1 | 2 | 3 | 4 | 5;
 type StudyWindow = "within_30" | "1_2h" | "3plus" | "not_today";
 type ExerciseType = "cardio" | "strength" | "walking";
 
-const DailyWellbeingCheckin = ({ open, onClose }: DailyWellbeingCheckinProps) => {
+const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbeingCheckinProps) => {
   const { user, universityId } = useAuth();
+  const hasDetectedWorkout = !!detectedWorkout;
+  // When HealthKit has already given us a workout, the exercise step (5) is skipped.
+  const lastStep: Step = hasDetectedWorkout ? 4 : 5;
+  const totalSteps = hasDetectedWorkout ? 5 : 6;
   const [step, setStep] = useState<Step>(0);
   const [rest, setRest] = useState<number | null>(null);
   const [studyWindow, setStudyWindow] = useState<StudyWindow | null>(null);
