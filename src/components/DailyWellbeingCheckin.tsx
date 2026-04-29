@@ -357,7 +357,7 @@ const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbein
                 disabled={!canProceed() || saving}
                 onClick={handleNext}
               >
-                {saving ? "Saving…" : step === 5 ? "Done" : "Next"}
+                {saving ? "Saving…" : step === lastStep ? "Done" : "Next"}
               </Button>
             </div>
           </motion.div>
