@@ -21,12 +21,14 @@ import ExamChecklist from "@/components/ExamChecklist";
 import { startOfWeek } from "date-fns";
 import {
   fetchHealthData,
+  fetchTodaysWorkout,
   calculateApexScores,
   requestHealthPermissions,
   isHealthAvailable,
   DEFAULT_HEALTH_DATA,
   type AppleHealthData,
   type ApexScores,
+  type DetectedWorkout,
 } from "@/services/healthkit";
 import { applyCheckinModifiers, type HistoricalCheckin } from "@/algorithms/checkinModifiers";
 import { format } from "date-fns";
