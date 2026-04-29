@@ -281,8 +281,9 @@ const Index = () => {
     async function init() {
       const available = await isHealthAvailable();
       setHealthAvailable(available);
-      const data = await fetchHealthData();
+      const [data, workout] = await Promise.all([fetchHealthData(), fetchTodaysWorkout()]);
       setHealthData(data);
+      setDetectedWorkout(workout);
       if (available) {
         const isFallbackData = JSON.stringify(data) === JSON.stringify(DEFAULT_HEALTH_DATA);
         setHealthConnected(!isFallbackData);
