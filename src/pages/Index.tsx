@@ -178,6 +178,7 @@ const Index = () => {
   const [examOpen, setExamOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingPending, setOnboardingPending] = useState(true);
+  const [detectedWorkout, setDetectedWorkout] = useState<DetectedWorkout | null>(null);
 
   // Show onboarding guide on first ever login
   useEffect(() => {
