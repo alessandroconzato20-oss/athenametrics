@@ -169,7 +169,7 @@ const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbein
           </p>
         )}
         <div className="flex gap-1 px-5 pt-3">
-          {[0, 1, 2, 3, 4, 5].map(i => (
+          {Array.from({ length: totalSteps }).map((_, i) => (
             <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i <= step ? "bg-primary" : "bg-muted"}`} />
           ))}
         </div>
