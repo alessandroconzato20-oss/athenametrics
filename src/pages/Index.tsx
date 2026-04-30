@@ -293,7 +293,7 @@ const Index = () => {
 
       // Notification scheduling — fire-and-forget, native only
       setupNotificationActionListener();
-      if (user) scheduleMorningCheckin(user.id).catch(err => console.error("scheduleMorningCheckin:", err));
+      if (user) scheduleDailyNotifications(user.id).catch(err => console.error("scheduleDailyNotifications:", err));
     }
     init();
   }, [user]);
