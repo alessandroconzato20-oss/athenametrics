@@ -85,6 +85,20 @@ const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbein
   const [rest, setRest] = useState<number | null>(null);
   const [studyWindow, setStudyWindow] = useState<StudyWindow | null>(null);
   const [stress, setStress] = useState<number | null>(null);
+
+  // Pre-fill stress from morning notification quick-reply (Variant 3)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(QUICK_REPLY_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      // Only honor if reply was within the last 4 hours
+      if (parsed?.stress && Date.now() - (parsed.at || 0) < 4 * 60 * 60 * 1000) {
+        setStress(parsed.stress);
+      }
+      localStorage.removeItem(QUICK_REPLY_KEY);
+    } catch {}
+  }, []);
   const [motivation, setMotivation] = useState<number | null>(null);
   const [nightFactors, setNightFactors] = useState<string[]>([]);
   // null = unanswered, true = yes, false = no, "not_yet" = haven't yet (treated as no for scoring)
