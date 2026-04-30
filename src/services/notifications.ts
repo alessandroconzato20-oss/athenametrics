@@ -622,22 +622,66 @@ export async function scheduleMorningCheckin(userId: string): Promise<void> {
 }
 
 /**
- * Inline-reply handler. Maps quick-reply action → stress score (1/3/5)
- * and stashes it for the check-in component to pre-fill Q1a.
+ * Inline-reply handlers. Quick replies are stashed in localStorage so the
+ * relevant in-app component can pre-fill / record the answer when next opened.
  */
 export const QUICK_REPLY_KEY = "cofactor_morning_quick_reply_v1";
+export const EVENING_FACTORS_KEY = "cofactor_evening_factors_v1";
+export const EVENING_OVERWHELM_KEY = "cofactor_evening_overwhelm_v1";
+export const AFTERNOON_LOWMOT_KEY = "cofactor_afternoon_lowmot_v1";
+
 export function setupNotificationActionListener() {
   if (!Capacitor.isNativePlatform()) return;
   LocalNotifications.addListener("localNotificationActionPerformed", (event) => {
-    const stressMap: Record<string, number> = { calm: 1, okay: 3, stressed: 5 };
-    const score = stressMap[event.actionId];
-    if (score) {
-      try {
+    try {
+      const action = event.actionId;
+      const kind = (event.notification?.extra as any)?.kind;
+
+      // Morning check-in (V3): Calm/Okay/Stressed → stress 1/3/5
+      const stressMap: Record<string, number> = { calm: 1, okay: 3, stressed: 5 };
+      if (stressMap[action] !== undefined) {
         localStorage.setItem(
           QUICK_REPLY_KEY,
-          JSON.stringify({ stress: score, at: Date.now() })
+          JSON.stringify({ stress: stressMap[action], at: Date.now() })
         );
-      } catch {}
+        return;
+      }
+
+      // Afternoon low-motivation: Try 20 / Not today
+      if (kind === "afternoon_peak" && (action === "try_20" || action === "not_today")) {
+        localStorage.setItem(
+          AFTERNOON_LOWMOT_KEY,
+          JSON.stringify({ choice: action, at: Date.now() })
+        );
+        return;
+      }
+
+      // Evening factors: alcohol / late_caffeine / screens / nothing
+      const FACTOR_MAP: Record<string, string> = {
+        alcohol: "alcohol",
+        late_caffeine: "late_caffeine",
+        screens: "screens_in_bed",
+        nothing: "nothing",
+      };
+      if (kind === "evening_checkin" && FACTOR_MAP[action]) {
+        localStorage.setItem(
+          EVENING_FACTORS_KEY,
+          JSON.stringify({ factor: FACTOR_MAP[action], at: Date.now() })
+        );
+        return;
+      }
+
+      // Evening overwhelm (PSS-style): Not much / Somewhat / A lot → 0 / 2 / 4
+      const PSS_MAP: Record<string, number> = { ow_low: 0, ow_mid: 2, ow_high: 4 };
+      if (kind === "evening_checkin" && PSS_MAP[action] !== undefined) {
+        localStorage.setItem(
+          EVENING_OVERWHELM_KEY,
+          JSON.stringify({ pss: PSS_MAP[action], at: Date.now() })
+        );
+        return;
+      }
+    } catch (e) {
+      console.warn("notification action handler failed:", e);
     }
   });
 }
