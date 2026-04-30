@@ -129,6 +129,41 @@ export async function fetchTodaysWorkout(): Promise<DetectedWorkout | null> {
   }
 }
 
+/**
+ * Fetch today's HealthKit-detected wake time + previous night's sleep duration.
+ * Wake time is the END of the latest sleep sample whose end falls in the last 18h.
+ * Used by the notification scheduler to time the morning check-in.
+ */
+export interface WakeInfo {
+  wakeAt: Date;          // detected wake-up timestamp
+  sleepHours: number;    // total sleep duration of that night
+}
+
+export async function fetchTodaysWakeInfo(): Promise<WakeInfo | null> {
+  if (!Capacitor.isNativePlatform()) return null;
+  try {
+    const now = new Date();
+    const start = new Date(now.getTime() - 18 * 60 * 60 * 1000);
+    const samples = await querySample(QUERY_SAMPLE_TYPES.sleep, start, now);
+    if (!samples.length) return null;
+
+    let latestEnd = 0;
+    let totalMins = 0;
+    for (const s of samples) {
+      const startMs = new Date(s.startDate).getTime();
+      const endMs = new Date(s.endDate).getTime();
+      if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) continue;
+      totalMins += (endMs - startMs) / 60000;
+      if (endMs > latestEnd) latestEnd = endMs;
+    }
+    if (!latestEnd) return null;
+    return { wakeAt: new Date(latestEnd), sleepHours: parseFloat((totalMins / 60).toFixed(1)) };
+  } catch (e) {
+    console.error("fetchTodaysWakeInfo failed:", e);
+    return null;
+  }
+}
+
 // Default preview / fallback data matching the new AppleHealthData interface
 export const DEFAULT_HEALTH_DATA: AppleHealthData = {
   hrv_today: 48,
