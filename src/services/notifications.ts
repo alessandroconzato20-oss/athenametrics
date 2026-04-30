@@ -185,11 +185,380 @@ async function registerActionTypes() {
             { id: "stressed", title: "Stressed" },
           ],
         },
+        {
+          id: "AFTERNOON_LOW_MOTIVATION",
+          actions: [
+            { id: "try_20", title: "Try 20 minutes" },
+            { id: "not_today", title: "Not today" },
+          ],
+        },
+        {
+          id: "EVENING_FACTORS",
+          actions: [
+            { id: "alcohol", title: "Alcohol" },
+            { id: "late_caffeine", title: "Late caffeine" },
+            { id: "screens", title: "Screens in bed" },
+            { id: "nothing", title: "Nothing" },
+          ],
+        },
+        {
+          id: "EVENING_OVERWHELM",
+          actions: [
+            { id: "ow_low", title: "Not much" },
+            { id: "ow_mid", title: "Somewhat" },
+            { id: "ow_high", title: "A lot" },
+          ],
+        },
       ],
     });
   } catch (e) {
     console.warn("registerActionTypes failed:", e);
   }
+}
+
+// ──────────────────────────────────────────────────────────────
+// Shared helpers for the new schedulers
+// ──────────────────────────────────────────────────────────────
+
+function timeStringToTodayDate(hhmm: string): Date | null {
+  const m = /^(\d{1,2}):(\d{2})/.exec(hhmm.trim());
+  if (!m) return null;
+  const d = new Date();
+  d.setHours(parseInt(m[1], 10), parseInt(m[2], 10), 0, 0);
+  return d;
+}
+
+interface TodayContext {
+  checkin: {
+    rest_level: number | null;
+    stress_level: number | null;
+    motivation_level: number | null;
+    study_plan_window: string | null;
+  } | null;
+  cognitiveReadinessThisMorning: number | null;
+  primaryEnd: string | null;       // "HH:MM"
+  secondaryStart: string | null;   // "HH:MM"
+  isNightOwl: boolean;
+  totalStudyMinutesToday: number;
+  avgStudyMinutes7d: number;
+  typicalSleepOnsetHHMM: string | null;
+}
+
+async function loadTodayContext(userId: string): Promise<TodayContext> {
+  const today = format(new Date(), "yyyy-MM-dd");
+
+  // Today's wellbeing check-in (if any)
+  const { data: ci } = await (supabase
+    .from("daily_wellbeing_checkins" as any)
+    .select("rest_level,stress_level,motivation_level,study_plan_window")
+    .eq("user_id", userId)
+    .eq("checkin_date", today)
+    .maybeSingle() as any);
+
+  // Today's cognitive readiness (already computed and saved in Index.tsx)
+  const { data: ds } = await supabase
+    .from("daily_scores")
+    .select("cognitive_readiness")
+    .eq("user_id", userId)
+    .eq("score_date", today)
+    .maybeSingle();
+
+  // Today's study minutes
+  const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
+  const { data: logsToday } = await supabase
+    .from("study_logs")
+    .select("duration_minutes")
+    .eq("user_id", userId)
+    .gte("studied_at", startOfDay.toISOString());
+  const totalStudyMinutesToday = (logsToday || []).reduce((s, r: any) => s + (r.duration_minutes || 0), 0);
+
+  // 7-day average study minutes
+  const sevenAgo = new Date(Date.now() - 7 * 86400000);
+  const { data: logs7d } = await supabase
+    .from("study_logs")
+    .select("duration_minutes,studied_at")
+    .eq("user_id", userId)
+    .gte("studied_at", sevenAgo.toISOString());
+  const byDay: Record<string, number> = {};
+  for (const r of (logs7d || []) as any[]) {
+    const k = format(new Date(r.studied_at), "yyyy-MM-dd");
+    byDay[k] = (byDay[k] || 0) + (r.duration_minutes || 0);
+  }
+  const dayTotals = Object.values(byDay);
+  const avgStudyMinutes7d = dayTotals.length
+    ? dayTotals.reduce((a, b) => a + b, 0) / dayTotals.length
+    : 0;
+
+  // Peak windows + chronotype: pull from latest biometric snapshot if available,
+  // otherwise we leave nulls and the schedulers will skip the windowed parts.
+  const { data: snap } = await (supabase
+    .from("biometric_snapshots" as any)
+    .select("data")
+    .eq("user_id", userId)
+    .eq("snapshot_type", "peak_window")
+    .order("recorded_at", { ascending: false })
+    .limit(1)
+    .maybeSingle() as any);
+
+  const primaryEnd = snap?.data?.primary_end ?? null;
+  const secondaryStart = snap?.data?.secondary_start ?? null;
+  const isNightOwl = snap?.data?.chronotype === "night_owl";
+  const typicalSleepOnsetHHMM = snap?.data?.typical_sleep_onset ?? null;
+
+  return {
+    checkin: ci ?? null,
+    cognitiveReadinessThisMorning: ds?.cognitive_readiness ?? null,
+    primaryEnd,
+    secondaryStart,
+    isNightOwl,
+    totalStudyMinutesToday,
+    avgStudyMinutes7d,
+    typicalSleepOnsetHHMM,
+  };
+}
+
+function pickRotation(key: string, modulo: number): number {
+  const idx = Number(localStorage.getItem(key) || "0");
+  localStorage.setItem(key, String(idx + 1));
+  return idx % modulo;
+}
+
+async function trySchedule(opts: {
+  kind: string;
+  fireAt: Date;
+  title: string;
+  body: string;
+  actionTypeId?: string;
+  extra?: Record<string, any>;
+  oncePerDay?: boolean;
+}): Promise<boolean> {
+  const log = loadLog();
+  const day = format(opts.fireAt, "yyyy-MM-dd");
+
+  if (opts.oncePerDay !== false && log.some(l => l.date === day && l.kind === opts.kind)) return false;
+  if (opts.fireAt.getTime() < Date.now() + 60 * 1000) return false;
+  if (isWithinQuietHours(opts.fireAt)) return false;
+  if (!canSchedule(opts.fireAt, log)) return false;
+
+  const notifId = Math.floor((Date.now() + Math.random() * 1000) / 1) % 2_000_000_000;
+
+  // Cancel stale pending of same kind
+  try {
+    const pending = await LocalNotifications.getPending();
+    const stale = pending.notifications
+      .filter(n => n.extra?.kind === opts.kind)
+      .map(n => ({ id: n.id }));
+    if (stale.length) await LocalNotifications.cancel({ notifications: stale });
+  } catch {}
+
+  await LocalNotifications.schedule({
+    notifications: [
+      {
+        id: notifId,
+        title: opts.title,
+        body: opts.body,
+        schedule: { at: opts.fireAt, allowWhileIdle: true },
+        actionTypeId: opts.actionTypeId,
+        extra: { kind: opts.kind, ...(opts.extra || {}) },
+      },
+    ],
+  });
+
+  log.push({ date: day, scheduledAt: opts.fireAt.getTime(), kind: opts.kind });
+  saveLog(log);
+  console.log(`[notif] ${opts.kind} scheduled for ${opts.fireAt.toISOString()}`);
+  return true;
+}
+
+// ──────────────────────────────────────────────────────────────
+// 2. Midday nudge — fires 12:30–13:30 if no study yet & morning CR > 60.
+//    Skip if user said "Not today" in Q1b.
+// ──────────────────────────────────────────────────────────────
+export async function scheduleMiddayNudge(userId: string): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  const granted = await ensureNotificationPermission();
+  if (!granted) return;
+  await registerActionTypes();
+
+  const ctx = await loadTodayContext(userId);
+  if (ctx.checkin?.study_plan_window === "not_today") return;
+  if ((ctx.cognitiveReadinessThisMorning ?? 0) <= 60) return;
+  if (ctx.totalStudyMinutesToday > 0) return;
+
+  // Random fire time inside 12:30–13:30
+  const fireAt = new Date();
+  const minutesIntoWindow = 30 + Math.floor(Math.random() * 60);
+  fireAt.setHours(12, 0, 0, 0);
+  fireAt.setMinutes(minutesIntoWindow);
+
+  // Variant choice
+  const primaryEndDate = ctx.primaryEnd ? timeStringToTodayDate(ctx.primaryEnd) : null;
+  const primaryHasPassed = primaryEndDate ? Date.now() > primaryEndDate.getTime() : false;
+  const useNightOwlVariant = ctx.isNightOwl && primaryHasPassed && ctx.secondaryStart;
+
+  const cr = ctx.cognitiveReadinessThisMorning ?? 0;
+  const variant = useNightOwlVariant
+    ? {
+        id: 2,
+        title: "Use this gap",
+        body: `Even 20 minutes right now counts. Your secondary window opens at ${ctx.secondaryStart} — use this gap first.`,
+        extra: { variant: 2, openTo: "log" },
+      }
+    : {
+        id: 1,
+        title: "Window's still open",
+        body: `You haven't started yet and your readiness score was ${cr} this morning. That window doesn't last all day.`,
+        extra: { variant: 1, openTo: "log" },
+      };
+
+  await trySchedule({
+    kind: "midday_nudge",
+    fireAt,
+    title: variant.title,
+    body: variant.body,
+    extra: variant.extra,
+  });
+}
+
+// ──────────────────────────────────────────────────────────────
+// 3. Afternoon secondary peak — at secondary_start, only if today's
+//    study < 60 min. Three rotating variants.
+// ──────────────────────────────────────────────────────────────
+
+// Caffeine cutoff = 6h before typical sleep onset (default 23:00 → 17:00)
+function caffeineCutoffDate(typicalSleepOnsetHHMM: string | null): Date {
+  const d = new Date();
+  if (typicalSleepOnsetHHMM) {
+    const parsed = timeStringToTodayDate(typicalSleepOnsetHHMM);
+    if (parsed) {
+      parsed.setHours(parsed.getHours() - 6);
+      return parsed;
+    }
+  }
+  d.setHours(17, 0, 0, 0);
+  return d;
+}
+
+export async function scheduleAfternoonSecondaryPeak(userId: string): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  const granted = await ensureNotificationPermission();
+  if (!granted) return;
+  await registerActionTypes();
+
+  const ctx = await loadTodayContext(userId);
+  if (!ctx.secondaryStart) return;
+  if (ctx.totalStudyMinutesToday >= 60) return;
+
+  const fireAt = timeStringToTodayDate(ctx.secondaryStart);
+  if (!fireAt) return;
+
+  // Variant priority: low-motivation override → caffeine-cutoff override → default
+  const motivation = ctx.checkin?.motivation_level ?? null;
+  const cutoff = caffeineCutoffDate(ctx.typicalSleepOnsetHHMM);
+  const withinCaffeineWindow = Math.abs(fireAt.getTime() - cutoff.getTime()) <= 2 * 60 * 60 * 1000;
+
+  let title: string;
+  let body: string;
+  let actionTypeId: string | undefined;
+  let extra: Record<string, any> = { openTo: "log" };
+
+  if (motivation !== null && motivation <= 2) {
+    title = "Low-stakes counts";
+    body = "You said you weren't feeling motivated this morning. You don't need to feel ready — 20 minutes of low-stakes review still counts.";
+    actionTypeId = "AFTERNOON_LOW_MOTIVATION";
+    extra = { variant: "low_motivation", openTo: "log" };
+  } else if (withinCaffeineWindow) {
+    title = "Skip the caffeine";
+    body = "Caffeine now will cut into your REM tonight. Your retention score tomorrow depends on clean sleep — study sharp instead.";
+    extra = { variant: "caffeine_cutoff", openTo: "log" };
+  } else {
+    title = "Second peak is open";
+    body = "Your second peak window opens now. This is your brain's natural afternoon surge.";
+    extra = { variant: "default", openTo: "log" };
+  }
+
+  await trySchedule({
+    kind: "afternoon_peak",
+    fireAt,
+    title,
+    body,
+    actionTypeId,
+    extra,
+  });
+}
+
+// ──────────────────────────────────────────────────────────────
+// 4. Evening check-in — 60–90 min before typical sleep onset.
+//    Three rotating variants (factors / great-day / overwhelm).
+// ──────────────────────────────────────────────────────────────
+export async function scheduleEveningCheckin(userId: string): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  const granted = await ensureNotificationPermission();
+  if (!granted) return;
+  await registerActionTypes();
+
+  const ctx = await loadTodayContext(userId);
+
+  // Anchor: typical sleep onset (default 23:00)
+  const sleepOnset = ctx.typicalSleepOnsetHHMM
+    ? timeStringToTodayDate(ctx.typicalSleepOnsetHHMM)
+    : (() => { const d = new Date(); d.setHours(23, 0, 0, 0); return d; })();
+  if (!sleepOnset) return;
+
+  const offsetMin = 60 + Math.floor(Math.random() * 31); // 60–90
+  const fireAt = new Date(sleepOnset.getTime() - offsetMin * 60 * 1000);
+
+  // Variant choice
+  const studiedHoursToday = ctx.totalStudyMinutesToday / 60;
+  const avgHours = ctx.avgStudyMinutes7d / 60;
+  const beatAverage = avgHours > 0 && studiedHoursToday > avgHours;
+
+  // Rotate among the three eligible variants. Variant 2 only fires when beatAverage true.
+  // We rotate: 0 → factors, 1 → overwhelm. Then variant 2 takes priority on its trigger.
+  let title: string;
+  let body: string;
+  let actionTypeId: string | undefined;
+  let extra: Record<string, any> = { openTo: "checkin" };
+
+  if (beatAverage && pickRotation("cofactor_evening_great_day_idx", 2) === 0) {
+    title = "Best of the week";
+    body = `You studied ${studiedHoursToday.toFixed(1)} hours today — your best this week. Sleep well. Your brain consolidates everything tonight.`;
+    extra = { variant: "great_day", openTo: "log" };
+  } else {
+    const which = pickRotation("cofactor_evening_rot", 2);
+    if (which === 0) {
+      title = "30-second log";
+      body = "30-second log before you wind down. What happened tonight?";
+      actionTypeId = "EVENING_FACTORS";
+      extra = { variant: "factors", openTo: "checkin" };
+    } else {
+      title = "Quick reflection";
+      body = "How overwhelmed did you feel today?";
+      actionTypeId = "EVENING_OVERWHELM";
+      extra = { variant: "overwhelm", openTo: "checkin" };
+    }
+  }
+
+  await trySchedule({
+    kind: "evening_checkin",
+    fireAt,
+    title,
+    body,
+    actionTypeId,
+    extra,
+  });
+}
+
+/**
+ * Convenience wrapper: schedules all three additional notifications.
+ * Safe to call repeatedly — each is de-duped per day.
+ */
+export async function scheduleDailyNotifications(userId: string): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  await scheduleMorningCheckin(userId);
+  await scheduleMiddayNudge(userId);
+  await scheduleAfternoonSecondaryPeak(userId);
+  await scheduleEveningCheckin(userId);
 }
 
 /**
