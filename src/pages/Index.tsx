@@ -290,9 +290,13 @@ const Index = () => {
         setHealthConnected(!isFallbackData);
       }
       setLoading(false);
+
+      // Notification scheduling — fire-and-forget, native only
+      setupNotificationActionListener();
+      if (user) scheduleMorningCheckin(user.id).catch(err => console.error("scheduleMorningCheckin:", err));
     }
     init();
-  }, []);
+  }, [user]);
 
   const handleHealthSync = async () => {
     setSyncingHealth(true);
