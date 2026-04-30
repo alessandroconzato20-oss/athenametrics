@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Plus, Brain, Clock, Sparkles, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, Brain, Clock, Sparkles, Loader2, Timer } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
@@ -83,12 +83,19 @@ const StudyLogs = () => {
             <ArrowLeft className="h-4 w-4" /> Back to dashboard
           </button>
 
-          <div className="mb-6 flex items-center justify-between">
+          <div className="mb-4 flex items-center justify-between">
             <h1 className="font-display text-2xl font-bold text-foreground">Study Logs</h1>
-            <Button onClick={() => navigate("/study-logs/new")} className="rounded-xl bg-gradient-primary text-primary-foreground gap-1.5">
-              <Plus className="h-4 w-4" /> Log Session
+            <Button onClick={() => navigate("/study-logs/new")} variant="outline" size="sm" className="rounded-xl gap-1.5">
+              <Plus className="h-4 w-4" /> Manual log
             </Button>
           </div>
+
+          <Button
+            onClick={() => navigate("/study-timer")}
+            className="mb-6 h-14 w-full rounded-2xl bg-gradient-primary text-base font-semibold text-primary-foreground gap-2"
+          >
+            <Timer className="h-5 w-5" /> Start a live study session
+          </Button>
 
           {/* AI Insights */}
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="mb-6">
