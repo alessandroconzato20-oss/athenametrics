@@ -620,6 +620,84 @@ export type Database = {
           },
         ]
       }
+      study_sessions: {
+        Row: {
+          active_duration_seconds: number
+          comprehension: number | null
+          confidence: number | null
+          created_at: string
+          difficulty: number | null
+          id: string
+          location: string
+          location_other: string | null
+          pause_count: number
+          pause_log: Json
+          pause_rate: number | null
+          post_session_completed: boolean
+          revision_priority: number | null
+          session_end_at: string | null
+          session_start_at: string
+          status: string
+          study_method: string
+          study_method_other: string | null
+          subject: string
+          total_pause_duration_seconds: number
+          university_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active_duration_seconds?: number
+          comprehension?: number | null
+          confidence?: number | null
+          created_at?: string
+          difficulty?: number | null
+          id?: string
+          location: string
+          location_other?: string | null
+          pause_count?: number
+          pause_log?: Json
+          pause_rate?: number | null
+          post_session_completed?: boolean
+          revision_priority?: number | null
+          session_end_at?: string | null
+          session_start_at: string
+          status?: string
+          study_method: string
+          study_method_other?: string | null
+          subject: string
+          total_pause_duration_seconds?: number
+          university_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active_duration_seconds?: number
+          comprehension?: number | null
+          confidence?: number | null
+          created_at?: string
+          difficulty?: number | null
+          id?: string
+          location?: string
+          location_other?: string | null
+          pause_count?: number
+          pause_log?: Json
+          pause_rate?: number | null
+          post_session_completed?: boolean
+          revision_priority?: number | null
+          session_end_at?: string | null
+          session_start_at?: string
+          status?: string
+          study_method?: string
+          study_method_other?: string | null
+          subject?: string
+          total_pause_duration_seconds?: number
+          university_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       survey_responses: {
         Row: {
           created_at: string

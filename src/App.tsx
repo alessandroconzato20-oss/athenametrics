@@ -13,6 +13,7 @@ import Welcome from "./pages/Welcome";
 import PersonaQuiz from "./pages/PersonaQuiz";
 import StudyLogs from "./pages/StudyLogs";
 import StudyLogForm from "./pages/StudyLogForm";
+import StudyTimer from "./pages/StudyTimer";
 import Leaderboard from "./pages/Leaderboard";
 import WeeklyGoalsHistory from "./pages/WeeklyGoalsHistory";
 import AdminPanel from "./pages/AdminPanel";
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/persona-quiz" element={<PersonaQuiz />} />
             <Route path="/study-logs" element={<StudyLogs />} />
             <Route path="/study-logs/new" element={<StudyLogForm />} />
+            <Route path="/study-timer" element={<StudyTimer />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/weekly-goals" element={<WeeklyGoalsHistory />} />
             <Route path="/admin" element={<AdminPanel />} />
