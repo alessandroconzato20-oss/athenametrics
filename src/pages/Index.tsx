@@ -30,6 +30,7 @@ import {
   type ApexScores,
   type DetectedWorkout,
 } from "@/services/healthkit";
+import { scheduleMorningCheckin, setupNotificationActionListener } from "@/services/notifications";
 import { applyCheckinModifiers, type HistoricalCheckin } from "@/algorithms/checkinModifiers";
 import { format } from "date-fns";
 
