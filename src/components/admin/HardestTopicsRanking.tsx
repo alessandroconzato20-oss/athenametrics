@@ -206,7 +206,13 @@ const HardestTopicsRanking: React.FC<Props> = ({ topics, masteryBySubtopic = {},
           const key = `${t.subject}-${t.topic}`;
           const isExpanded = expanded.has(key);
 
-          const allSubtopics = getTopicsForCourse(t.subject).filter(st => !st.startsWith("## "));
+          // Prefer the university's approved syllabus; fall back to the bundled
+          // course topics file when no syllabus is available for this course.
+          const fromSyllabus = syllabusTopics[t.subject];
+          const allSubtopics = (fromSyllabus && fromSyllabus.length > 0
+            ? fromSyllabus
+            : getTopicsForCourse(t.subject)
+          ).filter(st => !st.startsWith("## "));
 
           return (
             <motion.div
