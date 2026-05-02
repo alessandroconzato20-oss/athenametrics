@@ -274,7 +274,7 @@ const AtRiskStudentsPanel: React.FC<Props> = ({ universityId }) => {
     const headers = [
       "Student", "Matricola", "Year", "Risk Level", "Risk Score",
       "Top Risk Factor", "Recommended Action",
-      ...ALL_BLOCKING_EXAMS.map((e) => BLOCKING_EXAM_SHORT[e] + " Passed"),
+      ...examsList.map((e) => examShort[e] + " Passed"),
     ];
     const rows = filtered.map((s) => [
       s.studentName,
@@ -284,7 +284,7 @@ const AtRiskStudentsPanel: React.FC<Props> = ({ universityId }) => {
       s.riskScore,
       `"${s.topRiskFactor}"`,
       `"${s.recommendedAction}"`,
-      ...ALL_BLOCKING_EXAMS.map((exam) => {
+      ...examsList.map((exam) => {
         const be = s.blockingExams.find((b) => b.examName === exam);
         return be ? (be.passed ? "Yes" : "No") : "N/A";
       }),
@@ -404,9 +404,9 @@ const AtRiskStudentsPanel: React.FC<Props> = ({ universityId }) => {
                   <TableHead className="text-xs w-[50px]">Year</TableHead>
                   <TableHead className="text-xs w-[90px]">Risk</TableHead>
                   <TableHead className="text-xs">Top Risk Factor</TableHead>
-                  {ALL_BLOCKING_EXAMS.map((exam) => (
+                  {examsList.map((exam) => (
                     <TableHead key={exam} className="text-xs text-center w-[50px]" title={exam}>
-                      {BLOCKING_EXAM_SHORT[exam]}
+                      {examShort[exam]}
                     </TableHead>
                   ))}
                   <TableHead className="text-xs">Action</TableHead>
@@ -415,7 +415,7 @@ const AtRiskStudentsPanel: React.FC<Props> = ({ universityId }) => {
               <TableBody>
                 {filtered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5 + ALL_BLOCKING_EXAMS.length} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={5 + examsList.length} className="text-center text-muted-foreground py-8">
                       No students match current filters
                     </TableCell>
                   </TableRow>
@@ -441,7 +441,7 @@ const AtRiskStudentsPanel: React.FC<Props> = ({ universityId }) => {
                               </Badge>
                             </TableCell>
                             <TableCell className="text-xs max-w-[200px] truncate">{s.topRiskFactor}</TableCell>
-                            {ALL_BLOCKING_EXAMS.map((exam) => {
+                            {examsList.map((exam) => {
                               const be = s.blockingExams.find((b) => b.examName === exam);
                               if (!be || be.attempts === 0) return (
                                 <TableCell key={exam} className="text-center">
@@ -463,7 +463,7 @@ const AtRiskStudentsPanel: React.FC<Props> = ({ universityId }) => {
                         </CollapsibleTrigger>
                         <CollapsibleContent asChild>
                           <TableRow className="bg-muted/30">
-                            <TableCell colSpan={5 + ALL_BLOCKING_EXAMS.length} className="p-4">
+                            <TableCell colSpan={5 + examsList.length} className="p-4">
                               <AnimatePresence>
                                 <motion.div
                                   initial={{ opacity: 0, height: 0 }}
