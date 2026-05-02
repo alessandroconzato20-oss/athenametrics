@@ -127,12 +127,12 @@ const StudyLogForm = () => {
     const totalMins = (parseInt(hours) || 0) * 60 + (parseInt(minutes) || 0);
     if (totalMins <= 0) { toast.error("Please enter a valid duration"); return; }
 
-    // Build methods string to append to notes
-    const allMethods = [...selectedMethods.map(id => STUDY_METHODS.find(m => m.id === id)?.label || id)];
-    if (otherMethod.trim()) allMethods.push(otherMethod.trim());
-    const methodsNote = allMethods.length > 0 ? `[Methods: ${allMethods.join(", ")}]` : "";
-    const locationNote = studyLocation ? `[Location: ${STUDY_LOCATIONS.find(l => l.id === studyLocation)?.label.replace(/^..\s/, '') || studyLocation}]` : "";
-    const combinedNotes = [notes.trim(), methodsNote, locationNote].filter(Boolean).join(" ") || null;
+    // Primary method = first selected; extras stay in notes for context
+    const primaryMethod = selectedMethods[0] || (otherMethod.trim() ? "other" : null);
+    const extraMethods = selectedMethods.slice(1).map(id => STUDY_METHODS.find(m => m.id === id)?.label || id);
+    if (otherMethod.trim() && selectedMethods.length > 0) extraMethods.push(otherMethod.trim());
+    const methodsNote = extraMethods.length > 0 ? `[Also: ${extraMethods.join(", ")}]` : "";
+    const combinedNotes = [notes.trim(), methodsNote].filter(Boolean).join(" ") || null;
 
     setSaving(true);
     try {
@@ -150,6 +150,9 @@ const StudyLogForm = () => {
         revision_priority: revisionPriority,
         teaching_readiness: teachingReadiness,
         notes: combinedNotes,
+        study_method: primaryMethod,
+        study_method_other: primaryMethod === "other" ? otherMethod.trim() || null : null,
+        location: studyLocation || null,
         university_id: universityId,
       } as any);
       if (error) throw error;

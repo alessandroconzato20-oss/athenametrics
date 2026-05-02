@@ -17,6 +17,7 @@ import TopicSummaryTable, { TopicMetric } from "@/components/admin/TopicSummaryT
 import HardestTopicsRanking, { HardestTopicEntry } from "@/components/admin/HardestTopicsRanking";
 import TopicDifficultyHeatmap from "@/components/admin/TopicDifficultyHeatmap";
 import AtRiskStudentsPanel from "@/components/admin/AtRiskStudentsPanel";
+import StudyBehaviourPanel from "@/components/admin/StudyBehaviourPanel";
 
 type AdminRole = "admin" | "university_admin";
 
@@ -446,6 +447,11 @@ const AdminPanel = () => {
         {/* At-Risk Students Panel */}
         <div className="mb-6">
           <AtRiskStudentsPanel universityId={adminUniversityId} />
+        </div>
+
+        {/* Study Behaviour Patterns */}
+        <div className="mb-6">
+          <StudyBehaviourPanel universityId={adminUniversityId} />
         </div>
 
         {/* Search */}
