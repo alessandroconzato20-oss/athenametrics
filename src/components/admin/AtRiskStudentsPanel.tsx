@@ -42,16 +42,19 @@ const RISK_DOT: Record<RiskLevel, string> = {
 };
 
 const AtRiskStudentsPanel: React.FC<Props> = ({ universityId }) => {
-  const { role } = useAuth();
+  const { role, universityName } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [students, setStudents] = useState<AtRiskStudent[]>([]);
   const [yearFilter, setYearFilter] = useState("all");
   const [riskFilter, setRiskFilter] = useState("all");
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
+  // Per-university blocking exam list (dynamic)
+  const [examsList, setExamsList] = useState<string[]>(ALL_BLOCKING_EXAMS);
+  const [examShort, setExamShort] = useState<Record<string, string>>(BLOCKING_EXAM_SHORT);
 
-  // Only visible to support_team or admin
-  const canView = role === "admin" || role === "support_team";
+  // Visible to global admins, support team and the university admin (paying customer)
+  const canView = role === "admin" || role === "support_team" || role === "university_admin";
 
   const loadData = async () => {
     if (!universityId) return;
