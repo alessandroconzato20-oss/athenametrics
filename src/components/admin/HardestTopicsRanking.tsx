@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Flame, Brain, Zap, Eye, BookOpen, GraduationCap, ChevronDown } from "lucide-react";
 import { getTopicsForCourse } from "@/data/courseTopics";
+import { supabase } from "@/integrations/supabase/client";
 import type { TopicMetric } from "@/components/admin/TopicSummaryTable";
 
 export interface HardestTopicEntry {
