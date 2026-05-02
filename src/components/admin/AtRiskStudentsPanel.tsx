@@ -252,7 +252,7 @@ const AtRiskStudentsPanel: React.FC<Props> = ({ universityId }) => {
 
   useEffect(() => {
     if (canView) loadData();
-  }, [universityId, canView]);
+  }, [universityId, canView, universityName]);
 
   const filtered = useMemo(() => {
     return students.filter((s) => {
