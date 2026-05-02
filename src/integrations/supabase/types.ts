@@ -515,10 +515,14 @@ export type Database = {
           duration_minutes: number
           energy_level: number
           id: string
+          location: string | null
+          location_other: string | null
           notes: string | null
           revision_priority: number | null
           stress_level: number
           studied_at: string
+          study_method: string | null
+          study_method_other: string | null
           subject: string
           teaching_readiness: number | null
           topic: string
@@ -534,10 +538,14 @@ export type Database = {
           duration_minutes: number
           energy_level: number
           id?: string
+          location?: string | null
+          location_other?: string | null
           notes?: string | null
           revision_priority?: number | null
           stress_level: number
           studied_at?: string
+          study_method?: string | null
+          study_method_other?: string | null
           subject: string
           teaching_readiness?: number | null
           topic: string
@@ -553,10 +561,14 @@ export type Database = {
           duration_minutes?: number
           energy_level?: number
           id?: string
+          location?: string | null
+          location_other?: string | null
           notes?: string | null
           revision_priority?: number | null
           stress_level?: number
           studied_at?: string
+          study_method?: string | null
+          study_method_other?: string | null
           subject?: string
           teaching_readiness?: number | null
           topic?: string
