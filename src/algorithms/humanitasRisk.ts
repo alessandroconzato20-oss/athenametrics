@@ -110,6 +110,8 @@ export interface StudentInput {
   selfConfidence: Record<string, number>; // course_name → 1-5
   // cohort average time-on-task (minutes over same period)
   cohortAvgMinutes: number;
+  /** Optional university-specific blocking exam list. If omitted, falls back to Humanitas defaults. */
+  blockingExamsList?: string[];
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────
