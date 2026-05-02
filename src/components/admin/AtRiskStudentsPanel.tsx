@@ -62,7 +62,9 @@ const AtRiskStudentsPanel: React.FC<Props> = ({ universityId }) => {
     setError(null);
 
     try {
-      // Fetch all data scoped by RLS
+      // Fetch all data scoped by RLS — biometric_snapshots is included so the
+      // algorithm has its strongest physiological signals (HRV + sleep).
+      const fourteenDaysAgoIso = new Date(Date.now() - 14 * 86_400_000).toISOString();
       const [
         { data: profiles },
         { data: assessments },
@@ -70,6 +72,8 @@ const AtRiskStudentsPanel: React.FC<Props> = ({ universityId }) => {
         { data: checkins },
         { data: surveys },
         { data: examPasses },
+        { data: biometrics },
+        { data: syllabi },
       ] = await Promise.all([
         supabase.from("profiles").select("id, username, matricola, university_id"),
         supabase.from("assessment_results").select("*"),
@@ -77,9 +81,74 @@ const AtRiskStudentsPanel: React.FC<Props> = ({ universityId }) => {
         supabase.from("daily_wellbeing_checkins").select("checkin_date, stress_level, user_id"),
         supabase.from("survey_responses").select("survey_type, responses, created_at, user_id"),
         supabase.from("exam_passes").select("user_id, course_name"),
+        supabase
+          .from("biometric_snapshots")
+          .select("user_id, snapshot_type, data, recorded_at")
+          .gte("recorded_at", fourteenDaysAgoIso),
+        universityName
+          ? supabase
+              .from("university_syllabi")
+              .select("course_name, year")
+              .eq("university_name", universityName)
+              .eq("status", "approved")
+          : Promise.resolve({ data: [] as any[] }),
       ]);
 
       const uniProfiles = (profiles || []).filter((p: any) => p.university_id === universityId);
+
+      // Derive blocking exam list from syllabus (year 1 + year 2 courses).
+      // Falls back to Humanitas defaults when no syllabus is available.
+      let dynamicExamsList: string[] = ALL_BLOCKING_EXAMS;
+      let dynamicExamShort: Record<string, string> = BLOCKING_EXAM_SHORT;
+      const syllabusRows = (syllabi || []) as any[];
+      if (syllabusRows.length > 0) {
+        const blockingCourses = syllabusRows
+          .filter((r) => (r.year === 1 || r.year === 2) && r.course_name)
+          // Exclude "Being a Medical Doctor" / BMD per progression rules
+          .filter((r) => !/being a medical doctor|^bmd$/i.test(r.course_name))
+          .map((r) => r.course_name as string);
+        const unique = Array.from(new Set(blockingCourses));
+        if (unique.length > 0) {
+          dynamicExamsList = unique;
+          dynamicExamShort = Object.fromEntries(
+            unique.map((name) => [
+              name,
+              // Build a short label from initials (max 5 chars)
+              name
+                .split(/\s+/)
+                .filter((w) => /^[A-Za-z0-9]/.test(w))
+                .map((w) => w[0]?.toUpperCase() ?? "")
+                .join("")
+                .slice(0, 5) || name.slice(0, 4),
+            ])
+          );
+        }
+      }
+      setExamsList(dynamicExamsList);
+      setExamShort(dynamicExamShort);
+
+      // Aggregate biometric snapshots → per-user 14-day averages
+      const hrvByUser: Record<string, number[]> = {};
+      const sleepByUser: Record<string, number[]> = {};
+      (biometrics || []).forEach((b: any) => {
+        const d = b.data || {};
+        const type = (b.snapshot_type || "").toLowerCase();
+        // Accept multiple shapes: {hrv: number}, {value: number, type: 'hrv'}, etc.
+        const hrvVal =
+          typeof d.hrv === "number" ? d.hrv :
+          (type === "hrv" && typeof d.value === "number" ? d.value : null);
+        const sleepVal =
+          typeof d.sleep_hours === "number" ? d.sleep_hours :
+          typeof d.sleepHours === "number" ? d.sleepHours :
+          (type.includes("sleep") && typeof d.hours === "number" ? d.hours : null);
+        if (hrvVal !== null && !Number.isNaN(hrvVal)) {
+          (hrvByUser[b.user_id] ||= []).push(hrvVal);
+        }
+        if (sleepVal !== null && !Number.isNaN(sleepVal)) {
+          (sleepByUser[b.user_id] ||= []).push(sleepVal);
+        }
+      });
+      const avg = (arr: number[]) => arr.reduce((a, b) => a + b, 0) / arr.length;
 
       // Compute cohort average study time
       const allUserMinutes: Record<string, number> = {};
