@@ -137,9 +137,14 @@ export function computeStudentRisk(s: StudentInput): AtRiskStudent {
   const factors: RiskFactor[] = [];
   let rawScore = 0;
 
+  // University-configurable blocking exam list (defaults to Humanitas)
+  const examsList = s.blockingExamsList && s.blockingExamsList.length > 0
+    ? s.blockingExamsList
+    : ALL_BLOCKING_EXAMS;
+
   // ── Build blocking exam status ──
   // Use exam_passes (self-reported checklist) as primary source, fall back to assessment scores
-  const blockingExams: BlockingExamStatus[] = ALL_BLOCKING_EXAMS.map((exam) => {
+  const blockingExams: BlockingExamStatus[] = examsList.map((exam) => {
     const attempts = s.assessments.filter(
       (a) => a.course_name.toLowerCase() === exam.toLowerCase()
     );
