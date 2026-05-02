@@ -226,12 +226,15 @@ const AtRiskStudentsPanel: React.FC<Props> = ({ universityId }) => {
             responses: sv.responses,
             created_at: sv.created_at,
           })),
-          avgHrv14d: null, // would come from biometric_snapshots if available
-          hrvBaseline: null,
-          avgSleepHours14d: null,
+          avgHrv14d: hrvByUser[uid]?.length ? avg(hrvByUser[uid]) : null,
+          // Personal baseline = same 14-day mean for now (lacking historical baseline series).
+          // The algorithm only fires when avg < baseline * 0.85, so equal values are safely inert.
+          hrvBaseline: hrvByUser[uid]?.length ? avg(hrvByUser[uid]) : null,
+          avgSleepHours14d: sleepByUser[uid]?.length ? avg(sleepByUser[uid]) : null,
           selfConfidence: selfConf,
           passedExamNames: userPassedExams,
           cohortAvgMinutes: cohortAvg,
+          blockingExamsList: dynamicExamsList,
         };
 
         return computeStudentRisk(input);
