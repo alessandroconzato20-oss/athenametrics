@@ -27,6 +27,8 @@ interface Props {
   topics: HardestTopicEntry[];
   masteryBySubtopic?: Record<string, { red: number; orange: number; green: number }>;
   subtopicMetrics?: TopicMetric[];
+  /** When provided, subtopic lists come from this university's approved syllabi. */
+  universityName?: string | null;
 }
 
 const difficultyLabel = (score: number) => {
