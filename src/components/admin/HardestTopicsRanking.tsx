@@ -124,8 +124,44 @@ const SubtopicRow = ({ name, mastery, metric }: SubtopicRowProps) => {
   );
 };
 
-const HardestTopicsRanking: React.FC<Props> = ({ topics, masteryBySubtopic = {}, subtopicMetrics = [] }) => {
+const HardestTopicsRanking: React.FC<Props> = ({ topics, masteryBySubtopic = {}, subtopicMetrics = [], universityName = null }) => {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [syllabusTopics, setSyllabusTopics] = useState<Record<string, string[]>>({});
+
+  // Load approved syllabi for the current university and build a course -> topics map.
+  useEffect(() => {
+    if (!universityName) {
+      setSyllabusTopics({});
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("university_syllabi")
+        .select("course_name, topics")
+        .eq("university_name", universityName)
+        .eq("status", "approved");
+      if (cancelled) return;
+      const map: Record<string, string[]> = {};
+      (data || []).forEach((row: any) => {
+        const list: string[] = [];
+        const t = row.topics;
+        if (Array.isArray(t)) {
+          t.forEach((item: any) => {
+            if (typeof item === "string") list.push(item);
+            else if (item && typeof item === "object") {
+              if (item.name) list.push(String(item.name));
+              else if (item.topic) list.push(String(item.topic));
+              else if (item.title) list.push(String(item.title));
+            }
+          });
+        }
+        if (list.length) map[row.course_name] = list;
+      });
+      setSyllabusTopics(map);
+    })();
+    return () => { cancelled = true; };
+  }, [universityName]);
 
   if (topics.length === 0) return null;
 
