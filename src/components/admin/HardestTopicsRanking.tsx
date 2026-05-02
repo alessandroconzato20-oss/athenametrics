@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Flame, Brain, Zap, Eye, BookOpen, GraduationCap, ChevronDown } from "lucide-react";
 import { getTopicsForCourse } from "@/data/courseTopics";
+import { supabase } from "@/integrations/supabase/client";
 import type { TopicMetric } from "@/components/admin/TopicSummaryTable";
 
 export interface HardestTopicEntry {
@@ -26,6 +27,8 @@ interface Props {
   topics: HardestTopicEntry[];
   masteryBySubtopic?: Record<string, { red: number; orange: number; green: number }>;
   subtopicMetrics?: TopicMetric[];
+  /** When provided, subtopic lists come from this university's approved syllabi. */
+  universityName?: string | null;
 }
 
 const difficultyLabel = (score: number) => {
@@ -121,8 +124,44 @@ const SubtopicRow = ({ name, mastery, metric }: SubtopicRowProps) => {
   );
 };
 
-const HardestTopicsRanking: React.FC<Props> = ({ topics, masteryBySubtopic = {}, subtopicMetrics = [] }) => {
+const HardestTopicsRanking: React.FC<Props> = ({ topics, masteryBySubtopic = {}, subtopicMetrics = [], universityName = null }) => {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [syllabusTopics, setSyllabusTopics] = useState<Record<string, string[]>>({});
+
+  // Load approved syllabi for the current university and build a course -> topics map.
+  useEffect(() => {
+    if (!universityName) {
+      setSyllabusTopics({});
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("university_syllabi")
+        .select("course_name, topics")
+        .eq("university_name", universityName)
+        .eq("status", "approved");
+      if (cancelled) return;
+      const map: Record<string, string[]> = {};
+      (data || []).forEach((row: any) => {
+        const list: string[] = [];
+        const t = row.topics;
+        if (Array.isArray(t)) {
+          t.forEach((item: any) => {
+            if (typeof item === "string") list.push(item);
+            else if (item && typeof item === "object") {
+              if (item.name) list.push(String(item.name));
+              else if (item.topic) list.push(String(item.topic));
+              else if (item.title) list.push(String(item.title));
+            }
+          });
+        }
+        if (list.length) map[row.course_name] = list;
+      });
+      setSyllabusTopics(map);
+    })();
+    return () => { cancelled = true; };
+  }, [universityName]);
 
   if (topics.length === 0) return null;
 
@@ -167,7 +206,13 @@ const HardestTopicsRanking: React.FC<Props> = ({ topics, masteryBySubtopic = {},
           const key = `${t.subject}-${t.topic}`;
           const isExpanded = expanded.has(key);
 
-          const allSubtopics = getTopicsForCourse(t.subject).filter(st => !st.startsWith("## "));
+          // Prefer the university's approved syllabus; fall back to the bundled
+          // course topics file when no syllabus is available for this course.
+          const fromSyllabus = syllabusTopics[t.subject];
+          const allSubtopics = (fromSyllabus && fromSyllabus.length > 0
+            ? fromSyllabus
+            : getTopicsForCourse(t.subject)
+          ).filter(st => !st.startsWith("## "));
 
           return (
             <motion.div
