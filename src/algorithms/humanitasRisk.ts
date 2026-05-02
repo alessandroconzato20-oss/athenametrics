@@ -110,6 +110,8 @@ export interface StudentInput {
   selfConfidence: Record<string, number>; // course_name → 1-5
   // cohort average time-on-task (minutes over same period)
   cohortAvgMinutes: number;
+  /** Optional university-specific blocking exam list. If omitted, falls back to Humanitas defaults. */
+  blockingExamsList?: string[];
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────
@@ -135,9 +137,14 @@ export function computeStudentRisk(s: StudentInput): AtRiskStudent {
   const factors: RiskFactor[] = [];
   let rawScore = 0;
 
+  // University-configurable blocking exam list (defaults to Humanitas)
+  const examsList = s.blockingExamsList && s.blockingExamsList.length > 0
+    ? s.blockingExamsList
+    : ALL_BLOCKING_EXAMS;
+
   // ── Build blocking exam status ──
   // Use exam_passes (self-reported checklist) as primary source, fall back to assessment scores
-  const blockingExams: BlockingExamStatus[] = ALL_BLOCKING_EXAMS.map((exam) => {
+  const blockingExams: BlockingExamStatus[] = examsList.map((exam) => {
     const attempts = s.assessments.filter(
       (a) => a.course_name.toLowerCase() === exam.toLowerCase()
     );
@@ -201,7 +208,7 @@ export function computeStudentRisk(s: StudentInput): AtRiskStudent {
   }
 
   // 4) Confidence-score gap
-  for (const exam of ALL_BLOCKING_EXAMS) {
+  for (const exam of examsList) {
     const conf = s.selfConfidence[exam];
     const attempts = s.assessments.filter(
       (a) => a.course_name.toLowerCase() === exam.toLowerCase()
@@ -224,7 +231,7 @@ export function computeStudentRisk(s: StudentInput): AtRiskStudent {
   }
 
   // 5) Revisiting blocking topics without score improvement
-  for (const exam of ALL_BLOCKING_EXAMS) {
+  for (const exam of examsList) {
     const attempts = s.assessments
       .filter((a) => a.course_name.toLowerCase() === exam.toLowerCase())
       .sort((a, b) => a.assessed_at.localeCompare(b.assessed_at));
@@ -389,7 +396,7 @@ export function computeStudentRisk(s: StudentInput): AtRiskStudent {
   }
 
   // Survey confidence below 2 for blocking exam
-  for (const exam of ALL_BLOCKING_EXAMS) {
+  for (const exam of examsList) {
     const conf = s.selfConfidence[exam];
     if (conf !== undefined && conf < 2) {
       const w = 0.08;
