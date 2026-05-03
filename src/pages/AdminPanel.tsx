@@ -20,6 +20,7 @@ import AtRiskStudentsPanel from "@/components/admin/AtRiskStudentsPanel";
 import StudyBehaviourPanel from "@/components/admin/StudyBehaviourPanel";
 import CohortBurnoutChart from "@/components/admin/CohortBurnoutChart";
 import SleepWellbeingPanel from "@/components/admin/SleepWellbeingPanel";
+import CohortInviteCodesPanel from "@/components/admin/CohortInviteCodesPanel";
 
 type AdminRole = "admin" | "university_admin";
 
