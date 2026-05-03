@@ -18,20 +18,45 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [year, setYear] = useState("");
   const [matricola, setMatricola] = useState("");
-  const [university, setUniversity] = useState("");
+  const [cohortCode, setCohortCode] = useState("");
+  const [codeStatus, setCodeStatus] = useState<
+    | { state: "idle" }
+    | { state: "checking" }
+    | { state: "valid"; university: string; year: number | null; label: string | null }
+    | { state: "invalid" }
+  >({ state: "idle" });
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [consentGiven, setConsentGiven] = useState(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
 
+  // Live-validate the cohort code with debounce
+  useState(() => {});
+  const onCodeChange = (raw: string) => {
+    const v = raw.toUpperCase().replace(/\s+/g, "").slice(0, 16);
+    setCohortCode(v);
+    if (v.length < 4) { setCodeStatus({ state: "idle" }); return; }
+    setCodeStatus({ state: "checking" });
+    const checked = v;
+    setTimeout(async () => {
+      if (checked !== v) return;
+      const { data, error } = await supabase.rpc("validate_cohort_code" as any, { _code: checked });
+      const row = Array.isArray(data) ? data[0] : data;
+      if (error || !row?.valid) { setCodeStatus({ state: "invalid" }); return; }
+      setCodeStatus({ state: "valid", university: row.university_name, year: row.year, label: row.label });
+      if (row.year && !year) setYear(String(row.year));
+    }, 350);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (codeStatus.state !== "valid") { toast.error("Please enter a valid institution code"); return; }
     if (!year) { toast.error("Please select your year"); return; }
     if (!consentGiven) { toast.error("You must agree to the Privacy Policy and Terms of Service"); return; }
     setIsLoading(true);
     try {
-      await signUp(email, password, name, parseInt(year), matricola, university);
+      await signUp(email, password, name, parseInt(year), matricola, cohortCode);
 
       // Log consent after signup (best-effort, user may not be authed yet)
       try {
