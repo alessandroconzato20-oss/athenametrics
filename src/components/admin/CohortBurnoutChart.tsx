@@ -180,7 +180,7 @@ const CohortBurnoutChart = ({ universityId, adminRole }: Props) => {
     };
   }, [valid]);
 
-  const showAlert = recentHighPct >= ALERT_PCT_THRESHOLD && totalStudents >= 3;
+  const showAlert = recentHighPct >= alertThresholdPct && totalStudents >= 3;
 
   return (
     <div className="space-y-3">
