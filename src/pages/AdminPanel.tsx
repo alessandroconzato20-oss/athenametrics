@@ -440,6 +440,11 @@ const AdminPanel = () => {
           </div>
         )}
 
+        {/* Cohort Burnout Forecast */}
+        <div className="mb-6">
+          <CohortBurnoutChart universityId={adminUniversityId} adminRole={adminRole} />
+        </div>
+
         {/* Topic Difficulty Heatmap (ML API) */}
         <div className="mb-6">
           <TopicDifficultyHeatmap universityId={adminUniversityId} />
