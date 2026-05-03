@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useNavigate } from "react-router-dom";
-import { LogOut, Activity, BookOpen, Trophy, Plus, RefreshCcw, Target, Settings, GraduationCap, ChevronDown, Info } from "lucide-react";
+import { LogOut, Activity, BookOpen, Trophy, Plus, RefreshCcw, Target, Settings, GraduationCap, ChevronDown, Info, Timer } from "lucide-react";
 import OnboardingGuide from "@/components/OnboardingGuide";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
@@ -402,6 +402,16 @@ const Index = () => {
             studyCapacity: scores.studyCapacity.label,
           } : null}
         />
+
+        {/* Start Study Timer — primary CTA */}
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-2">
+          <Button
+            onClick={() => navigate("/study-timer")}
+            className="w-full rounded-xl h-12 gap-2 bg-gradient-primary text-primary-foreground font-semibold text-sm shadow-md"
+          >
+            <Timer className="h-4 w-4" /> Start Study Timer
+          </Button>
+        </motion.div>
 
         {/* Quick actions */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="mb-2 grid grid-cols-4 gap-2">
