@@ -18,6 +18,7 @@ import HardestTopicsRanking, { HardestTopicEntry } from "@/components/admin/Hard
 import TopicDifficultyHeatmap from "@/components/admin/TopicDifficultyHeatmap";
 import AtRiskStudentsPanel from "@/components/admin/AtRiskStudentsPanel";
 import StudyBehaviourPanel from "@/components/admin/StudyBehaviourPanel";
+import CohortBurnoutChart from "@/components/admin/CohortBurnoutChart";
 
 type AdminRole = "admin" | "university_admin";
 
@@ -438,6 +439,11 @@ const AdminPanel = () => {
             <HardestTopicsRanking topics={hardestTopics} masteryBySubtopic={masteryBySubtopic} subtopicMetrics={topicMetrics} universityName={adminUniversity} />
           </div>
         )}
+
+        {/* Cohort Burnout Forecast */}
+        <div className="mb-6">
+          <CohortBurnoutChart universityId={adminUniversityId} adminRole={adminRole} />
+        </div>
 
         {/* Topic Difficulty Heatmap (ML API) */}
         <div className="mb-6">
