@@ -185,7 +185,7 @@ const StudyLogForm = () => {
               </Select>
               {courseObj && (
                 <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-xs text-muted-foreground">
-                  {courseObj.credits} credits · Year {userYear}
+                  {courseObj.credits} credits · Year {(courseObj as any).courseYear ?? userYear}{(courseObj as any).isCarryOver ? " (carry-over)" : ""}
                 </motion.p>
               )}
             </div>
