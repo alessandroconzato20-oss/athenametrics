@@ -7,7 +7,7 @@ import { Slider } from "@/components/ui/slider";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { startOfWeek, format } from "date-fns";
-import { getCoursesForYear } from "@/data/curriculum";
+import { useStudentCourses } from "@/hooks/useStudentCourses";
 
 interface WeeklyGoalsPopupProps {
   open: boolean;
@@ -45,7 +45,7 @@ const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupP
   const [subjectFocus, setSubjectFocus] = useState<Record<string, number>>({});
 
   const userYear = user?.user_metadata?.year || 1;
-  const yearCourses = useMemo(() => getCoursesForYear(userYear), [userYear]);
+  const { courses: yearCourses } = useStudentCourses();
 
   // Initialize subject focus evenly
   useEffect(() => {
