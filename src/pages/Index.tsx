@@ -403,6 +403,16 @@ const Index = () => {
           } : null}
         />
 
+        {/* Start Study Timer — primary CTA */}
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-2">
+          <Button
+            onClick={() => navigate("/study-timer")}
+            className="w-full rounded-xl h-12 gap-2 bg-gradient-primary text-primary-foreground font-semibold text-sm shadow-md"
+          >
+            <Timer className="h-4 w-4" /> Start Study Timer
+          </Button>
+        </motion.div>
+
         {/* Quick actions */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="mb-2 grid grid-cols-4 gap-2">
           <Button onClick={() => navigate("/study-logs/new")} className="w-full rounded-xl h-11 gap-1.5 bg-gradient-primary text-primary-foreground font-semibold text-xs">
