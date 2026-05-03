@@ -163,6 +163,8 @@ export type Database = {
       }
       daily_scores: {
         Row: {
+          attentional_fragmentation_flag: boolean
+          burnout_capacity_flag: boolean
           burnout_risk: number
           cognitive_readiness: number | null
           created_at: string
@@ -173,6 +175,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          attentional_fragmentation_flag?: boolean
+          burnout_capacity_flag?: boolean
           burnout_risk: number
           cognitive_readiness?: number | null
           created_at?: string
@@ -183,6 +187,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          attentional_fragmentation_flag?: boolean
+          burnout_capacity_flag?: boolean
           burnout_risk?: number
           cognitive_readiness?: number | null
           created_at?: string
