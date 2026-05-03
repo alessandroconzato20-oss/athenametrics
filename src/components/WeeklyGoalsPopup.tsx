@@ -371,6 +371,11 @@ const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupP
                                 Y{(course as any).courseYear}
                               </span>
                             )}
+                            {(course as any).isAhead && (
+                              <span className="text-[9px] px-1 py-0.5 rounded-full bg-sky-100 text-sky-800 shrink-0">
+                                Y{(course as any).courseYear} ahead
+                              </span>
+                            )}
                           </span>
                           <span className={`text-sm font-bold tabular-nums ${pct >= 50 ? "text-primary" : pct > 0 ? "text-foreground" : "text-muted-foreground"}`}>
                             {pct}%
