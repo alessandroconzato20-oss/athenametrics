@@ -414,6 +414,15 @@ const UniversitySetup = () => {
                 universityName={universityName ?? "your institution"}
                 universityId={universityId}
                 onFinish={() => navigate("/admin")}
+                completeness={{
+                  hasCourses: (programme.courses?.length ?? 0) > 0,
+                  hasWelfareContact: !!(welfare.support_url || welfare.support_email || welfare.crisis_line),
+                  hasLegalBasis: !!welfare.legal_basis,
+                  retentionAcknowledged: retentionAck,
+                  authorityConfirmed: !!welfare.authority_confirmed,
+                  noticeConfirmed: !!welfare.notice_confirmed,
+                }}
+                jumpToStep={(s) => setStep(s)}
               />
             )}
           </motion.div>
