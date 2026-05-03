@@ -9,7 +9,7 @@ serve(async (req) => {
   if ("error" in auth) return auth.error;
 
   try {
-    const { cognitiveReadiness, burnoutRisk, peakWindow, studyCapacity, studyBlock, pastFeedback, persona, currentCourses, crossSemesterCourses, recentStudyLogs, topicMastery, year, semester } = await req.json();
+    const { cognitiveReadiness, burnoutRisk, peakWindow, studyCapacity, studyBlock, pastFeedback, persona, currentCourses, crossSemesterCourses, carryOverCourses, recentStudyLogs, topicMastery, year, semester } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not set");
 
@@ -36,11 +36,15 @@ Tailor tasks, language, and scheduling to match their study style and preference
       : "";
 
     // Build curriculum context
+    const carryOverContext = carryOverCourses && carryOverCourses.length > 0
+      ? `\n\nCARRY-OVER EXAMS (from earlier years, NOT yet passed — student is still studying these alongside current-year material; allocate time and treat as high priority when exam dates approach):\n${carryOverCourses.map((c: any) => `- ${c.name} (Year ${c.fromYear}, ${c.credits} credits)`).join("\n")}`
+      : "";
+
     const coursesContext = currentCourses && currentCourses.length > 0
       ? `\n\nCURRENT COURSES (Year ${year}, Semester ${semester}) — prioritize by credit weight:
-${currentCourses.map((c: any) => `- ${c.name} (${c.credits} credits)`).join("\n")}${
+${currentCourses.map((c: any) => `- ${c.name} (${c.credits} credits)`).join("\n")}${carryOverContext}${
         crossSemesterCourses && crossSemesterCourses.length > 0
-          ? `\n\nCROSS-SEMESTER COURSES (student is also studying/reviewing these for exams):\n${crossSemesterCourses.map((c: any) => `- ${c.name} (${c.credits} credits)`).join("\n")}`
+          ? `\n\nOTHER COURSES the student has logged recently (resit/review):\n${crossSemesterCourses.map((c: any) => `- ${c.name} (${c.credits} credits)`).join("\n")}`
           : ""
       }`
       : "";

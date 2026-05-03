@@ -11,7 +11,8 @@ import {
   Brain, AlertTriangle, Eye, Zap, Coffee,
 } from "lucide-react";
 import { toast } from "sonner";
-import { getCoursesForYear, type Course } from "@/data/curriculum";
+import { type Course } from "@/data/curriculum";
+import { useStudentCourses } from "@/hooks/useStudentCourses";
 
 type Step = "setup" | "timer" | "review";
 
@@ -90,7 +91,7 @@ const StudyTimer = () => {
   const { user, universityId } = useAuth();
   const navigate = useNavigate();
   const userYear = user?.user_metadata?.year || 1;
-  const userUniversity = user?.user_metadata?.university || "";
+  
 
   const [step, setStep] = useState<Step>("setup");
 
@@ -100,24 +101,7 @@ const StudyTimer = () => {
   const [location, setLocation] = useState("");
   const [locationOther, setLocationOther] = useState("");
 
-  const [syllabiCourses, setSyllabiCourses] = useState<Course[]>([]);
-  const defaultCourses = useMemo(() => getCoursesForYear(userYear), [userYear]);
-  const availableCourses = syllabiCourses.length > 0 ? syllabiCourses : defaultCourses;
-
-  useEffect(() => {
-    if (!userUniversity) return;
-    (async () => {
-      const { data } = await supabase
-        .from("university_syllabi")
-        .select("course_name, credits, year")
-        .eq("university_name", userUniversity)
-        .eq("status", "approved")
-        .eq("year", userYear) as any;
-      if (data?.length) {
-        setSyllabiCourses(data.map((s: any) => ({ name: s.course_name, credits: s.credits || 0 })));
-      }
-    })();
-  }, [userUniversity, userYear]);
+  const { courses: availableCourses } = useStudentCourses({ mergeSyllabi: true });
 
   // ---------- Live timer state ----------
   const [active, setActive] = useState<ActiveSessionState | null>(null);
@@ -387,7 +371,7 @@ const SetupScreen = ({
             <GraduationCap className="h-4 w-4 text-primary" /> What are you studying?
           </Label>
           <div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto pr-1">
-            {availableCourses.map((c: Course) => (
+            {availableCourses.map((c: any) => (
               <motion.button
                 key={c.name} type="button" whileTap={{ scale: 0.98 }}
                 onClick={() => setSubject(c.name)}
@@ -395,7 +379,14 @@ const SetupScreen = ({
                   subject === c.name ? "bg-primary text-primary-foreground shadow-soft" : "bg-muted text-foreground hover:bg-muted/70"
                 }`}
               >
-                {c.name}
+                <span className="flex items-center justify-between gap-2">
+                  <span>{c.name}</span>
+                  {c.isCarryOver && (
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${subject === c.name ? "bg-primary-foreground/20" : "bg-amber-100 text-amber-800"}`}>
+                      Y{c.courseYear}
+                    </span>
+                  )}
+                </span>
               </motion.button>
             ))}
           </div>

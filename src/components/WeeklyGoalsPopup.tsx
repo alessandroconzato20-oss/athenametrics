@@ -7,7 +7,7 @@ import { Slider } from "@/components/ui/slider";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { startOfWeek, format } from "date-fns";
-import { getCoursesForYear } from "@/data/curriculum";
+import { useStudentCourses } from "@/hooks/useStudentCourses";
 
 interface WeeklyGoalsPopupProps {
   open: boolean;
@@ -45,7 +45,7 @@ const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupP
   const [subjectFocus, setSubjectFocus] = useState<Record<string, number>>({});
 
   const userYear = user?.user_metadata?.year || 1;
-  const yearCourses = useMemo(() => getCoursesForYear(userYear), [userYear]);
+  const { courses: yearCourses } = useStudentCourses();
 
   // Initialize subject focus evenly
   useEffect(() => {
@@ -364,7 +364,14 @@ const WeeklyGoalsPopup = ({ open, onClose, onGoalsConfirmed }: WeeklyGoalsPopupP
                         transition={{ delay: i * 0.05 }}
                       >
                         <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-sm font-medium text-foreground truncate mr-2">{course.name}</span>
+                          <span className="text-sm font-medium text-foreground truncate mr-2 flex items-center gap-1.5">
+                            {course.name}
+                            {(course as any).isCarryOver && (
+                              <span className="text-[9px] px-1 py-0.5 rounded-full bg-amber-100 text-amber-800 shrink-0">
+                                Y{(course as any).courseYear}
+                              </span>
+                            )}
+                          </span>
                           <span className={`text-sm font-bold tabular-nums ${pct >= 50 ? "text-primary" : pct > 0 ? "text-foreground" : "text-muted-foreground"}`}>
                             {pct}%
                           </span>

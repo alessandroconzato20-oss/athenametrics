@@ -11,7 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Brain, Zap, AlertTriangle, Eye, GraduationCap, BookOpen, MapPin } from "lucide-react";
 import { toast } from "sonner";
-import { getCoursesForYear, type Course } from "@/data/curriculum";
+import { type Course } from "@/data/curriculum";
+import { useStudentCourses } from "@/hooks/useStudentCourses";
 import { Checkbox } from "@/components/ui/checkbox";
 import TopicMasteryChecklist from "@/components/TopicMasteryChecklist";
 
@@ -70,29 +71,7 @@ const StudyLogForm = () => {
   const navigate = useNavigate();
 
   const userYear = user?.user_metadata?.year || 1;
-  const userUniversity = user?.user_metadata?.university || "";
-  const defaultCourses = useMemo(() => getCoursesForYear(userYear), [userYear]);
-
-  const [syllabiCourses, setSyllabiCourses] = useState<Course[]>([]);
-
-  useEffect(() => {
-    if (!userUniversity) return;
-    const fetchSyllabi = async () => {
-      const { data } = await supabase
-        .from("university_syllabi")
-        .select("course_name, credits, year")
-        .eq("university_name", userUniversity)
-        .eq("status", "approved")
-        .eq("year", userYear) as any;
-      if (data && data.length > 0) {
-        setSyllabiCourses(data.map((s: any) => ({ name: s.course_name, credits: s.credits || 0 })));
-      }
-    };
-    fetchSyllabi();
-  }, [userUniversity, userYear]);
-
-  // Use syllabi courses if available, otherwise fall back to defaults
-  const availableCourses = syllabiCourses.length > 0 ? syllabiCourses : defaultCourses;
+  const { courses: availableCourses } = useStudentCourses({ mergeSyllabi: true });
 
   const [selectedCourse, setSelectedCourse] = useState("");
   const [topic, setTopic] = useState("");
@@ -190,7 +169,14 @@ const StudyLogForm = () => {
                   {availableCourses.map((course) => (
                     <SelectItem key={course.name} value={course.name}>
                       <span className="flex items-center justify-between gap-3 w-full">
-                        <span>{course.name}</span>
+                        <span className="flex items-center gap-2">
+                          {course.name}
+                          {(course as any).isCarryOver && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                              Y{(course as any).courseYear} carry-over
+                            </span>
+                          )}
+                        </span>
                         <span className="text-xs text-muted-foreground ml-2">{course.credits} cr</span>
                       </span>
                     </SelectItem>
@@ -199,7 +185,7 @@ const StudyLogForm = () => {
               </Select>
               {courseObj && (
                 <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-xs text-muted-foreground">
-                  {courseObj.credits} credits · Year {userYear}
+                  {courseObj.credits} credits · Year {(courseObj as any).courseYear ?? userYear}{(courseObj as any).isCarryOver ? " (carry-over)" : ""}
                 </motion.p>
               )}
             </div>

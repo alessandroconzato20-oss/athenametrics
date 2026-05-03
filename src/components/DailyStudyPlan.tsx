@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import DisagreeButton from "@/components/DisagreeButton";
 import { getCoursesForYear, curriculum } from "@/data/curriculum";
+import { useStudentCourses } from "@/hooks/useStudentCourses";
 
 interface PlanItem {
   time: string;
@@ -26,6 +27,7 @@ interface DailyStudyPlanProps {
 
 const DailyStudyPlan = ({ scores, weeklyGoalsTasks }: DailyStudyPlanProps) => {
   const { user } = useAuth();
+  const { courses: studentCourses, passedExamNames } = useStudentCourses();
   const [plan, setPlan] = useState<PlanItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(true);
@@ -75,18 +77,22 @@ const DailyStudyPlan = ({ scores, weeklyGoalsTasks }: DailyStudyPlanProps) => {
       // Get student year from metadata
       const year = user.user_metadata?.year || 1;
 
-      // All courses for the student's year
-      const currentCourses = getCoursesForYear(year);
+      // Current-year courses + unpassed prior-year carry-overs (already merged)
+      const currentCourses = studentCourses.filter((c: any) => !c.isCarryOver);
+      const carryOverCourses = studentCourses
+        .filter((c: any) => c.isCarryOver)
+        .map((c: any) => ({ name: c.name, credits: c.credits, fromYear: c.courseYear }));
+
+      // Anything the student logged that we still don't know about (e.g. resit prep)
       const recentSubjects = [...new Set((logsRes.data || []).map((l: any) => l.subject))];
-      const crossSemesterSubjects = recentSubjects.filter(
-        (s: string) => !currentCourses.some(c => c.name === s)
-      );
-      // Find credits for cross-semester subjects
       const allCourses = curriculum.flatMap(s => s.courses);
-      const crossSemesterCourses = crossSemesterSubjects.map((name: string) => {
-        const found = allCourses.find(c => c.name === name);
-        return { name, credits: found?.credits || 0 };
-      });
+      const knownNames = new Set(studentCourses.map((c) => c.name));
+      const otherCourses = recentSubjects
+        .filter((s: string) => !knownNames.has(s))
+        .map((name: string) => {
+          const found = allCourses.find(c => c.name === name);
+          return { name, credits: found?.credits || 0 };
+        });
 
       const { data, error } = await supabase.functions.invoke("daily-plan", {
         body: {
@@ -98,10 +104,12 @@ const DailyStudyPlan = ({ scores, weeklyGoalsTasks }: DailyStudyPlanProps) => {
           pastFeedback: feedbackRes.data || [],
           persona: personaRes.data || null,
           currentCourses: currentCourses.map(c => ({ name: c.name, credits: c.credits })),
-          crossSemesterCourses,
+          carryOverCourses,
+          crossSemesterCourses: otherCourses,
           recentStudyLogs: (logsRes.data || []).slice(0, 10),
           topicMastery,
           year,
+          passedExamNames: Array.from(passedExamNames),
         },
       });
       if (error) throw error;
