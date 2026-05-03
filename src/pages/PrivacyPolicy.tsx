@@ -17,7 +17,7 @@ const PrivacyPolicy = () => (
       <div className="prose prose-sm dark:prose-invert max-w-none space-y-6">
         <section>
           <h2 className="text-xl font-semibold text-foreground">1. Data Controller</h2>
-          <p className="text-muted-foreground">Athena Metrics ("we", "us", "our") is the data controller for the personal data processed through this application. For questions, contact us at <strong>privacy@cofactorstudent.com</strong>.</p>
+          <p className="text-muted-foreground">Athena Metrics ("we", "us", "our") is the data controller for the personal data processed through this application. For questions, contact us at <strong>+39 375 593 4963</strong>.</p>
         </section>
 
         <section>
