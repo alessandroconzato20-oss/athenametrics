@@ -452,6 +452,13 @@ const AdminPanel = () => {
           <SleepWellbeingPanel universityId={adminUniversityId} />
         </div>
 
+        {/* Student Invite Codes */}
+        {adminRole === "university_admin" && (
+          <div className="mb-6">
+            <CohortInviteCodesPanel universityId={adminUniversityId} universityName={adminUniversity} />
+          </div>
+        )}
+
         {/* Topic Difficulty Heatmap (ML API) */}
         <div className="mb-6">
           <TopicDifficultyHeatmap universityId={adminUniversityId} />
