@@ -1,13 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { curriculum, getCoursesForYear, type Course } from "@/data/curriculum";
+import { curriculum, type Course } from "@/data/curriculum";
+import { isEligible, missingPrerequisites } from "@/data/prerequisites";
 
 export interface StudentCourse extends Course {
   /** Year the course officially belongs to */
   courseYear: number;
-  /** True when this is from a year prior to the student's current year and not yet passed */
+  /** True when this course belongs to a year prior to the student's current year (not yet passed) */
   isCarryOver: boolean;
+  /** True when this course belongs to a year AFTER the student's current year but prereqs are met */
+  isAhead: boolean;
+  /** Prereqs not yet satisfied (empty when eligible) */
+  missingPrereqs: string[];
 }
 
 /**
