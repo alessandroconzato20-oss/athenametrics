@@ -609,6 +609,7 @@ export type Database = {
           id: string
           matricola: string | null
           onboarded_at: string | null
+          onboarding_completed: boolean
           trial_arm: string | null
           trial_consent_at: string | null
           trial_consent_version: string | null
@@ -622,6 +623,7 @@ export type Database = {
           id: string
           matricola?: string | null
           onboarded_at?: string | null
+          onboarding_completed?: boolean
           trial_arm?: string | null
           trial_consent_at?: string | null
           trial_consent_version?: string | null
@@ -635,6 +637,7 @@ export type Database = {
           id?: string
           matricola?: string | null
           onboarded_at?: string | null
+          onboarding_completed?: boolean
           trial_arm?: string | null
           trial_consent_at?: string | null
           trial_consent_version?: string | null
@@ -1038,6 +1041,39 @@ export type Database = {
         }
         Relationships: []
       }
+      university_academic_calendar: {
+        Row: {
+          created_at: string
+          end_date: string
+          event_name: string
+          event_type: string
+          id: string
+          start_date: string
+          university_id: string
+          year_group: number | null
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          event_name: string
+          event_type: string
+          id?: string
+          start_date: string
+          university_id: string
+          year_group?: number | null
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          event_name?: string
+          event_type?: string
+          id?: string
+          start_date?: string
+          university_id?: string
+          year_group?: number | null
+        }
+        Relationships: []
+      }
       university_access_codes: {
         Row: {
           access_code: string
@@ -1092,17 +1128,58 @@ export type Database = {
         }
         Relationships: []
       }
+      university_onboarding_progress: {
+        Row: {
+          admin_user_id: string
+          calendar_data: Json
+          created_at: string
+          id: string
+          programme_data: Json
+          retention_acknowledged: boolean
+          step_completed: number
+          university_id: string
+          updated_at: string
+          welfare_data: Json
+        }
+        Insert: {
+          admin_user_id: string
+          calendar_data?: Json
+          created_at?: string
+          id?: string
+          programme_data?: Json
+          retention_acknowledged?: boolean
+          step_completed?: number
+          university_id: string
+          updated_at?: string
+          welfare_data?: Json
+        }
+        Update: {
+          admin_user_id?: string
+          calendar_data?: Json
+          created_at?: string
+          id?: string
+          programme_data?: Json
+          retention_acknowledged?: boolean
+          step_completed?: number
+          university_id?: string
+          updated_at?: string
+          welfare_data?: Json
+        }
+        Relationships: []
+      }
       university_syllabi: {
         Row: {
           course_name: string
           created_at: string
           credits: number | null
           id: string
+          is_blocking_exam: boolean
           notes: string | null
           pdf_path: string | null
           semester: number | null
           status: string
           topics: Json
+          university_id: string | null
           university_name: string
           updated_at: string
           uploaded_by: string
@@ -1113,11 +1190,13 @@ export type Database = {
           created_at?: string
           credits?: number | null
           id?: string
+          is_blocking_exam?: boolean
           notes?: string | null
           pdf_path?: string | null
           semester?: number | null
           status?: string
           topics?: Json
+          university_id?: string | null
           university_name: string
           updated_at?: string
           uploaded_by: string
@@ -1128,15 +1207,56 @@ export type Database = {
           created_at?: string
           credits?: number | null
           id?: string
+          is_blocking_exam?: boolean
           notes?: string | null
           pdf_path?: string | null
           semester?: number | null
           status?: string
           topics?: Json
+          university_id?: string | null
           university_name?: string
           updated_at?: string
           uploaded_by?: string
           year?: number
+        }
+        Relationships: []
+      }
+      university_welfare_config: {
+        Row: {
+          burnout_alert_threshold_pct: number
+          created_at: string
+          crisis_line: string | null
+          data_retention_months: number | null
+          id: string
+          legal_basis: string | null
+          support_email: string | null
+          support_url: string | null
+          university_id: string
+          updated_at: string
+        }
+        Insert: {
+          burnout_alert_threshold_pct?: number
+          created_at?: string
+          crisis_line?: string | null
+          data_retention_months?: number | null
+          id?: string
+          legal_basis?: string | null
+          support_email?: string | null
+          support_url?: string | null
+          university_id: string
+          updated_at?: string
+        }
+        Update: {
+          burnout_alert_threshold_pct?: number
+          created_at?: string
+          crisis_line?: string | null
+          data_retention_months?: number | null
+          id?: string
+          legal_basis?: string | null
+          support_email?: string | null
+          support_url?: string | null
+          university_id?: string
+          updated_at?: string
         }
         Relationships: []
       }
