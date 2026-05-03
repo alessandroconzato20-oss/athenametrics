@@ -603,6 +603,39 @@ export type Database = {
         }
         Relationships: []
       }
+      professor_invites: {
+        Row: {
+          courses: string[]
+          created_at: string
+          email: string
+          id: string
+          invited_by: string
+          status: string
+          university_id: string
+          updated_at: string
+        }
+        Insert: {
+          courses?: string[]
+          created_at?: string
+          email: string
+          id?: string
+          invited_by: string
+          status?: string
+          university_id: string
+          updated_at?: string
+        }
+        Update: {
+          courses?: string[]
+          created_at?: string
+          email?: string
+          id?: string
+          invited_by?: string
+          status?: string
+          university_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
