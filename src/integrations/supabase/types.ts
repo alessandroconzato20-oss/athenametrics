@@ -123,6 +123,48 @@ export type Database = {
           },
         ]
       }
+      chronotype_profiles: {
+        Row: {
+          chronotype_category: string | null
+          created_at: string
+          id: string
+          msfsc_midpoint: string | null
+          raw_responses: Json
+          sleep_duration_free_hours: number | null
+          sleep_duration_workdays_hours: number | null
+          social_jetlag_hours: number | null
+          university_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chronotype_category?: string | null
+          created_at?: string
+          id?: string
+          msfsc_midpoint?: string | null
+          raw_responses?: Json
+          sleep_duration_free_hours?: number | null
+          sleep_duration_workdays_hours?: number | null
+          social_jetlag_hours?: number | null
+          university_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chronotype_category?: string | null
+          created_at?: string
+          id?: string
+          msfsc_midpoint?: string | null
+          raw_responses?: Json
+          sleep_duration_free_hours?: number | null
+          sleep_duration_workdays_hours?: number | null
+          social_jetlag_hours?: number | null
+          university_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       consent_logs: {
         Row: {
           consent_type: string
@@ -160,6 +202,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      daily_biometrics: {
+        Row: {
+          created_at: string
+          hrv_available: boolean
+          hrv_sdnn: number | null
+          id: string
+          recorded_date: string
+          resting_hr: number | null
+          sleep_duration_hours: number | null
+          sleep_rem_percent: number | null
+          sleep_sws_percent: number | null
+          sleep_timing_variance_7d: number | null
+          source: string
+          spo2_percent: number | null
+          university_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          hrv_available?: boolean
+          hrv_sdnn?: number | null
+          id?: string
+          recorded_date?: string
+          resting_hr?: number | null
+          sleep_duration_hours?: number | null
+          sleep_rem_percent?: number | null
+          sleep_sws_percent?: number | null
+          sleep_timing_variance_7d?: number | null
+          source?: string
+          spo2_percent?: number | null
+          university_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          hrv_available?: boolean
+          hrv_sdnn?: number | null
+          id?: string
+          recorded_date?: string
+          resting_hr?: number | null
+          sleep_duration_hours?: number | null
+          sleep_rem_percent?: number | null
+          sleep_sws_percent?: number | null
+          sleep_timing_variance_7d?: number | null
+          source?: string
+          spo2_percent?: number | null
+          university_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       daily_scores: {
         Row: {
@@ -263,6 +359,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      evening_checkins: {
+        Row: {
+          checkin_date: string
+          created_at: string
+          id: string
+          intended_sleep_time: string | null
+          night_factor_alcohol: boolean
+          night_factor_caffeine: boolean
+          night_factor_screen: boolean
+          night_factor_stress: boolean
+          night_factor_unwell: boolean
+          nightly_pss_score: number | null
+          notes: string | null
+          screen_time_before_bed_minutes: number | null
+          university_id: string | null
+          updated_at: string
+          user_id: string
+          wind_down_activity: string | null
+        }
+        Insert: {
+          checkin_date?: string
+          created_at?: string
+          id?: string
+          intended_sleep_time?: string | null
+          night_factor_alcohol?: boolean
+          night_factor_caffeine?: boolean
+          night_factor_screen?: boolean
+          night_factor_stress?: boolean
+          night_factor_unwell?: boolean
+          nightly_pss_score?: number | null
+          notes?: string | null
+          screen_time_before_bed_minutes?: number | null
+          university_id?: string | null
+          updated_at?: string
+          user_id: string
+          wind_down_activity?: string | null
+        }
+        Update: {
+          checkin_date?: string
+          created_at?: string
+          id?: string
+          intended_sleep_time?: string | null
+          night_factor_alcohol?: boolean
+          night_factor_caffeine?: boolean
+          night_factor_screen?: boolean
+          night_factor_stress?: boolean
+          night_factor_unwell?: boolean
+          nightly_pss_score?: number | null
+          notes?: string | null
+          screen_time_before_bed_minutes?: number | null
+          university_id?: string | null
+          updated_at?: string
+          user_id?: string
+          wind_down_activity?: string | null
+        }
+        Relationships: []
       }
       exam_passes: {
         Row: {
