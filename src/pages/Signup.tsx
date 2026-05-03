@@ -141,8 +141,27 @@ const Signup = () => {
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="university">University</Label>
-            <Input id="university" placeholder="e.g. Università di Padova" value={university} onChange={(e) => setUniversity(e.target.value)} className="h-12 rounded-xl" />
+            <Label htmlFor="cohortCode">Institution Code</Label>
+            <Input
+              id="cohortCode"
+              placeholder="e.g. PADUA-MED-Y2"
+              value={cohortCode}
+              onChange={(e) => onCodeChange(e.target.value)}
+              required
+              autoCapitalize="characters"
+              className="h-12 rounded-xl font-mono tracking-wider"
+            />
+            {codeStatus.state === "checking" && (
+              <p className="text-xs text-muted-foreground">Checking…</p>
+            )}
+            {codeStatus.state === "valid" && (
+              <p className="text-xs text-primary">
+                ✓ {codeStatus.university}{codeStatus.year ? ` · Year ${codeStatus.year}` : ""}{codeStatus.label ? ` · ${codeStatus.label}` : ""}
+              </p>
+            )}
+            {codeStatus.state === "invalid" && (
+              <p className="text-xs text-destructive">Code not recognised. Ask your institution admin.</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="matricola">Numero di Matricola <span className="text-muted-foreground font-normal">(optional)</span></Label>
