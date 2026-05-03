@@ -19,6 +19,7 @@ import TopicDifficultyHeatmap from "@/components/admin/TopicDifficultyHeatmap";
 import AtRiskStudentsPanel from "@/components/admin/AtRiskStudentsPanel";
 import StudyBehaviourPanel from "@/components/admin/StudyBehaviourPanel";
 import CohortBurnoutChart from "@/components/admin/CohortBurnoutChart";
+import SleepWellbeingPanel from "@/components/admin/SleepWellbeingPanel";
 
 type AdminRole = "admin" | "university_admin";
 
