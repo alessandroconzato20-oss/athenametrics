@@ -37,7 +37,7 @@ interface ExamPeriod {
 }
 
 const HIGH_RISK_THRESHOLD = 70;
-const ALERT_PCT_THRESHOLD = 40; // %
+const DEFAULT_ALERT_PCT_THRESHOLD = 40; // %
 
 const CohortBurnoutChart = ({ universityId, adminRole }: Props) => {
   const [range, setRange] = useState<30 | 60 | 90>(30);
@@ -47,6 +47,7 @@ const CohortBurnoutChart = ({ universityId, adminRole }: Props) => {
   const [recentHighPct, setRecentHighPct] = useState(0);
   const [studentsAtRisk, setStudentsAtRisk] = useState(0);
   const [totalStudents, setTotalStudents] = useState(0);
+  const [alertThresholdPct, setAlertThresholdPct] = useState<number>(DEFAULT_ALERT_PCT_THRESHOLD);
 
   useEffect(() => {
     load();
