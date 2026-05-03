@@ -85,13 +85,12 @@ const AtRiskStudentsPanel: React.FC<Props> = ({ universityId }) => {
           .from("biometric_snapshots")
           .select("user_id, snapshot_type, data, recorded_at")
           .gte("recorded_at", fourteenDaysAgoIso),
-        universityName
-          ? supabase
-              .from("university_syllabi")
-              .select("course_name, year")
-              .eq("university_name", universityName)
-              .eq("status", "approved")
-          : Promise.resolve({ data: [] as any[] }),
+        supabase
+          .from("university_syllabi")
+          .select("course_name, year, is_blocking_exam, university_id, university_name, status" as any)
+          .or(
+            `university_id.eq.${universityId}${universityName ? `,university_name.eq.${universityName}` : ""}`
+          ),
       ]);
 
       const uniProfiles = (profiles || []).filter((p: any) => p.university_id === universityId);
@@ -102,18 +101,25 @@ const AtRiskStudentsPanel: React.FC<Props> = ({ universityId }) => {
       let dynamicExamShort: Record<string, string> = BLOCKING_EXAM_SHORT;
       const syllabusRows = (syllabi || []) as any[];
       if (syllabusRows.length > 0) {
-        const blockingCourses = syllabusRows
-          .filter((r) => (r.year === 1 || r.year === 2) && r.course_name)
-          // Exclude "Being a Medical Doctor" / BMD per progression rules
-          .filter((r) => !/being a medical doctor|^bmd$/i.test(r.course_name))
+        // Prefer explicit is_blocking_exam flags from the onboarding wizard.
+        // Fall back to "all year 1+2 courses except BMD" if no explicit flags exist.
+        const explicitlyFlagged = syllabusRows
+          .filter((r) => r.is_blocking_exam === true && r.course_name)
           .map((r) => r.course_name as string);
+
+        const blockingCourses = explicitlyFlagged.length > 0
+          ? explicitlyFlagged
+          : syllabusRows
+              .filter((r) => (r.year === 1 || r.year === 2) && r.course_name)
+              .filter((r) => !/being a medical doctor|^bmd$/i.test(r.course_name))
+              .map((r) => r.course_name as string);
+
         const unique = Array.from(new Set(blockingCourses));
         if (unique.length > 0) {
           dynamicExamsList = unique;
           dynamicExamShort = Object.fromEntries(
             unique.map((name) => [
               name,
-              // Build a short label from initials (max 5 chars)
               name
                 .split(/\s+/)
                 .filter((w) => /^[A-Za-z0-9]/.test(w))

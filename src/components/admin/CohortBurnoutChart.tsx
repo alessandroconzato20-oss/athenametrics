@@ -37,7 +37,7 @@ interface ExamPeriod {
 }
 
 const HIGH_RISK_THRESHOLD = 70;
-const ALERT_PCT_THRESHOLD = 40; // %
+const DEFAULT_ALERT_PCT_THRESHOLD = 40; // %
 
 const CohortBurnoutChart = ({ universityId, adminRole }: Props) => {
   const [range, setRange] = useState<30 | 60 | 90>(30);
@@ -47,6 +47,7 @@ const CohortBurnoutChart = ({ universityId, adminRole }: Props) => {
   const [recentHighPct, setRecentHighPct] = useState(0);
   const [studentsAtRisk, setStudentsAtRisk] = useState(0);
   const [totalStudents, setTotalStudents] = useState(0);
+  const [alertThresholdPct, setAlertThresholdPct] = useState<number>(DEFAULT_ALERT_PCT_THRESHOLD);
 
   useEffect(() => {
     load();
@@ -56,6 +57,17 @@ const CohortBurnoutChart = ({ universityId, adminRole }: Props) => {
     setLoading(true);
     try {
       const fromDate = format(subDays(new Date(), range), "yyyy-MM-dd");
+
+      // Load university-configured burnout alert threshold (set in onboarding wizard).
+      if (universityId) {
+        const { data: cfg } = await supabase
+          .from("university_welfare_config" as any)
+          .select("burnout_alert_threshold_pct")
+          .eq("university_id", universityId)
+          .maybeSingle();
+        const pct = (cfg as any)?.burnout_alert_threshold_pct;
+        if (typeof pct === "number" && pct > 0) setAlertThresholdPct(pct);
+      }
 
       // Scoped student set for university admins
       let userIds: string[] | null = null;
@@ -179,7 +191,7 @@ const CohortBurnoutChart = ({ universityId, adminRole }: Props) => {
     };
   }, [valid]);
 
-  const showAlert = recentHighPct >= ALERT_PCT_THRESHOLD && totalStudents >= 3;
+  const showAlert = recentHighPct >= alertThresholdPct && totalStudents >= 3;
 
   return (
     <div className="space-y-3">
