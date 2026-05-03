@@ -37,10 +37,7 @@ const GdprPrivacySheet = () => {
               <p>This policy applies to all users of the Athena Metrics application ("the App"), including the web application and any associated mobile applications.</p>
               <p>
                 <strong>Data Controller:</strong> Athena Metrics<br />
-                <strong>Contact Email:</strong>{" "}
-                <a href="mailto:privacy@cofactorstudent.com" className="text-primary hover:underline">privacy@cofactorstudent.com</a><br />
-                <strong>Data Protection Officer (DPO):</strong>{" "}
-                <a href="mailto:dpo@cofactorstudent.com" className="text-primary hover:underline">dpo@cofactorstudent.com</a>
+                <strong>Contact:</strong> <strong>+39 375 593 4963</strong>
               </p>
             </Section>
 
@@ -123,9 +120,7 @@ const GdprPrivacySheet = () => {
                   <a href="https://edpb.europa.eu" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">edpb.europa.eu</a>.</li>
               </ul>
               <p className="mt-3">
-                To exercise any of these rights, email us at{" "}
-                <a href="mailto:privacy@cofactorstudent.com" className="text-primary hover:underline">privacy@cofactorstudent.com</a> or contact our DPO at{" "}
-                <a href="mailto:dpo@cofactorstudent.com" className="text-primary hover:underline">dpo@cofactorstudent.com</a>. We may request identity verification before processing your request.
+                To exercise any of these rights, contact us at <strong>+39 375 593 4963</strong>. We may request identity verification before processing your request.
               </p>
             </Section>
 
@@ -168,13 +163,7 @@ const GdprPrivacySheet = () => {
 
             {/* Contact */}
             <Section icon={<Mail className="h-5 w-5 text-primary" />} title="Contact & Data Protection Officer">
-              <p>For any privacy concerns, data access requests, or to exercise your GDPR rights:</p>
-              <ul className="list-disc pl-5 space-y-2">
-                <li><strong>General enquiries:</strong>{" "}
-                  <a href="mailto:privacy@cofactorstudent.com" className="text-primary hover:underline">privacy@cofactorstudent.com</a></li>
-                <li><strong>Data Protection Officer:</strong>{" "}
-                  <a href="mailto:dpo@cofactorstudent.com" className="text-primary hover:underline">dpo@cofactorstudent.com</a></li>
-              </ul>
+              <p>For any privacy concerns, data access requests, or to exercise your GDPR rights, contact us at <strong>+39 375 593 4963</strong>.</p>
               <p className="mt-3 text-xs text-muted-foreground">Last updated: April 7, 2026</p>
             </Section>
           </div>
