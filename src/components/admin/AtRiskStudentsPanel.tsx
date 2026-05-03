@@ -85,13 +85,12 @@ const AtRiskStudentsPanel: React.FC<Props> = ({ universityId }) => {
           .from("biometric_snapshots")
           .select("user_id, snapshot_type, data, recorded_at")
           .gte("recorded_at", fourteenDaysAgoIso),
-        universityName
-          ? supabase
-              .from("university_syllabi")
-              .select("course_name, year")
-              .eq("university_name", universityName)
-              .eq("status", "approved")
-          : Promise.resolve({ data: [] as any[] }),
+        supabase
+          .from("university_syllabi")
+          .select("course_name, year, is_blocking_exam, university_id, university_name, status" as any)
+          .or(
+            `university_id.eq.${universityId}${universityName ? `,university_name.eq.${universityName}` : ""}`
+          ),
       ]);
 
       const uniProfiles = (profiles || []).filter((p: any) => p.university_id === universityId);
