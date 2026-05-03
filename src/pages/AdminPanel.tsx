@@ -446,6 +446,11 @@ const AdminPanel = () => {
           <CohortBurnoutChart universityId={adminUniversityId} adminRole={adminRole} />
         </div>
 
+        {/* Sleep & Wellbeing — academic-period overlay */}
+        <div className="mb-6">
+          <SleepWellbeingPanel universityId={adminUniversityId} />
+        </div>
+
         {/* Topic Difficulty Heatmap (ML API) */}
         <div className="mb-6">
           <TopicDifficultyHeatmap universityId={adminUniversityId} />
