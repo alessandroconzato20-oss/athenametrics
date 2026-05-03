@@ -169,7 +169,14 @@ const StudyLogForm = () => {
                   {availableCourses.map((course) => (
                     <SelectItem key={course.name} value={course.name}>
                       <span className="flex items-center justify-between gap-3 w-full">
-                        <span>{course.name}</span>
+                        <span className="flex items-center gap-2">
+                          {course.name}
+                          {(course as any).isCarryOver && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                              Y{(course as any).courseYear} carry-over
+                            </span>
+                          )}
+                        </span>
                         <span className="text-xs text-muted-foreground ml-2">{course.credits} cr</span>
                       </span>
                     </SelectItem>
