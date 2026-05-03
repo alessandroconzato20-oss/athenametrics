@@ -81,7 +81,7 @@ const UniversitySignup = () => {
           toast.success("Account created! Save your university key below.");
         } else {
           toast.success("University admin account created!");
-          navigate("/admin");
+          navigate("/university-setup");
         }
       }
     } catch (err: any) {
