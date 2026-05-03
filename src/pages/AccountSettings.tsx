@@ -38,7 +38,7 @@ const AccountSettings = () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `cofactor-data-export-${new Date().toISOString().split("T")[0]}.json`;
+      a.download = `athena-metrics-data-export-${new Date().toISOString().split("T")[0]}.json`;
       a.click();
       URL.revokeObjectURL(url);
 
