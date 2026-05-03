@@ -9,5 +9,8 @@ verify_jwt = true
 [functions.parse-syllabus]
 verify_jwt = true
 
+[functions.extract-programme-handbook]
+verify_jwt = true
+
 [functions.ml-proxy]
 verify_jwt = true
