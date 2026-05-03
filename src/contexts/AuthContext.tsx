@@ -9,7 +9,7 @@ interface AuthContextType {
   universityId: string | null;
   universityName: string | null;
   role: string | null;
-  signUp: (email: string, password: string, name: string, year: number, matricola: string, university: string) => Promise<void>;
+  signUp: (email: string, password: string, name: string, year: number, matricola: string, cohortCode: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   displayName: string;
