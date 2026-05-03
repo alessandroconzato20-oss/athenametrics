@@ -165,6 +165,54 @@ export type Database = {
         }
         Relationships: []
       }
+      cohort_invite_codes: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          label: string | null
+          max_uses: number | null
+          university_id: string
+          university_name: string
+          updated_at: string
+          uses_count: number
+          year: number | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          max_uses?: number | null
+          university_id: string
+          university_name: string
+          updated_at?: string
+          uses_count?: number
+          year?: number | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          max_uses?: number | null
+          university_id?: string
+          university_name?: string
+          updated_at?: string
+          uses_count?: number
+          year?: number | null
+        }
+        Relationships: []
+      }
       consent_logs: {
         Row: {
           consent_type: string
@@ -1239,7 +1287,20 @@ export type Database = {
         Args: { _course_name: string; _university_id: string; _user_id: string }
         Returns: boolean
       }
+      redeem_cohort_code: {
+        Args: { _code: string; _user_id: string }
+        Returns: boolean
+      }
       rotate_all_login_keys: { Args: never; Returns: undefined }
+      validate_cohort_code: {
+        Args: { _code: string }
+        Returns: {
+          label: string
+          university_name: string
+          valid: boolean
+          year: number
+        }[]
+      }
       verify_university_code: {
         Args: {
           _access_code: string
