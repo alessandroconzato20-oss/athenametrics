@@ -118,8 +118,8 @@ const UniversitySignup = () => {
             {copied ? "Copied!" : "Copy Key"}
           </Button>
 
-          <Button onClick={() => navigate("/admin")} className="w-full h-12 rounded-xl bg-gradient-primary text-base font-semibold text-primary-foreground">
-            Go to Admin Panel →
+          <Button onClick={() => navigate("/university-setup")} className="w-full h-12 rounded-xl bg-gradient-primary text-base font-semibold text-primary-foreground">
+            Start onboarding →
           </Button>
         </motion.div>
       </div>
