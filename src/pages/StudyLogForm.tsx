@@ -11,7 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Brain, Zap, AlertTriangle, Eye, GraduationCap, BookOpen, MapPin } from "lucide-react";
 import { toast } from "sonner";
-import { getCoursesForYear, type Course } from "@/data/curriculum";
+import { type Course } from "@/data/curriculum";
+import { useStudentCourses } from "@/hooks/useStudentCourses";
 import { Checkbox } from "@/components/ui/checkbox";
 import TopicMasteryChecklist from "@/components/TopicMasteryChecklist";
 
@@ -70,29 +71,7 @@ const StudyLogForm = () => {
   const navigate = useNavigate();
 
   const userYear = user?.user_metadata?.year || 1;
-  const userUniversity = user?.user_metadata?.university || "";
-  const defaultCourses = useMemo(() => getCoursesForYear(userYear), [userYear]);
-
-  const [syllabiCourses, setSyllabiCourses] = useState<Course[]>([]);
-
-  useEffect(() => {
-    if (!userUniversity) return;
-    const fetchSyllabi = async () => {
-      const { data } = await supabase
-        .from("university_syllabi")
-        .select("course_name, credits, year")
-        .eq("university_name", userUniversity)
-        .eq("status", "approved")
-        .eq("year", userYear) as any;
-      if (data && data.length > 0) {
-        setSyllabiCourses(data.map((s: any) => ({ name: s.course_name, credits: s.credits || 0 })));
-      }
-    };
-    fetchSyllabi();
-  }, [userUniversity, userYear]);
-
-  // Use syllabi courses if available, otherwise fall back to defaults
-  const availableCourses = syllabiCourses.length > 0 ? syllabiCourses : defaultCourses;
+  const { courses: availableCourses } = useStudentCourses({ mergeSyllabi: true });
 
   const [selectedCourse, setSelectedCourse] = useState("");
   const [topic, setTopic] = useState("");
