@@ -381,9 +381,9 @@ const SetupScreen = ({
               >
                 <span className="flex items-center justify-between gap-2">
                   <span>{c.name}</span>
-                  {c.isCarryOver && (
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${subject === c.name ? "bg-primary-foreground/20" : "bg-amber-100 text-amber-800"}`}>
-                      Y{c.courseYear}
+                  {(c.isCarryOver || c.isAhead) && (
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${subject === c.name ? "bg-primary-foreground/20" : c.isCarryOver ? "bg-amber-100 text-amber-800" : "bg-sky-100 text-sky-800"}`}>
+                      Y{c.courseYear}{c.isAhead ? " · ahead" : ""}
                     </span>
                   )}
                 </span>

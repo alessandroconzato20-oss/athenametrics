@@ -1,13 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { curriculum, getCoursesForYear, type Course } from "@/data/curriculum";
+import { curriculum, type Course } from "@/data/curriculum";
+import { isEligible, missingPrerequisites } from "@/data/prerequisites";
 
 export interface StudentCourse extends Course {
   /** Year the course officially belongs to */
   courseYear: number;
-  /** True when this is from a year prior to the student's current year and not yet passed */
+  /** True when this course belongs to a year prior to the student's current year (not yet passed) */
   isCarryOver: boolean;
+  /** True when this course belongs to a year AFTER the student's current year but prereqs are met */
+  isAhead: boolean;
+  /** Prereqs not yet satisfied (empty when eligible) */
+  missingPrereqs: string[];
 }
 
 /**
@@ -64,23 +69,42 @@ export function useStudentCourses(opts?: { mergeSyllabi?: boolean }) {
     const seen = new Set<string>();
     const out: StudentCourse[] = [];
 
-    // Current year first
-    for (const c of getCoursesForYear(userYear)) {
-      if (seen.has(c.name)) continue;
-      seen.add(c.name);
-      out.push({ ...c, courseYear: userYear, isCarryOver: false });
-    }
-
-    // Prior years — only unpassed
+    // Walk the entire curriculum. Include any course that:
+    //   • belongs to the current year (always shown), OR
+    //   • belongs to a prior year and isn't passed yet (carry-over), OR
+    //   • belongs to a later year but the student has already cleared its prerequisites.
     for (const sem of curriculum) {
-      if (sem.year >= userYear) continue;
       for (const c of sem.courses) {
         if (seen.has(c.name)) continue;
         if (passed.has(c.name)) continue;
+
+        const isCurrent = sem.year === userYear;
+        const isPrior = sem.year < userYear;
+        const isLater = sem.year > userYear;
+        const eligible = isEligible(c.name, passed);
+
+        // Show current year regardless of prereqs (student is officially in it).
+        // Show prior years only when not yet passed (carry-over).
+        // Show later years only when prereqs are satisfied (student got ahead).
+        if (!isCurrent && isLater && !eligible) continue;
+
         seen.add(c.name);
-        out.push({ ...c, courseYear: sem.year, isCarryOver: true });
+        out.push({
+          ...c,
+          courseYear: sem.year,
+          isCarryOver: isPrior,
+          isAhead: isLater,
+          missingPrereqs: eligible ? [] : missingPrerequisites(c.name, passed),
+        });
       }
     }
+
+    // Sort: current year first, then carry-over (oldest first), then ahead (nearest first)
+    out.sort((a, b) => {
+      const score = (c: StudentCourse) =>
+        c.courseYear === userYear ? 0 : c.isCarryOver ? -1 - (userYear - c.courseYear) : 100 + (c.courseYear - userYear);
+      return score(a) - score(b);
+    });
 
     // Merge syllabi: override credits when names match
     if (syllabi.length > 0) {

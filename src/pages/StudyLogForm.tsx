@@ -176,6 +176,11 @@ const StudyLogForm = () => {
                               Y{(course as any).courseYear} carry-over
                             </span>
                           )}
+                          {(course as any).isAhead && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-sky-100 text-sky-800">
+                              Y{(course as any).courseYear} ahead
+                            </span>
+                          )}
                         </span>
                         <span className="text-xs text-muted-foreground ml-2">{course.credits} cr</span>
                       </span>
@@ -185,7 +190,7 @@ const StudyLogForm = () => {
               </Select>
               {courseObj && (
                 <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-xs text-muted-foreground">
-                  {courseObj.credits} credits · Year {(courseObj as any).courseYear ?? userYear}{(courseObj as any).isCarryOver ? " (carry-over)" : ""}
+                  {courseObj.credits} credits · Year {(courseObj as any).courseYear ?? userYear}{(courseObj as any).isCarryOver ? " (carry-over)" : (courseObj as any).isAhead ? " (ahead of schedule)" : ""}
                 </motion.p>
               )}
             </div>
