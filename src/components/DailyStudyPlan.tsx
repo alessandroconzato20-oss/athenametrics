@@ -77,11 +77,14 @@ const DailyStudyPlan = ({ scores, weeklyGoalsTasks }: DailyStudyPlanProps) => {
       // Get student year from metadata
       const year = user.user_metadata?.year || 1;
 
-      // Current-year courses + unpassed prior-year carry-overs (already merged)
-      const currentCourses = studentCourses.filter((c: any) => !c.isCarryOver);
+      // Current-year + carry-overs (prior, unpassed) + ahead-of-schedule (later, prereqs met)
+      const currentCourses = studentCourses.filter((c: any) => !c.isCarryOver && !c.isAhead);
       const carryOverCourses = studentCourses
         .filter((c: any) => c.isCarryOver)
         .map((c: any) => ({ name: c.name, credits: c.credits, fromYear: c.courseYear }));
+      const aheadCourses = studentCourses
+        .filter((c: any) => c.isAhead)
+        .map((c: any) => ({ name: c.name, credits: c.credits, targetYear: c.courseYear }));
 
       // Anything the student logged that we still don't know about (e.g. resit prep)
       const recentSubjects = [...new Set((logsRes.data || []).map((l: any) => l.subject))];
@@ -105,6 +108,7 @@ const DailyStudyPlan = ({ scores, weeklyGoalsTasks }: DailyStudyPlanProps) => {
           persona: personaRes.data || null,
           currentCourses: currentCourses.map(c => ({ name: c.name, credits: c.credits })),
           carryOverCourses,
+          aheadCourses,
           crossSemesterCourses: otherCourses,
           recentStudyLogs: (logsRes.data || []).slice(0, 10),
           topicMastery,
