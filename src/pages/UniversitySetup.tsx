@@ -140,8 +140,15 @@ const UniversitySetup = () => {
         .single<{ university_id: string | null; university: string | null; onboarding_completed: boolean | null }>();
 
       if (profile?.onboarding_completed) { navigate("/admin"); return; }
-      setUniversityId(profile?.university_id ?? null);
-      setUniversityName(profile?.university ?? null);
+
+      // Every wizard write needs a university_id; bail out cleanly if missing.
+      if (!profile?.university_id) {
+        toast.error("Your account isn't linked to a university yet. Please sign out, sign back in, or contact support.");
+        navigate("/");
+        return;
+      }
+      setUniversityId(profile.university_id);
+      setUniversityName(profile.university);
 
       if (profile?.university_id) {
         const { data: progress } = await supabase
@@ -284,7 +291,7 @@ const UniversitySetup = () => {
   const ensureAccessCode = async () => {
     if (!universityId || !universityName || !user) return;
     if (accessCode) return;
-    // Look for an existing active code first
+    // Reuse an existing active code if there already is one
     const { data: existing } = await supabase
       .from("cohort_invite_codes" as any)
       .select("code")
@@ -296,17 +303,20 @@ const UniversitySetup = () => {
       setAccessCode((existing as any[])[0].code);
       return;
     }
-    const slug = (universityName || "UNI").toUpperCase().replace(/[^A-Z]+/g, "").slice(0, 5) || "UNI";
-    const code = `${slug}-GEN-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
-    const { error } = await supabase.from("cohort_invite_codes" as any).insert({
-      university_id: universityId,
-      university_name: universityName,
-      code,
-      label: "Onboarding default",
-      created_by: user.id,
-    } as any);
-    if (error) { toast.error("Couldn't generate code: " + error.message); return; }
-    setAccessCode(code);
+    // Otherwise generate a guaranteed-unique one server-side
+    const { data: generated, error } = await supabase.rpc(
+      "generate_student_access_code" as any,
+      {
+        _university_id: universityId,
+        _university_name: universityName,
+        _created_by: user.id,
+      },
+    );
+    if (error || !generated) {
+      toast.error("Couldn't generate code: " + (error?.message ?? "unknown error"));
+      return;
+    }
+    setAccessCode(generated as string);
   };
 
   // ── Loading ───────────────────────────────────────────────────────────────
