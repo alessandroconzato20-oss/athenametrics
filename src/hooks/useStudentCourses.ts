@@ -32,15 +32,19 @@ export function useStudentCourses(opts?: { mergeSyllabi?: boolean }) {
     if (!user) { setLoading(false); return; }
     (async () => {
       const promises: Promise<any>[] = [
-        supabase.from("exam_passes").select("course_name").eq("user_id", user.id),
+        Promise.resolve(
+          await supabase.from("exam_passes").select("course_name").eq("user_id", user.id)
+        ),
       ];
       if (opts?.mergeSyllabi && universityName) {
         promises.push(
-          supabase
-            .from("university_syllabi")
-            .select("course_name, credits, year")
-            .eq("university_name", universityName)
-            .eq("status", "approved") as any
+          Promise.resolve(
+            await (supabase
+              .from("university_syllabi")
+              .select("course_name, credits, year")
+              .eq("university_name", universityName)
+              .eq("status", "approved") as any)
+          )
         );
       }
       const results = await Promise.all(promises);
