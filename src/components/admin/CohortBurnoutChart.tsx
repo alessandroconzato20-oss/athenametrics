@@ -58,6 +58,17 @@ const CohortBurnoutChart = ({ universityId, adminRole }: Props) => {
     try {
       const fromDate = format(subDays(new Date(), range), "yyyy-MM-dd");
 
+      // Load university-configured burnout alert threshold (set in onboarding wizard).
+      if (universityId) {
+        const { data: cfg } = await supabase
+          .from("university_welfare_config" as any)
+          .select("burnout_alert_threshold_pct")
+          .eq("university_id", universityId)
+          .maybeSingle();
+        const pct = (cfg as any)?.burnout_alert_threshold_pct;
+        if (typeof pct === "number" && pct > 0) setAlertThresholdPct(pct);
+      }
+
       // Scoped student set for university admins
       let userIds: string[] | null = null;
       if (adminRole === "university_admin" && universityId) {
