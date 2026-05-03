@@ -140,8 +140,15 @@ const UniversitySetup = () => {
         .single<{ university_id: string | null; university: string | null; onboarding_completed: boolean | null }>();
 
       if (profile?.onboarding_completed) { navigate("/admin"); return; }
-      setUniversityId(profile?.university_id ?? null);
-      setUniversityName(profile?.university ?? null);
+
+      // Every wizard write needs a university_id; bail out cleanly if missing.
+      if (!profile?.university_id) {
+        toast.error("Your account isn't linked to a university yet. Please sign out, sign back in, or contact support.");
+        navigate("/");
+        return;
+      }
+      setUniversityId(profile.university_id);
+      setUniversityName(profile.university);
 
       if (profile?.university_id) {
         const { data: progress } = await supabase
