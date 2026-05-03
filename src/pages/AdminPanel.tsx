@@ -60,9 +60,18 @@ const AdminPanel = () => {
       if (isUniAdmin) {
         setAdminRole("university_admin");
         // Get their university from profile
-        const { data: profile } = await supabase.from("profiles").select("university, university_id").eq("id", user.id).single();
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("university, university_id, onboarding_completed")
+          .eq("id", user.id)
+          .single<{ university: string | null; university_id: string | null; onboarding_completed: boolean | null }>();
+        // Gate: uni-admin must finish setup wizard before seeing the panel
+        if (profile && profile.onboarding_completed === false) {
+          navigate("/university-setup");
+          return;
+        }
         setAdminUniversity(profile?.university || null);
-        setAdminUniversityId((profile as any)?.university_id || null);
+        setAdminUniversityId(profile?.university_id || null);
         setChecking(false);
         return;
       }

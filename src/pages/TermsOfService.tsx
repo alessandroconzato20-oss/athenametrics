@@ -87,7 +87,7 @@ const TermsOfService = () => (
 
         <section>
           <h2 className="text-xl font-semibold text-foreground">13. Contact</h2>
-          <p className="text-muted-foreground">For questions about these Terms, contact us at <strong>legal@cofactorstudent.com</strong>.</p>
+          <p className="text-muted-foreground">For questions about these Terms, contact us at <strong>+39 375 593 4963</strong>.</p>
         </section>
       </div>
     </div>
