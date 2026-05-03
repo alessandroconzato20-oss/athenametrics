@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useNavigate } from "react-router-dom";
-import { LogOut, Activity, BookOpen, Trophy, Plus, RefreshCcw, Target, Settings, GraduationCap, ChevronDown, Info } from "lucide-react";
+import { LogOut, Activity, BookOpen, Trophy, Plus, RefreshCcw, Target, Settings, GraduationCap, ChevronDown, Info, Timer } from "lucide-react";
 import OnboardingGuide from "@/components/OnboardingGuide";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
