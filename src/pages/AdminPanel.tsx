@@ -19,6 +19,7 @@ import TopicDifficultyHeatmap from "@/components/admin/TopicDifficultyHeatmap";
 import AtRiskStudentsPanel from "@/components/admin/AtRiskStudentsPanel";
 import StudyBehaviourPanel from "@/components/admin/StudyBehaviourPanel";
 import CohortBurnoutChart from "@/components/admin/CohortBurnoutChart";
+import SleepWellbeingPanel from "@/components/admin/SleepWellbeingPanel";
 
 type AdminRole = "admin" | "university_admin";
 
@@ -443,6 +444,11 @@ const AdminPanel = () => {
         {/* Cohort Burnout Forecast */}
         <div className="mb-6">
           <CohortBurnoutChart universityId={adminUniversityId} adminRole={adminRole} />
+        </div>
+
+        {/* Sleep & Wellbeing — academic-period overlay */}
+        <div className="mb-6">
+          <SleepWellbeingPanel universityId={adminUniversityId} />
         </div>
 
         {/* Topic Difficulty Heatmap (ML API) */}

@@ -148,6 +148,22 @@ const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbein
         exercise_type: finalDidExercise ? finalExerciseType : null,
         exercise_duration_minutes: finalDidExercise ? finalExerciseDuration : null,
       } as any, { onConflict: "user_id,checkin_date" } as any);
+    // Mirror night factors and stress into the structured evening_checkins table
+    // for institutional sleep & wellbeing analytics.
+    const today = new Date().toISOString().split("T")[0];
+    await supabase
+      .from("evening_checkins" as any)
+      .upsert({
+        user_id: user.id,
+        university_id: universityId,
+        checkin_date: today,
+        night_factor_alcohol: nightFactors.includes("alcohol"),
+        night_factor_caffeine: nightFactors.includes("caffeine"),
+        night_factor_screen: nightFactors.includes("screen"),
+        night_factor_stress: nightFactors.includes("stress"),
+        night_factor_unwell: nightFactors.includes("unwell"),
+        nightly_pss_score: stress,
+      } as any, { onConflict: "user_id,checkin_date" } as any);
     setSaving(false);
     if (error) {
       toast({ title: "Failed to save", description: error.message, variant: "destructive" });
