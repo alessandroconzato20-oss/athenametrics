@@ -17,6 +17,7 @@ import StudyTimer from "./pages/StudyTimer";
 import Leaderboard from "./pages/Leaderboard";
 import WeeklyGoalsHistory from "./pages/WeeklyGoalsHistory";
 import AdminPanel from "./pages/AdminPanel";
+import ProfessorPanel from "./pages/ProfessorPanel";
 import UniversitySignup from "./pages/UniversitySignup";
 import UniversityLogin from "./pages/UniversityLogin";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/weekly-goals" element={<WeeklyGoalsHistory />} />
             <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/professor" element={<ProfessorPanel />} />
             <Route path="/university-login" element={<UniversityLogin />} />
             <Route path="/university-signup" element={<UniversitySignup />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
