@@ -1416,6 +1416,15 @@ export type Database = {
         Args: { _user_id: string }
         Returns: string
       }
+      generate_student_access_code: {
+        Args: {
+          _created_by: string
+          _label?: string
+          _university_id: string
+          _university_name: string
+        }
+        Returns: string
+      }
       get_user_university_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
