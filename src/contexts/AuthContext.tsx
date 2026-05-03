@@ -9,7 +9,7 @@ interface AuthContextType {
   universityId: string | null;
   universityName: string | null;
   role: string | null;
-  signUp: (email: string, password: string, name: string, year: number, matricola: string, university: string) => Promise<void>;
+  signUp: (email: string, password: string, name: string, year: number, matricola: string, cohortCode: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   displayName: string;
@@ -84,12 +84,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, name: string, year: number, matricola: string, university: string) => {
+  const signUp = async (email: string, password: string, name: string, year: number, matricola: string, cohortCode: string) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { name, year, matricola, university },
+        data: { name, year, matricola, cohort_code: cohortCode },
         emailRedirectTo: `${window.location.origin}/login`,
       },
     });

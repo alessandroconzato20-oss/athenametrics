@@ -20,6 +20,7 @@ import AtRiskStudentsPanel from "@/components/admin/AtRiskStudentsPanel";
 import StudyBehaviourPanel from "@/components/admin/StudyBehaviourPanel";
 import CohortBurnoutChart from "@/components/admin/CohortBurnoutChart";
 import SleepWellbeingPanel from "@/components/admin/SleepWellbeingPanel";
+import CohortInviteCodesPanel from "@/components/admin/CohortInviteCodesPanel";
 
 type AdminRole = "admin" | "university_admin";
 
@@ -450,6 +451,13 @@ const AdminPanel = () => {
         <div className="mb-6">
           <SleepWellbeingPanel universityId={adminUniversityId} />
         </div>
+
+        {/* Student Invite Codes */}
+        {adminRole === "university_admin" && (
+          <div className="mb-6">
+            <CohortInviteCodesPanel universityId={adminUniversityId} universityName={adminUniversity} />
+          </div>
+        )}
 
         {/* Topic Difficulty Heatmap (ML API) */}
         <div className="mb-6">
