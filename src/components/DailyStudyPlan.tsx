@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import DisagreeButton from "@/components/DisagreeButton";
 import { getCoursesForYear, curriculum } from "@/data/curriculum";
+import { useStudentCourses } from "@/hooks/useStudentCourses";
 
 interface PlanItem {
   time: string;
