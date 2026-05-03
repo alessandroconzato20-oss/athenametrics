@@ -375,6 +375,33 @@ export type Database = {
           },
         ]
       }
+      professor_courses: {
+        Row: {
+          course_name: string
+          created_at: string
+          id: string
+          professor_id: string
+          university_id: string
+          year: number | null
+        }
+        Insert: {
+          course_name: string
+          created_at?: string
+          id?: string
+          professor_id: string
+          university_id: string
+          year?: number | null
+        }
+        Update: {
+          course_name?: string
+          created_at?: string
+          id?: string
+          professor_id?: string
+          university_id?: string
+          year?: number | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -1054,6 +1081,10 @@ export type Database = {
       lookup_email_by_login_key: {
         Args: { _login_key: string }
         Returns: string
+      }
+      professor_teaches: {
+        Args: { _course_name: string; _university_id: string; _user_id: string }
+        Returns: boolean
       }
       rotate_all_login_keys: { Args: never; Returns: undefined }
       verify_university_code: {
