@@ -91,7 +91,7 @@ const StudyTimer = () => {
   const { user, universityId } = useAuth();
   const navigate = useNavigate();
   const userYear = user?.user_metadata?.year || 1;
-  const userUniversity = user?.user_metadata?.university || "";
+  
 
   const [step, setStep] = useState<Step>("setup");
 
