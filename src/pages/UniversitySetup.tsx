@@ -1089,14 +1089,37 @@ function Step5Governance({
 
 function Step6Reveal({
   accessCode, ensureCode, universityName, universityId, onFinish,
+  completeness, jumpToStep,
 }: {
   accessCode: string | null;
   ensureCode: () => Promise<void>;
   universityName: string;
   universityId: string | null;
   onFinish: () => void;
+  completeness: {
+    hasCourses: boolean;
+    hasWelfareContact: boolean;
+    hasLegalBasis: boolean;
+    retentionAcknowledged: boolean;
+    authorityConfirmed: boolean;
+    noticeConfirmed: boolean;
+  };
+  jumpToStep: (s: number) => void;
 }) {
-  useEffect(() => { ensureCode(); /* eslint-disable-next-line */ }, []);
+  const gateChecks = [
+    { ok: completeness.hasCourses,            label: "At least one course set up",         step: 2 },
+    { ok: completeness.hasWelfareContact,     label: "A welfare contact (URL, email, or line)", step: 4 },
+    { ok: completeness.hasLegalBasis,         label: "Legal basis selected",               step: 5 },
+    { ok: completeness.retentionAcknowledged, label: "Data retention acknowledged",        step: 5 },
+    { ok: completeness.authorityConfirmed,    label: "Authority to share student data confirmed", step: 5 },
+    { ok: completeness.noticeConfirmed,       label: "Student notice confirmed",            step: 5 },
+  ];
+  const allReady = gateChecks.every((c) => c.ok);
+
+  useEffect(() => {
+    if (allReady) ensureCode();
+    /* eslint-disable-next-line */
+  }, [allReady]);
 
   const [copied, setCopied] = useState(false);
   const [copiedInvite, setCopiedInvite] = useState(false);
@@ -1106,8 +1129,10 @@ function Step6Reveal({
   }, [accessCode, signupUrl]);
 
   // Professor rows
+  const { user } = useAuth();
   const [profs, setProfs] = useState<{ email: string; courses: string[] }[]>([]);
   const [allCourses, setAllCourses] = useState<string[]>([]);
+  const [savingProfs, setSavingProfs] = useState(false);
   useEffect(() => {
     if (!universityId) return;
     supabase.from("university_syllabi").select("course_name").eq("university_id", universityId)
@@ -1120,15 +1145,61 @@ function Step6Reveal({
   };
   const removeProf = (i: number) => { const next = [...profs]; next.splice(i, 1); setProfs(next); };
 
-  const saveProfs = async () => {
-    if (!universityId) return;
-    const valid = profs.filter((p) => p.email && p.courses.length > 0);
-    if (valid.length === 0) return;
-    // We can't auth-invite from the client — record the intent in professor_courses,
-    // marked so an admin can issue the actual invite from the admin panel.
-    toast.info("Professors will appear in your admin panel — you can finalise their invites there.");
+  const saveAndFinish = async () => {
+    const valid = profs.filter((p) => /\S+@\S+\.\S+/.test(p.email) && p.courses.length > 0);
+    if (valid.length > 0 && universityId && user) {
+      setSavingProfs(true);
+      const rows = valid.map((p) => ({
+        university_id: universityId,
+        invited_by: user.id,
+        email: p.email.trim().toLowerCase(),
+        courses: p.courses,
+      }));
+      const { error } = await supabase
+        .from("professor_invites" as any)
+        .upsert(rows as any, { onConflict: "university_id,email" });
+      setSavingProfs(false);
+      if (error) { toast.error("Couldn't save professor invites: " + error.message); return; }
+      toast.success(`Saved ${rows.length} professor invite${rows.length > 1 ? "s" : ""}. Finalise from the admin panel.`);
+    }
     onFinish();
   };
+
+  // ── Gate (incomplete) ────────────────────────────────────────────────────
+  if (!allReady) {
+    return (
+      <Card className="rounded-3xl border-2 border-amber-300/40">
+        <CardContent className="space-y-5 p-7">
+          <div className="text-center">
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/15">
+              <ShieldAlert className="h-7 w-7 text-amber-600" />
+            </div>
+            <h2 className="font-display text-2xl font-bold text-foreground">Almost there</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Finish these items to unlock your student access code.
+            </p>
+          </div>
+          <ul className="space-y-2">
+            {gateChecks.map((c, i) => (
+              <li key={i} className="flex items-center justify-between rounded-xl border bg-card px-4 py-2.5">
+                <span className="flex items-center gap-2 text-sm">
+                  {c.ok
+                    ? <Check className="h-4 w-4 text-primary" />
+                    : <X className="h-4 w-4 text-amber-600" />}
+                  <span className={c.ok ? "text-muted-foreground line-through" : "text-foreground"}>{c.label}</span>
+                </span>
+                {!c.ok && (
+                  <Button variant="ghost" size="sm" onClick={() => jumpToStep(c.step)} className="h-7 text-xs">
+                    Go to step {c.step}
+                  </Button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="rounded-3xl border-2 border-primary/15">
@@ -1187,7 +1258,9 @@ function Step6Reveal({
 
         <div className="rounded-2xl border bg-card p-4">
           <h3 className="text-sm font-semibold text-foreground">Add professors (optional)</h3>
-          <p className="mb-3 text-xs text-muted-foreground">You can do this later from the admin panel.</p>
+          <p className="mb-3 text-xs text-muted-foreground">
+            Saved here, finalised from your admin panel. They'll get access to study logs for the courses you assign.
+          </p>
           <div className="space-y-2">
             {profs.map((p, i) => (
               <div key={i} className="flex flex-wrap gap-2">
@@ -1217,11 +1290,12 @@ function Step6Reveal({
           </Button>
         </div>
 
-        <div className="flex items-center justify-between gap-3">
-          <button onClick={onFinish} className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline">
-            Skip professors — go to dashboard
-          </button>
-          <Button onClick={profs.length > 0 ? saveProfs : onFinish} className="bg-gradient-primary text-primary-foreground">
+        <div className="flex items-center justify-end gap-3">
+          <Button
+            onClick={saveAndFinish}
+            disabled={savingProfs}
+            className="bg-gradient-primary text-primary-foreground"
+          >
             Go to my dashboard →
           </Button>
         </div>
