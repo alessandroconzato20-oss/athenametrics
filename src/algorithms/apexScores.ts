@@ -221,9 +221,9 @@ export function getRetentionOutlook(
     const hrvRatio = d.hrv_today / d.hrv_baseline_30d;
     const hrv_score = normalize(hrvRatio, 0.55, 1.35) * 100;
     const outlook =
-      rem_score * 0.40 +
+      rem_score * 0.30 +
       hrv_score * 0.25 +
-      timing_score * 0.20 +
+      timing_score * 0.30 +
       deep_score * 0.15;
     return Math.round(clamp(outlook, 0, 100));
   }
