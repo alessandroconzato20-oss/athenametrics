@@ -188,11 +188,11 @@ export function getBurnoutRisk(d: AppleHealthData): number {
     return Math.round(clamp(risk, 0, 100));
   }
 
-  // HRV unavailable — redistribute HRV's 0.35 weight: HR +0.20, Sleep +0.10, Resp +0.05
+  // HRV unavailable — redistributed weights
   const risk =
-    hr_trend_score * 0.45 +
-    sleep_trend_score * 0.35 +
-    resp_score * 0.20;
+    hr_trend_score * 0.60 +
+    sleep_trend_score * 0.30 +
+    resp_score * 0.10;
 
   return Math.round(clamp(risk, 0, 100));
 }
