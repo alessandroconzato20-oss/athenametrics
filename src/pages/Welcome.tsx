@@ -18,7 +18,7 @@ const Welcome = () => {
           transition={{ type: "spring", delay: 0.15 }}
           src={athenaLogo}
           alt="Athena Metrics"
-          className="mb-8 h-40 w-40 object-contain"
+          className="mb-8 h-56 w-56 object-contain"
         />
 
         <motion.h1
@@ -45,16 +45,16 @@ const Welcome = () => {
           className="mt-10 w-full space-y-3"
         >
           <Link to="/signup" className="block">
-            <Button className="h-13 w-full rounded-xl bg-gradient-primary text-base font-semibold uppercase tracking-wide text-primary-foreground py-3.5">
-              Create Account, Understand Yourself Better
+            <Button className="h-auto min-h-13 w-full whitespace-normal rounded-xl bg-gradient-primary px-4 py-3.5 text-sm sm:text-base font-semibold uppercase tracking-wide text-primary-foreground leading-tight">
+              Create Account
             </Button>
           </Link>
           <Link to="/login" className="block">
             <Button
               variant="outline"
-              className="h-13 w-full rounded-xl border-2 border-primary text-primary text-base font-semibold uppercase tracking-wide hover:bg-primary hover:text-primary-foreground transition-colors py-3.5"
+              className="h-auto min-h-13 w-full whitespace-normal rounded-xl border-2 border-primary px-4 py-3.5 text-sm sm:text-base font-semibold uppercase tracking-wide text-primary leading-tight hover:bg-primary hover:text-primary-foreground transition-colors"
             >
-              Log In, Return to Your Insights
+              Log In
             </Button>
           </Link>
         </motion.div>
