@@ -11,6 +11,7 @@ interface ScoreCardProps {
   actionText: string;
   numValue: number;
   subtitle?: string;
+  compact?: boolean;
   onClick: () => void;
 }
 
