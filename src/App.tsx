@@ -42,6 +42,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/persona-quiz" element={<PersonaQuiz />} />
+            <Route path="/quiz/chronotype" element={<ChronotypeQuiz />} />
             <Route path="/study-logs" element={<StudyLogs />} />
             <Route path="/study-logs/new" element={<StudyLogForm />} />
             <Route path="/study-timer" element={<StudyTimer />} />
