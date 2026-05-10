@@ -29,7 +29,7 @@ const getScoreEmoji = (icon: string, numValue: number) => {
   return "";
 };
 
-const ScoreCard = ({ label, value, icon, colorClass, index, actionText, numValue, subtitle, onClick }: ScoreCardProps) => {
+const ScoreCard = ({ label, value, icon, colorClass, index, actionText, numValue, subtitle, compact, onClick }: ScoreCardProps) => {
   const isGood = icon === "alert" ? numValue < 30 : numValue > 70;
   
   return (
@@ -40,7 +40,7 @@ const ScoreCard = ({ label, value, icon, colorClass, index, actionText, numValue
       whileHover={{ scale: 1.02, y: -2 }}
       whileTap={{ scale: 0.97 }}
       onClick={onClick}
-      className="group relative flex items-start gap-3 rounded-2xl bg-card p-4 text-left shadow-card transition-all hover:shadow-elevated overflow-hidden"
+      className={`group relative flex items-start gap-3 rounded-2xl bg-card text-left shadow-card transition-all hover:shadow-elevated overflow-hidden ${compact ? "p-3 mx-2" : "p-4"}`}
     >
       {/* Subtle shimmer on hover */}
       <motion.div
@@ -49,7 +49,7 @@ const ScoreCard = ({ label, value, icon, colorClass, index, actionText, numValue
       />
       
       <div className="relative">
-        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${colorClass} transition-transform group-hover:scale-110`}>
+        <div className={`flex shrink-0 items-center justify-center rounded-xl ${colorClass} transition-transform group-hover:scale-110 ${compact ? "h-10 w-10" : "h-12 w-12"}`}>
           {iconMap[icon]}
         </div>
         {isGood && (
@@ -69,7 +69,7 @@ const ScoreCard = ({ label, value, icon, colorClass, index, actionText, numValue
           <p className="text-xs font-medium text-muted-foreground">{label}</p>
           <span className="text-xs">{getScoreEmoji(icon, numValue)}</span>
         </div>
-        <p className="font-display text-lg font-bold text-foreground leading-tight">{value}</p>
+        <p className={`font-display font-bold text-foreground leading-tight ${compact ? "text-base" : "text-lg"}`}>{value}</p>
         {subtitle && (
           <p className="mt-0.5 text-[11px] font-semibold text-primary/80">{subtitle}</p>
         )}
