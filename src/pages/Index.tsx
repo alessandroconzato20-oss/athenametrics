@@ -157,6 +157,23 @@ function buildScoresData(scores: ApexScores) {
         { label: "HRV Adjustment", value: 85 },
       ],
     },
+    {
+      label: "Secondary Peak Window",
+      value: isRest ? "Rest" : `${scores.peakStudyWindow.secondary_start} – ${scores.peakStudyWindow.secondary_end}`,
+      numValue: 75,
+      color: "bg-score-peak/10 text-score-peak",
+      icon: "sun",
+      compact: true,
+      reasoning: [
+        `A lighter back-up focus window for review or lighter topics`,
+        `Chronotype: ${scores.peakStudyWindow.chronotype.replace("_", " ")}`,
+        `Confidence: ${scores.peakStudyWindow.confidence}`,
+      ],
+      factors: [
+        { label: "Circadian Alignment", value: 75 },
+        { label: "HRV Adjustment", value: 70 },
+      ],
+    },
   ];
 }
 
@@ -500,6 +517,7 @@ const Index = () => {
                 numValue={score.numValue}
                 actionText={getActionText(score.icon, score.numValue)}
                 subtitle={(score as any).subtitle}
+                compact={(score as any).compact}
                 onClick={() => setSelectedScore(score)}
               />
             ))}
