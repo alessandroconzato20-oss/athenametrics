@@ -525,6 +525,8 @@ const Index = () => {
         )}
 
 
+        <GettingToKnowYouQuizzes />
+
         <WeeklyChallenges />
       </div>
 
