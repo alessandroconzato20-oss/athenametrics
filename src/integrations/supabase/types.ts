@@ -751,6 +751,39 @@ export type Database = {
           },
         ]
       }
+      student_quizzes: {
+        Row: {
+          completed_at: string
+          created_at: string
+          id: string
+          quiz_key: string
+          results: Json
+          university_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          created_at?: string
+          id?: string
+          quiz_key: string
+          results?: Json
+          university_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          created_at?: string
+          id?: string
+          quiz_key?: string
+          results?: Json
+          university_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       study_libraries: {
         Row: {
           created_at: string

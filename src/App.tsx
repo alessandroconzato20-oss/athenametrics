@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Welcome from "./pages/Welcome";
 import PersonaQuiz from "./pages/PersonaQuiz";
+import ChronotypeQuiz from "./pages/ChronotypeQuiz";
 import StudyLogs from "./pages/StudyLogs";
 import StudyLogForm from "./pages/StudyLogForm";
 import StudyTimer from "./pages/StudyTimer";
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/persona-quiz" element={<PersonaQuiz />} />
+            <Route path="/quiz/chronotype" element={<ChronotypeQuiz />} />
             <Route path="/study-logs" element={<StudyLogs />} />
             <Route path="/study-logs/new" element={<StudyLogForm />} />
             <Route path="/study-timer" element={<StudyTimer />} />
