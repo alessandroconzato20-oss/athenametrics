@@ -11,6 +11,7 @@ import ScoreCard from "@/components/ScoreCard";
 import ScoreDetailModal from "@/components/ScoreDetailModal";
 import StreakBadge from "@/components/StreakBadge";
 import WeeklyChallenges from "@/components/WeeklyChallenges";
+import GettingToKnowYouQuizzes from "@/components/GettingToKnowYouQuizzes";
 
 import HeroAction from "@/components/HeroAction";
 import TodaysInsight from "@/components/TodaysInsight";
