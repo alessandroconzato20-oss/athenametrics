@@ -517,6 +517,7 @@ const Index = () => {
                 numValue={score.numValue}
                 actionText={getActionText(score.icon, score.numValue)}
                 subtitle={(score as any).subtitle}
+                compact={(score as any).compact}
                 onClick={() => setSelectedScore(score)}
               />
             ))}
