@@ -412,6 +412,30 @@ const Index = () => {
 
   const blockRec = scores ? getStudyBlockRecommendation(scores) : null;
 
+  // Calibration — visible from day 1, drives chips/overlays per score
+  const calibDays = getCalibrationDays(firstSyncAt);
+  const overallTier = getOverallTier(calibDays);
+  const showCalibBanner = !!firstSyncAt && overallTier !== "calibrated" && !calibBannerDismissed;
+  const scoreKeyByLabel: Record<string, Parameters<typeof getScoreCalibration>[0]> = {
+    "Cognitive Readiness": "cognitive",
+    "Study Capacity": "study",
+    "Burnout Risk": "burnout",
+    "Retention Outlook": "retention",
+    "Peak Study Window": "peak",
+    "Secondary Peak Window": "peakSecondary",
+  };
+  const calibrationFor = (label: string): ScoreCalibration | undefined => {
+    const key = scoreKeyByLabel[label];
+    if (!key) return undefined;
+    // No first-sync stamp yet → treat as fully calibrated (preview/web mode)
+    if (!firstSyncAt) return undefined;
+    return getScoreCalibration(key, calibDays);
+  };
+  const dismissCalibBanner = () => {
+    if (user) localStorage.setItem(`cofactor_calib_banner_${user.id}`, "1");
+    setCalibBannerDismissed(true);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-lg px-5 pb-10 pt-8">
