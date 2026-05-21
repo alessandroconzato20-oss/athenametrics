@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Brain, Clock, AlertTriangle, BookOpen, Sun } from "lucide-react";
+import { X, Brain, Clock, AlertTriangle, BookOpen, Sun, Loader2 } from "lucide-react";
 import BurnoutTrendChart from "@/components/BurnoutTrendChart";
+import type { ScoreCalibration } from "@/algorithms/calibration";
 
 interface ScoreDetailModalProps {
   score: {
@@ -11,6 +12,7 @@ interface ScoreDetailModalProps {
     icon: string;
     reasoning: string[];
     factors: { label: string; value: number }[];
+    calibration?: ScoreCalibration;
   } | null;
   onClose: () => void;
 }
@@ -84,6 +86,20 @@ const ScoreDetailModal = ({ score, onClose }: ScoreDetailModalProps) => {
               <p key={i} className="text-sm text-muted-foreground leading-relaxed">• {r}</p>
             ))}
           </div>
+
+          {score.calibration && score.calibration.tier !== "calibrated" && (
+            <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-3">
+              <div className="mb-1 flex items-center gap-2">
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                <span className="text-xs font-semibold uppercase tracking-wide text-primary">
+                  {score.calibration.label || "Calibrating"}
+                </span>
+              </div>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                {score.calibration.explanation}
+              </p>
+            </div>
+          )}
 
           {(score.icon === "brain" || score.icon === "alert" || score.icon === "book") && (
             <p className="mt-4 text-xs text-muted-foreground/80 italic leading-relaxed">

@@ -33,6 +33,7 @@ import {
 } from "@/services/healthkit";
 import { scheduleDailyNotifications, setupNotificationActionListener } from "@/services/notifications";
 import { applyCheckinModifiers, type HistoricalCheckin } from "@/algorithms/checkinModifiers";
+import { getCalibrationDays, getScoreCalibration, getOverallTier, CALIBRATION_TOTAL_DAYS, type ScoreCalibration } from "@/algorithms/calibration";
 import { format } from "date-fns";
 
 function getActionText(icon: string, numValue: number): string {
@@ -198,6 +199,8 @@ const Index = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingPending, setOnboardingPending] = useState(true);
   const [detectedWorkout, setDetectedWorkout] = useState<DetectedWorkout | null>(null);
+  const [firstSyncAt, setFirstSyncAt] = useState<string | null>(null);
+  const [calibBannerDismissed, setCalibBannerDismissed] = useState(false);
 
   // Show onboarding guide on first ever login
   useEffect(() => {
@@ -309,6 +312,18 @@ const Index = () => {
       }
       setLoading(false);
 
+      // Load first HealthKit sync timestamp for calibration display
+      if (user) {
+        const { data: prof } = await (supabase
+          .from("profiles")
+          .select("healthkit_first_sync_at")
+          .eq("id", user.id)
+          .maybeSingle() as any);
+        if (prof?.healthkit_first_sync_at) setFirstSyncAt(prof.healthkit_first_sync_at);
+        const dismissKey = `cofactor_calib_banner_${user.id}`;
+        if (localStorage.getItem(dismissKey)) setCalibBannerDismissed(true);
+      }
+
       // Notification scheduling — fire-and-forget, native only
       setupNotificationActionListener();
       if (user) scheduleDailyNotifications(user.id).catch(err => console.error("scheduleDailyNotifications:", err));
@@ -337,6 +352,16 @@ const Index = () => {
       setHealthData(data);
       setDetectedWorkout(workout);
       const isFallbackData = JSON.stringify(data) === JSON.stringify(DEFAULT_HEALTH_DATA);
+      // Stamp first sync timestamp on the profile (only if not already set)
+      if (!isFallbackData && user && !firstSyncAt) {
+        const nowIso = new Date().toISOString();
+        const { error } = await supabase
+          .from("profiles")
+          .update({ healthkit_first_sync_at: nowIso } as any)
+          .eq("id", user.id)
+          .is("healthkit_first_sync_at", null);
+        if (!error) setFirstSyncAt(nowIso);
+      }
       setSyncStatus(
         isFallbackData
           ? "No Health samples found yet. Open Apple Health once, then tap sync again."
@@ -386,6 +411,30 @@ const Index = () => {
   if (!user) return <Navigate to="/welcome" replace />;
 
   const blockRec = scores ? getStudyBlockRecommendation(scores) : null;
+
+  // Calibration — visible from day 1, drives chips/overlays per score
+  const calibDays = getCalibrationDays(firstSyncAt);
+  const overallTier = getOverallTier(calibDays);
+  const showCalibBanner = !!firstSyncAt && overallTier !== "calibrated" && !calibBannerDismissed;
+  const scoreKeyByLabel: Record<string, Parameters<typeof getScoreCalibration>[0]> = {
+    "Cognitive Readiness": "cognitive",
+    "Study Capacity": "study",
+    "Burnout Risk": "burnout",
+    "Retention Outlook": "retention",
+    "Peak Study Window": "peak",
+    "Secondary Peak Window": "peakSecondary",
+  };
+  const calibrationFor = (label: string): ScoreCalibration | undefined => {
+    const key = scoreKeyByLabel[label];
+    if (!key) return undefined;
+    // No first-sync stamp yet → treat as fully calibrated (preview/web mode)
+    if (!firstSyncAt) return undefined;
+    return getScoreCalibration(key, calibDays);
+  };
+  const dismissCalibBanner = () => {
+    if (user) localStorage.setItem(`cofactor_calib_banner_${user.id}`, "1");
+    setCalibBannerDismissed(true);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -502,25 +551,50 @@ const Index = () => {
           </div>
         )}
 
+        {showCalibBanner && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-3 flex items-start gap-2 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5"
+          >
+            <div className="mt-0.5 h-2 w-2 shrink-0 animate-pulse rounded-full bg-primary" />
+            <p className="flex-1 text-[11px] leading-snug text-foreground/80">
+              <span className="font-semibold text-primary">Day {Math.min(calibDays, CALIBRATION_TOTAL_DAYS)} of {CALIBRATION_TOTAL_DAYS} · calibrating.</span>{" "}
+              Athena is still learning your baselines — scores sharpen each day until your personal rhythm is locked in.
+            </p>
+            <button
+              onClick={dismissCalibBanner}
+              className="shrink-0 text-[11px] font-medium text-muted-foreground hover:text-foreground"
+              aria-label="Dismiss calibration notice"
+            >
+              Got it
+            </button>
+          </motion.div>
+        )}
+
         {loading ? (
           <div className="space-y-3">{[...Array(5)].map((_, i) => <div key={i} className="h-[88px] animate-pulse rounded-2xl bg-muted" />)}</div>
         ) : (
           <div className="mb-6 grid grid-cols-1 gap-2.5">
-            {scoresData.map((score, i) => (
-              <ScoreCard
-                key={score.label}
-                label={score.label}
-                value={score.value}
-                icon={score.icon}
-                colorClass={score.color}
-                index={i}
-                numValue={score.numValue}
-                actionText={getActionText(score.icon, score.numValue)}
-                subtitle={(score as any).subtitle}
-                compact={(score as any).compact}
-                onClick={() => setSelectedScore(score)}
-              />
-            ))}
+            {scoresData.map((score, i) => {
+              const calibration = calibrationFor(score.label);
+              return (
+                <ScoreCard
+                  key={score.label}
+                  label={score.label}
+                  value={score.value}
+                  icon={score.icon}
+                  colorClass={score.color}
+                  index={i}
+                  numValue={score.numValue}
+                  actionText={getActionText(score.icon, score.numValue)}
+                  subtitle={(score as any).subtitle}
+                  compact={(score as any).compact}
+                  calibration={calibration}
+                  onClick={() => setSelectedScore({ ...score, calibration })}
+                />
+              );
+            })}
           </div>
         )}
 

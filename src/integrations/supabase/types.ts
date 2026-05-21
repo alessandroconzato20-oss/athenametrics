@@ -639,6 +639,7 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          healthkit_first_sync_at: string | null
           id: string
           matricola: string | null
           onboarded_at: string | null
@@ -653,6 +654,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          healthkit_first_sync_at?: string | null
           id: string
           matricola?: string | null
           onboarded_at?: string | null
@@ -667,6 +669,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          healthkit_first_sync_at?: string | null
           id?: string
           matricola?: string | null
           onboarded_at?: string | null
