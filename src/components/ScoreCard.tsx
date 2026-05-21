@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
-import { Brain, Clock, AlertTriangle, BookOpen, Sun, ChevronRight, Sparkles } from "lucide-react";
+import { Brain, Clock, AlertTriangle, BookOpen, Sun, ChevronRight, Sparkles, Loader2 } from "lucide-react";
 import DisagreeButton from "@/components/DisagreeButton";
+import type { ScoreCalibration } from "@/algorithms/calibration";
 
 interface ScoreCardProps {
   label: string;
@@ -12,6 +13,7 @@ interface ScoreCardProps {
   numValue: number;
   subtitle?: string;
   compact?: boolean;
+  calibration?: ScoreCalibration;
   onClick: () => void;
 }
 
@@ -29,9 +31,10 @@ const getScoreEmoji = (icon: string, numValue: number) => {
   return "";
 };
 
-const ScoreCard = ({ label, value, icon, colorClass, index, actionText, numValue, subtitle, compact, onClick }: ScoreCardProps) => {
+const ScoreCard = ({ label, value, icon, colorClass, index, actionText, numValue, subtitle, compact, calibration, onClick }: ScoreCardProps) => {
   const isGood = icon === "alert" ? numValue < 30 : numValue > 70;
-  
+  const isCalibrating = calibration && calibration.tier !== "calibrated";
+
   return (
     <motion.button
       initial={{ opacity: 0, y: 20 }}
@@ -47,12 +50,24 @@ const ScoreCard = ({ label, value, icon, colorClass, index, actionText, numValue
         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
         style={{ background: "linear-gradient(135deg, transparent 40%, hsl(var(--primary) / 0.04) 50%, transparent 60%)" }}
       />
-      
+
+      {/* Calibration hatched overlay */}
+      {isCalibrating && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[0.07]"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(135deg, hsl(var(--primary)) 0 1px, transparent 1px 9px)",
+          }}
+        />
+      )}
+
       <div className="relative">
-        <div className={`flex shrink-0 items-center justify-center rounded-xl ${colorClass} transition-transform group-hover:scale-110 ${compact ? "h-10 w-10" : "h-12 w-12"}`}>
+        <div className={`flex shrink-0 items-center justify-center rounded-xl ${colorClass} transition-transform group-hover:scale-110 ${compact ? "h-10 w-10" : "h-12 w-12"} ${isCalibrating ? "ring-2 ring-dashed ring-primary/40 ring-offset-1 ring-offset-card" : ""}`}>
           {iconMap[icon]}
         </div>
-        {isGood && (
+        {isGood && !isCalibrating && (
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -62,20 +77,37 @@ const ScoreCard = ({ label, value, icon, colorClass, index, actionText, numValue
             <Sparkles className="h-3.5 w-3.5 text-accent" />
           </motion.div>
         )}
+        {isCalibrating && (
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+            className="absolute -right-1 -top-1 rounded-full bg-card p-0.5 shadow-sm"
+          >
+            <Loader2 className="h-3 w-3 text-primary/70" />
+          </motion.div>
+        )}
       </div>
-      
+
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between">
           <p className="text-xs font-medium text-muted-foreground">{label}</p>
           <span className="text-xs">{getScoreEmoji(icon, numValue)}</span>
         </div>
-        <p className={`font-display font-bold text-foreground leading-tight ${compact ? "text-base" : "text-lg"}`}>{value}</p>
+        <p className={`font-display font-bold text-foreground leading-tight ${compact ? "text-base" : "text-lg"} ${isCalibrating ? "opacity-75" : ""}`}>{value}</p>
         {subtitle && (
           <p className="mt-0.5 text-[11px] font-semibold text-primary/80">{subtitle}</p>
         )}
-        <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground/80 line-clamp-2">{actionText}</p>
+        {isCalibrating && calibration!.label && (
+          <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+            <span className="inline-block h-1 w-1 animate-pulse rounded-full bg-primary" />
+            {calibration!.label}
+          </span>
+        )}
+        <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground/80 line-clamp-2">
+          {isCalibrating ? "Numbers sharpen as Athena learns your rhythm." : actionText}
+        </p>
       </div>
-      
+
       <div className="flex items-center shrink-0">
         <ChevronRight className="h-4 w-4 text-muted-foreground/40 transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
       </div>
