@@ -551,25 +551,50 @@ const Index = () => {
           </div>
         )}
 
+        {showCalibBanner && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-3 flex items-start gap-2 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5"
+          >
+            <div className="mt-0.5 h-2 w-2 shrink-0 animate-pulse rounded-full bg-primary" />
+            <p className="flex-1 text-[11px] leading-snug text-foreground/80">
+              <span className="font-semibold text-primary">Day {Math.min(calibDays, CALIBRATION_TOTAL_DAYS)} of {CALIBRATION_TOTAL_DAYS} · calibrating.</span>{" "}
+              Athena is still learning your baselines — scores sharpen each day until your personal rhythm is locked in.
+            </p>
+            <button
+              onClick={dismissCalibBanner}
+              className="shrink-0 text-[11px] font-medium text-muted-foreground hover:text-foreground"
+              aria-label="Dismiss calibration notice"
+            >
+              Got it
+            </button>
+          </motion.div>
+        )}
+
         {loading ? (
           <div className="space-y-3">{[...Array(5)].map((_, i) => <div key={i} className="h-[88px] animate-pulse rounded-2xl bg-muted" />)}</div>
         ) : (
           <div className="mb-6 grid grid-cols-1 gap-2.5">
-            {scoresData.map((score, i) => (
-              <ScoreCard
-                key={score.label}
-                label={score.label}
-                value={score.value}
-                icon={score.icon}
-                colorClass={score.color}
-                index={i}
-                numValue={score.numValue}
-                actionText={getActionText(score.icon, score.numValue)}
-                subtitle={(score as any).subtitle}
-                compact={(score as any).compact}
-                onClick={() => setSelectedScore(score)}
-              />
-            ))}
+            {scoresData.map((score, i) => {
+              const calibration = calibrationFor(score.label);
+              return (
+                <ScoreCard
+                  key={score.label}
+                  label={score.label}
+                  value={score.value}
+                  icon={score.icon}
+                  colorClass={score.color}
+                  index={i}
+                  numValue={score.numValue}
+                  actionText={getActionText(score.icon, score.numValue)}
+                  subtitle={(score as any).subtitle}
+                  compact={(score as any).compact}
+                  calibration={calibration}
+                  onClick={() => setSelectedScore({ ...score, calibration })}
+                />
+              );
+            })}
           </div>
         )}
 
