@@ -312,6 +312,18 @@ const Index = () => {
       }
       setLoading(false);
 
+      // Load first HealthKit sync timestamp for calibration display
+      if (user) {
+        const { data: prof } = await (supabase
+          .from("profiles")
+          .select("healthkit_first_sync_at")
+          .eq("id", user.id)
+          .maybeSingle() as any);
+        if (prof?.healthkit_first_sync_at) setFirstSyncAt(prof.healthkit_first_sync_at);
+        const dismissKey = `cofactor_calib_banner_${user.id}`;
+        if (localStorage.getItem(dismissKey)) setCalibBannerDismissed(true);
+      }
+
       // Notification scheduling — fire-and-forget, native only
       setupNotificationActionListener();
       if (user) scheduleDailyNotifications(user.id).catch(err => console.error("scheduleDailyNotifications:", err));
