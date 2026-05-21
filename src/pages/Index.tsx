@@ -352,6 +352,16 @@ const Index = () => {
       setHealthData(data);
       setDetectedWorkout(workout);
       const isFallbackData = JSON.stringify(data) === JSON.stringify(DEFAULT_HEALTH_DATA);
+      // Stamp first sync timestamp on the profile (only if not already set)
+      if (!isFallbackData && user && !firstSyncAt) {
+        const nowIso = new Date().toISOString();
+        const { error } = await supabase
+          .from("profiles")
+          .update({ healthkit_first_sync_at: nowIso } as any)
+          .eq("id", user.id)
+          .is("healthkit_first_sync_at", null);
+        if (!error) setFirstSyncAt(nowIso);
+      }
       setSyncStatus(
         isFallbackData
           ? "No Health samples found yet. Open Apple Health once, then tap sync again."
