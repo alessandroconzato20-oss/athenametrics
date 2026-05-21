@@ -33,6 +33,7 @@ import {
 } from "@/services/healthkit";
 import { scheduleDailyNotifications, setupNotificationActionListener } from "@/services/notifications";
 import { applyCheckinModifiers, type HistoricalCheckin } from "@/algorithms/checkinModifiers";
+import { getCalibrationDays, getScoreCalibration, getOverallTier, CALIBRATION_TOTAL_DAYS, type ScoreCalibration } from "@/algorithms/calibration";
 import { format } from "date-fns";
 
 function getActionText(icon: string, numValue: number): string {
@@ -198,6 +199,8 @@ const Index = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingPending, setOnboardingPending] = useState(true);
   const [detectedWorkout, setDetectedWorkout] = useState<DetectedWorkout | null>(null);
+  const [firstSyncAt, setFirstSyncAt] = useState<string | null>(null);
+  const [calibBannerDismissed, setCalibBannerDismissed] = useState(false);
 
   // Show onboarding guide on first ever login
   useEffect(() => {
