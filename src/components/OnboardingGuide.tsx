@@ -15,7 +15,7 @@ interface OnboardingGuideProps {
 const steps = [
   {
     icon: Sparkles,
-    title: "Welcome to Cofactor",
+    title: "Welcome to Athena Metrics",
     body: "Your personal study coach. We turn your daily habits and biometrics into clear actions so you study smarter — not longer.",
     color: "text-primary",
     bg: "bg-primary/10",
