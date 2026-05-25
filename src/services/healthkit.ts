@@ -187,6 +187,7 @@ export const DEFAULT_HEALTH_DATA: AppleHealthData = {
   hrv_7d: [44, 46, 43, 47, 45, 49, 48],
   resting_hr_7d: [65, 64, 63, 64, 63, 62, 62],
   sleep_quality_7d: [72, 68, 75, 70, 74, 71, 76],
+  hrv_is_estimated: true,
 };
 
 export async function requestHealthPermissions(): Promise<boolean> {
