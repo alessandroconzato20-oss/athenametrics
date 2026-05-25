@@ -377,7 +377,7 @@ const Index = () => {
 
   const rawScores = useMemo(() => healthData ? calculateApexScores(healthData) : null, [healthData]);
   const scores = useMemo(() => rawScores ? applyCheckinModifiers(rawScores, checkinData, historicalCheckins) : null, [rawScores, checkinData, historicalCheckins]);
-  const scoresData = useMemo(() => scores ? buildScoresData(scores) : [], [scores]);
+  const scoresData = useMemo(() => scores ? buildScoresData(scores, healthData?.hrv_is_estimated ?? true) : [], [scores, healthData?.hrv_is_estimated]);
   const peakLabel = scores ? (scores.peakStudyWindow.primary_start === "Rest" ? "Rest" : `${scores.peakStudyWindow.primary_start} – ${scores.peakStudyWindow.primary_end}`) : "";
 
   // Check for micro reward triggers
