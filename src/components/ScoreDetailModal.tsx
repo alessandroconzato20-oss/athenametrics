@@ -113,6 +113,7 @@ const ScoreDetailModal = ({ score, onClose }: ScoreDetailModalProps) => {
               <BurnoutTrendChart />
             </div>
           )}
+          </div>
         </motion.div>
       </motion.div>
     </AnimatePresence>
