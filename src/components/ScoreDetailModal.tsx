@@ -13,6 +13,7 @@ interface ScoreDetailModalProps {
     reasoning: string[];
     factors: { label: string; value: number }[];
     calibration?: ScoreCalibration;
+    hrvEstimated?: boolean;
   } | null;
   onClose: () => void;
 }
