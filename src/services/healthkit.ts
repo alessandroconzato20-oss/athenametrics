@@ -14,6 +14,7 @@ const AUTH_READ_PERMISSIONS = [
   "calories",
   "heartRate",
   "restingHeartRate",
+  "heartRateVariability",
   "oxygenSaturation",
   "bodyTemperature",
   "sleepAnalysis",
@@ -24,6 +25,7 @@ const QUERY_SAMPLE_TYPES = {
   steps: "stepCount",
   heartRate: "heartRate",
   restingHeartRate: "restingHeartRate",
+  hrv: "heartRateVariabilitySDNN",
   sleep: "sleepAnalysis",
   activeCalories: "activeEnergyBurned",
   oxygenSaturation: "oxygenSaturation",
@@ -185,6 +187,7 @@ export const DEFAULT_HEALTH_DATA: AppleHealthData = {
   hrv_7d: [44, 46, 43, 47, 45, 49, 48],
   resting_hr_7d: [65, 64, 63, 64, 63, 62, 62],
   sleep_quality_7d: [72, 68, 75, 70, 74, 71, 76],
+  hrv_is_estimated: true,
 };
 
 export async function requestHealthPermissions(): Promise<boolean> {
@@ -275,6 +278,7 @@ export async function fetchHealthData(): Promise<AppleHealthData> {
     const [
       heartRateToday,
       restingHRToday,
+      hrvToday,
       sleepToday,
       caloriesToday,
       spo2Today,
@@ -285,35 +289,48 @@ export async function fetchHealthData(): Promise<AppleHealthData> {
       restingHR30d,
       respRate30d,
       // 7-day trends
-      hrv7d,
+      hrv7dDaily,
       restingHR7d,
     ] = await Promise.all([
       querySample(QUERY_SAMPLE_TYPES.heartRate, yesterday, now),
       querySample(QUERY_SAMPLE_TYPES.restingHeartRate, yesterday, now),
+      querySample(QUERY_SAMPLE_TYPES.hrv, yesterday, now),
       querySample(QUERY_SAMPLE_TYPES.sleep, yesterday, now),
       querySample(QUERY_SAMPLE_TYPES.activeCalories, yesterday, now),
       querySample(QUERY_SAMPLE_TYPES.oxygenSaturation, yesterday, now),
       querySample(QUERY_SAMPLE_TYPES.vo2Max, thirtyDaysAgo, now),
       querySample("respiratoryRate", yesterday, now),
       // 30-day baselines
-      querySample(QUERY_SAMPLE_TYPES.restingHeartRate, thirtyDaysAgo, now),
+      querySample(QUERY_SAMPLE_TYPES.hrv, thirtyDaysAgo, now),
       querySample(QUERY_SAMPLE_TYPES.restingHeartRate, thirtyDaysAgo, now),
       querySample("respiratoryRate", thirtyDaysAgo, now),
       // 7-day trends
-      queryDailyValues(QUERY_SAMPLE_TYPES.restingHeartRate, 7, "avg"),
+      queryDailyValues(QUERY_SAMPLE_TYPES.hrv, 7, "avg"),
       queryDailyValues(QUERY_SAMPLE_TYPES.restingHeartRate, 7, "avg"),
     ]);
 
-    // HRV — use resting HR as rough proxy since plugin doesn't support SDNN
+    // SDNN samples may come back in seconds (plugin default) — convert to ms when value < 5
+    const toMs = (v: number) => (v > 0 && v < 5 ? v * 1000 : v);
+
     const avgRestingHRToday = restingHRToday.length > 0
       ? average(restingHRToday.map((s: any) => s.value || 0))
       : DEFAULT_HEALTH_DATA.resting_hr_today;
-    const estimatedHRVToday = Math.max(20, Math.min(80, Math.round(120 - avgRestingHRToday * 1.2)));
-
     const avgRestingHR30d = restingHR30d.length > 0
       ? average(restingHR30d.map((s: any) => s.value || 0))
       : DEFAULT_HEALTH_DATA.resting_hr_baseline_30d;
-    const estimatedHRVBaseline = Math.max(20, Math.min(80, Math.round(120 - avgRestingHR30d * 1.2)));
+
+    // Prefer real HRV samples; fall back to RHR-derived estimate
+    const realHRVTodayValues = hrvToday.map((s: any) => toMs(s.value || 0)).filter((v: number) => v > 0);
+    const realHRV30dValues = hrv30d.map((s: any) => toMs(s.value || 0)).filter((v: number) => v > 0);
+    const hasRealHRV = realHRVTodayValues.length > 0 || realHRV30dValues.length > 0;
+
+    const estimatedHRVToday = realHRVTodayValues.length > 0
+      ? Math.round(average(realHRVTodayValues))
+      : Math.max(20, Math.min(80, Math.round(120 - avgRestingHRToday * 1.2)));
+
+    const estimatedHRVBaseline = realHRV30dValues.length > 0
+      ? Math.round(average(realHRV30dValues))
+      : Math.max(20, Math.min(80, Math.round(120 - avgRestingHR30d * 1.2)));
 
     // Sleep analysis
     let totalSleepMins = 0;
@@ -377,10 +394,14 @@ export async function fetchHealthData(): Promise<AppleHealthData> {
       ? average(respRate30d.map((s: any) => s.value || 0))
       : DEFAULT_HEALTH_DATA.respiratory_rate_baseline_30d;
 
-    // 7-day HRV trend (estimated from resting HR)
-    const hrv7dValues = restingHR7d.map((rhr: number) =>
-      rhr > 0 ? Math.max(20, Math.min(80, Math.round(120 - rhr * 1.2))) : estimatedHRVBaseline
-    );
+    // 7-day HRV trend — prefer real HRV daily series, fall back to RHR-derived per-day
+    const hrv7dValues = restingHR7d.map((rhr: number, i: number) => {
+      const realDay = toMs(hrv7dDaily[i] || 0);
+      if (realDay > 0) return Math.round(realDay);
+      return rhr > 0
+        ? Math.max(20, Math.min(80, Math.round(120 - rhr * 1.2)))
+        : estimatedHRVBaseline;
+    });
 
     // 7-day sleep quality (simplified composite)
     const sleepQuality7d = hrv7dValues.map((hrv: number, i: number) => {
@@ -391,6 +412,7 @@ export async function fetchHealthData(): Promise<AppleHealthData> {
     const healthData: AppleHealthData = {
       hrv_today: estimatedHRVToday,
       hrv_baseline_30d: estimatedHRVBaseline,
+      hrv_is_estimated: !hasRealHRV,
       resting_hr_today: Math.round(avgRestingHRToday),
       resting_hr_baseline_30d: Math.round(avgRestingHR30d),
       sleep_duration_hours: parseFloat(sleepHours.toFixed(1)),

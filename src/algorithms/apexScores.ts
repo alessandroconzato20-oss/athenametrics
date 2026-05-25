@@ -22,6 +22,8 @@ export interface AppleHealthData {
   hrv_7d: number[];
   resting_hr_7d: number[];
   sleep_quality_7d: number[];
+  /** True when hrv_today/baseline are derived from RHR because no real HRV samples are available. */
+  hrv_is_estimated?: boolean;
 }
 
 // Toggle when the HealthKit plugin gains HRV SDNN support.

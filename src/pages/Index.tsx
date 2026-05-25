@@ -70,7 +70,7 @@ function getStudyBlockRecommendation(scores: ApexScores) {
     : { blockMinutes: 30, breakMinutes: 10, label: "30 min blocks · 10 min breaks", tier: "low" as const };
 }
 
-function buildScoresData(scores: ApexScores) {
+function buildScoresData(scores: ApexScores, hrvIsEstimated: boolean) {
   const isRest = scores.peakStudyWindow.primary_start === "Rest";
   const peakLabel = isRest ? "Rest" : `${scores.peakStudyWindow.primary_start} – ${scores.peakStudyWindow.primary_end}`;
   const blockRec = getStudyBlockRecommendation(scores);
@@ -175,7 +175,7 @@ function buildScoresData(scores: ApexScores) {
         { label: "HRV Adjustment", value: 70 },
       ],
     },
-  ];
+  ].map(card => ({ ...card, hrvEstimated: hrvIsEstimated }));
 }
 
 const Index = () => {
@@ -377,7 +377,7 @@ const Index = () => {
 
   const rawScores = useMemo(() => healthData ? calculateApexScores(healthData) : null, [healthData]);
   const scores = useMemo(() => rawScores ? applyCheckinModifiers(rawScores, checkinData, historicalCheckins) : null, [rawScores, checkinData, historicalCheckins]);
-  const scoresData = useMemo(() => scores ? buildScoresData(scores) : [], [scores]);
+  const scoresData = useMemo(() => scores ? buildScoresData(scores, healthData?.hrv_is_estimated ?? true) : [], [scores, healthData?.hrv_is_estimated]);
   const peakLabel = scores ? (scores.peakStudyWindow.primary_start === "Rest" ? "Rest" : `${scores.peakStudyWindow.primary_start} – ${scores.peakStudyWindow.primary_end}`) : "";
 
   // Check for micro reward triggers
