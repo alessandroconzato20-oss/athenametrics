@@ -43,9 +43,9 @@ const ScoreDetailModal = ({ score, onClose }: ScoreDetailModalProps) => {
           exit={{ y: "100%" }}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-lg rounded-t-3xl bg-card p-6 shadow-elevated sm:rounded-3xl"
+          className="flex max-h-[90dvh] w-full max-w-lg flex-col rounded-t-3xl bg-card shadow-elevated sm:max-h-[85vh] sm:rounded-3xl"
         >
-          <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center justify-between border-b border-border/40 bg-card p-6 pb-4 rounded-t-3xl">
             <div className="flex items-center gap-3">
               <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${score.color}`}>
                 {iconMap[score.icon]}
@@ -55,11 +55,12 @@ const ScoreDetailModal = ({ score, onClose }: ScoreDetailModalProps) => {
                 <p className="text-2xl font-bold text-foreground">{score.value}</p>
               </div>
             </div>
-            <button onClick={onClose} className="rounded-full p-2 text-muted-foreground hover:bg-muted">
+            <button onClick={onClose} className="rounded-full p-2 text-muted-foreground hover:bg-muted shrink-0" aria-label="Close">
               <X className="h-5 w-5" />
             </button>
           </div>
 
+          <div className="overflow-y-auto overscroll-contain px-6 pt-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
           <div className="mb-5 space-y-3">
             <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Contributing Factors</h4>
             {score.factors.map((factor, i) => (
