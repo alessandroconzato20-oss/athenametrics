@@ -14,6 +14,7 @@ const AUTH_READ_PERMISSIONS = [
   "calories",
   "heartRate",
   "restingHeartRate",
+  "heartRateVariability",
   "oxygenSaturation",
   "bodyTemperature",
   "sleepAnalysis",
