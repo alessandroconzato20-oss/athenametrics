@@ -70,7 +70,7 @@ function getStudyBlockRecommendation(scores: ApexScores) {
     : { blockMinutes: 30, breakMinutes: 10, label: "30 min blocks · 10 min breaks", tier: "low" as const };
 }
 
-function buildScoresData(scores: ApexScores) {
+function buildScoresData(scores: ApexScores, hrvIsEstimated: boolean) {
   const isRest = scores.peakStudyWindow.primary_start === "Rest";
   const peakLabel = isRest ? "Rest" : `${scores.peakStudyWindow.primary_start} – ${scores.peakStudyWindow.primary_end}`;
   const blockRec = getStudyBlockRecommendation(scores);
