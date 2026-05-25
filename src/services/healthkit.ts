@@ -25,6 +25,7 @@ const QUERY_SAMPLE_TYPES = {
   steps: "stepCount",
   heartRate: "heartRate",
   restingHeartRate: "restingHeartRate",
+  hrv: "heartRateVariabilitySDNN",
   sleep: "sleepAnalysis",
   activeCalories: "activeEnergyBurned",
   oxygenSaturation: "oxygenSaturation",
