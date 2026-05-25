@@ -175,7 +175,7 @@ function buildScoresData(scores: ApexScores, hrvIsEstimated: boolean) {
         { label: "HRV Adjustment", value: 70 },
       ],
     },
-  ];
+  ].map(card => ({ ...card, hrvEstimated: hrvIsEstimated }));
 }
 
 const Index = () => {
