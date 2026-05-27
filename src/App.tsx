@@ -26,6 +26,12 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import AccountSettings from "./pages/AccountSettings";
 import NotFound from "./pages/NotFound";
+import { lazy, Suspense } from "react";
+
+// Dev-only: algorithm tuning playground. Tree-shaken out of production builds.
+const AlgorithmPlayground = import.meta.env.DEV
+  ? lazy(() => import("./pages/dev/AlgorithmPlayground"))
+  : null;
 
 const queryClient = new QueryClient();
 
@@ -56,6 +62,16 @@ const App = () => (
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/account" element={<AccountSettings />} />
+            {AlgorithmPlayground && (
+              <Route
+                path="/dev/algorithms"
+                element={
+                  <Suspense fallback={<div className="p-6">Loading playground…</div>}>
+                    <AlgorithmPlayground />
+                  </Suspense>
+                }
+              />
+            )}
             <Route path="*" element={<NotFound />} />
           </Routes>
           <GdprPrivacySheet />

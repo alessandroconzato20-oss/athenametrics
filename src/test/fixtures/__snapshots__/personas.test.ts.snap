@@ -1,0 +1,131 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Persona pipeline snapshots > Anxious before exam: produces stable outputs 1`] = `
+{
+  "burnoutRisk": 92,
+  "chronotype": "intermediate",
+  "cognitiveReadiness": 49,
+  "confidence": "medium",
+  "peakEnd": "11:00 AM",
+  "peakStart": "10:00 AM",
+  "retentionOutlook": 76,
+  "studyCapacityMinutes": 315,
+}
+`;
+
+exports[`Persona pipeline snapshots > Burnt-out finalist: produces stable outputs 1`] = `
+{
+  "burnoutRisk": 70,
+  "chronotype": "intermediate",
+  "cognitiveReadiness": 64,
+  "confidence": "medium",
+  "peakEnd": "11:45 AM",
+  "peakStart": "9:15 AM",
+  "retentionOutlook": 47,
+  "studyCapacityMinutes": 225,
+}
+`;
+
+exports[`Persona pipeline snapshots > Comeback student: produces stable outputs 1`] = `
+{
+  "burnoutRisk": 37,
+  "chronotype": "intermediate",
+  "cognitiveReadiness": 97,
+  "confidence": "medium",
+  "peakEnd": "11:45 AM",
+  "peakStart": "9:15 AM",
+  "retentionOutlook": 91,
+  "studyCapacityMinutes": 476,
+}
+`;
+
+exports[`Persona pipeline snapshots > Consistent grinder: produces stable outputs 1`] = `
+{
+  "burnoutRisk": 50,
+  "chronotype": "intermediate",
+  "cognitiveReadiness": 95,
+  "confidence": "medium",
+  "peakEnd": "11:45 AM",
+  "peakStart": "9:15 AM",
+  "retentionOutlook": 93,
+  "studyCapacityMinutes": 466,
+}
+`;
+
+exports[`Persona pipeline snapshots > Late-night caffeine + screens: produces stable outputs 1`] = `
+{
+  "burnoutRisk": 64,
+  "chronotype": "intermediate",
+  "cognitiveReadiness": 59,
+  "confidence": "medium",
+  "peakEnd": "12:55 PM",
+  "peakStart": "10:55 AM",
+  "retentionOutlook": 61,
+  "studyCapacityMinutes": 385,
+}
+`;
+
+exports[`Persona pipeline snapshots > New user, no HealthKit data: produces stable outputs 1`] = `
+{
+  "burnoutRisk": 50,
+  "chronotype": "intermediate",
+  "cognitiveReadiness": 15,
+  "confidence": "medium",
+  "peakEnd": "11:45 AM",
+  "peakStart": "9:15 AM",
+  "retentionOutlook": 21,
+  "studyCapacityMinutes": 36,
+}
+`;
+
+exports[`Persona pipeline snapshots > Night owl mid-semester: produces stable outputs 1`] = `
+{
+  "burnoutRisk": 50,
+  "chronotype": "night_owl",
+  "cognitiveReadiness": 97,
+  "confidence": "low",
+  "peakEnd": "3:30 PM",
+  "peakStart": "1:00 PM",
+  "retentionOutlook": 78,
+  "studyCapacityMinutes": 476,
+}
+`;
+
+exports[`Persona pipeline snapshots > Recovery day (Rest override): produces stable outputs 1`] = `
+{
+  "burnoutRisk": 70,
+  "chronotype": "intermediate",
+  "cognitiveReadiness": 54,
+  "confidence": "medium",
+  "peakEnd": "Rest",
+  "peakStart": "Rest",
+  "retentionOutlook": 53,
+  "studyCapacityMinutes": 272,
+}
+`;
+
+exports[`Persona pipeline snapshots > Sleep-deprived student: produces stable outputs 1`] = `
+{
+  "burnoutRisk": 50,
+  "chronotype": "intermediate",
+  "cognitiveReadiness": 49,
+  "confidence": "medium",
+  "peakEnd": "11:45 AM",
+  "peakStart": "9:15 AM",
+  "retentionOutlook": 33,
+  "studyCapacityMinutes": 128,
+}
+`;
+
+exports[`Persona pipeline snapshots > Well-rested athlete: produces stable outputs 1`] = `
+{
+  "burnoutRisk": 50,
+  "chronotype": "intermediate",
+  "cognitiveReadiness": 100,
+  "confidence": "medium",
+  "peakEnd": "11:45 AM",
+  "peakStart": "9:15 AM",
+  "retentionOutlook": 91,
+  "studyCapacityMinutes": 480,
+}
+`;
