@@ -27,6 +27,11 @@ import TermsOfService from "./pages/TermsOfService";
 import AccountSettings from "./pages/AccountSettings";
 import NotFound from "./pages/NotFound";
 
+// Dev-only: algorithm tuning playground. Tree-shaken out of production.
+const AlgorithmPlayground = import.meta.env.DEV
+  ? (await import("./pages/dev/AlgorithmPlayground")).default
+  : null;
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -56,6 +61,9 @@ const App = () => (
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/account" element={<AccountSettings />} />
+            {AlgorithmPlayground && (
+              <Route path="/dev/algorithms" element={<AlgorithmPlayground />} />
+            )}
             <Route path="*" element={<NotFound />} />
           </Routes>
           <GdprPrivacySheet />
