@@ -1,46 +1,97 @@
-## Why HRV is missing
+# Algorithm Testing Infrastructure — All 4 Layers
 
-Apple Health may be connected, but the app currently:
-1. Does not ask iOS for HRV read permission.
-2. Does not query the HRV sample type.
-3. Estimates HRV from resting heart rate and always shows the "Estimated without HRV" note.
+Build a complete, dev-only testing system around the scoring algorithms. None of this ships to end users — fixtures and the playground live behind a dev route, tests run in CI/local only.
 
-So this is a code-side integration gap, not a HealthKit/baseline problem.
+## Layer 1 — Unit Tests (automated, invisible to you)
 
-## Fix
+Add Vitest test files next to each algorithm in `src/algorithms/`:
+- `apexScores.test.ts` — covers every exported scoring function (sleep, HRV, stress, motivation, rest, study, overall ApexScore)
+- `burnoutTrends.test.ts` — 7/30-day trend calculations
+- `peakWindow.test.ts` — chronotype + late factors + Rest override
+- `studyBlocks.test.ts` — High/Medium/Low block duration logic
+- `atRisk.test.ts` — academic (60%) vs survey (15%) weights
+- `wellbeingDampening.test.ts` — 0.5 impact multiplier
 
-### 1. Request HRV permission
-In `src/services/healthkit.ts`, add `"heartRateVariability"` to `AUTH_READ_PERMISSIONS`. Users who already authorized will be re-prompted only for this new type on next launch.
+Each test asserts: known input → known output, boundary values (0, max), null/missing handling, no NaN/negative outputs.
 
-### 2. Query the real HRV samples
-- Add `hrv: "heartRateVariabilitySDNN"` to `QUERY_SAMPLE_TYPES`.
-- In `fetchHealthData`, query HRV for today (last 24h) and the 30-day baseline window, plus a 7-day daily series using `queryDailyValues(..., "avg")`.
-- Plugin returns SDNN in **seconds**, so multiply by 1000 to get the millisecond values the ApexScores algorithm expects.
+Setup: install `vitest`, `@testing-library/react`, `jsdom`, `@testing-library/jest-dom`; add `vitest.config.ts` and `src/test/setup.ts` per the standard frontend testing setup.
 
-### 3. Use real values, fall back gracefully
-- `hrv_today` → average of today's HRV samples; if none, keep the current RHR-derived estimate.
-- `hrv_baseline_30d` → average of 30-day samples; same fallback.
-- `hrv_7d` → real 7-day daily averages; same fallback per missing day.
-- Track a boolean `hasRealHRV` (true if today OR baseline returned ≥1 real sample).
+## Layer 2 — Scenario Fixtures (you review once, then automatic)
 
-### 4. Expose the flag
-- Extend `AppleHealthData` with an optional `hrv_is_estimated: boolean`.
-- Set it in `fetchHealthData` (`!hasRealHRV`).
-- Thread it through wherever scores are built (likely `apexScores.ts` → score factor objects consumed by `ScoreCard` / `ScoreDetailModal`).
+Create `src/test/fixtures/personas.ts` with ~10 named personas. Initial drafts:
 
-### 5. Conditional disclaimer
-In `src/components/ScoreDetailModal.tsx`, the block that renders
-`"Estimated without HRV — your device's HealthKit integration…"` (currently shown unconditionally for `brain`/`alert`/`book` icons) should only render when `hrv_is_estimated === true`.
+1. **Well-rested athlete** — 8h sleep, HRV 75, low stress, high motivation
+2. **Sleep-deprived student** — 4h sleep, HRV 32, high stress
+3. **Burnt-out finalist** — chronic low sleep, declining 30-day HRV trend
+4. **Anxious before exam** — normal sleep but high stress + low motivation
+5. **Recovery day** — Rest override active
+6. **Night owl mid-semester** — late chronotype, late study factor
+7. **New user, no HealthKit** — missing HRV/sleep data
+8. **Consistent grinder** — flat metrics, steady study logs
+9. **Comeback student** — improving 7-day trend after bad month
+10. **At-risk profile** — failing academic weight + poor survey
 
-### 6. Native sync note
-Because this changes Info.plist usage requirements (new HKQuantityTypeIdentifierHeartRateVariabilitySDNN read), the user must run `npx cap sync ios` after pulling. The `NSHealthShareUsageDescription` string already in Info.plist covers HRV — no plist change needed — but the permission sheet will re-appear once.
+Then `src/test/fixtures/snapshots.ts` stores expected outputs. A test (`personas.test.ts`) runs every persona through every algorithm and diffs against snapshots. When you change a weight, failing snapshots show exactly which persona shifted and by how much.
 
-## Files touched
-- `src/services/healthkit.ts` — permission, query, baseline, 7-day series, estimated flag.
-- `src/algorithms/apexScores.ts` — propagate `hrv_is_estimated` into the score factor output (small change).
-- `src/components/ScoreDetailModal.tsx` — gate the disclaimer on the flag.
+Workflow: you skim personas once (~20 min), tell me which expected outputs feel wrong, I adjust.
 
-## Verification
-- Web preview: flag stays `true` (DEFAULT_HEALTH_DATA), disclaimer keeps showing — no regression.
-- On device after `npx cap sync` + reinstall: accept the new HRV prompt, open a score modal; if Apple Watch / iPhone has logged HRV in the last 24h or 30d the disclaimer disappears and factor bars use real HRV.
-- Console: `HealthKit computed AppleHealthData` log should show realistic `hrv_today` (typically 20–80 ms) instead of the RHR-derived number.
+## Layer 3 — Interactive Playground (your main tool)
+
+New dev-only route `/dev/algorithms` (guarded by `import.meta.env.DEV` — returns 404 in production builds, never reachable by end users).
+
+Features:
+- **Inputs panel** — sliders/number fields for every algorithm input (sleep hours, HRV, stress 1-10, motivation 1-10, rest toggle, chronotype, study minutes, mastery %, etc.)
+- **Live outputs panel** — every score recomputes on input change: ApexScore, sub-scores, burnout trend value, peak window time, recommended block duration, at-risk status
+- **Persona loader** — dropdown to load any Layer-2 persona as a starting point
+- **Diff mode** — compare two input sets side-by-side
+- **Export** — copy current input/output as a new persona fixture
+
+Built with existing UI tokens (beige/teal palette, semantic tokens — no hardcoded colors).
+
+## Layer 4 — Property-Based Tests (automated guardrails)
+
+Add `fast-check` as a dev dependency. Create `src/algorithms/*.property.test.ts` files that generate thousands of random valid inputs and assert invariants:
+- All scores stay within `[0, 100]`
+- Never `NaN`, `Infinity`, or negative
+- Monotonicity where expected (more sleep → sleep score never decreases, all else equal)
+- Rest override always reduces study-block duration
+- Missing HealthKit data → graceful fallback, no crash
+
+Runs in <5s, catches edge cases humans miss.
+
+## Technical section
+
+**New dependencies (dev only):**
+- `vitest`, `@vitejs/plugin-react-swc`, `@testing-library/react`, `@testing-library/jest-dom`, `jsdom`, `fast-check`
+
+**New files:**
+```
+vitest.config.ts
+src/test/setup.ts
+src/test/fixtures/personas.ts
+src/test/fixtures/snapshots.ts
+src/test/fixtures/personas.test.ts
+src/algorithms/*.test.ts          (one per algorithm)
+src/algorithms/*.property.test.ts (one per algorithm)
+src/pages/dev/AlgorithmPlayground.tsx
+src/components/dev/InputPanel.tsx
+src/components/dev/OutputPanel.tsx
+src/components/dev/PersonaLoader.tsx
+src/components/dev/DiffView.tsx
+```
+
+**Routing:** add `/dev/algorithms` to the router wrapped in `{import.meta.env.DEV && <Route ... />}` so the route literally does not exist in the production bundle.
+
+**Production safety:**
+- Playground page and dev components tree-shaken out of prod build (DEV guard)
+- Test files (`*.test.ts`, `*.property.test.ts`) excluded by Vite from the app bundle by default
+- Fixtures live under `src/test/` — not imported by any app code
+- Zero new runtime dependencies for end users
+
+**Build order:** Layer 1 + setup → Layer 2 fixtures → Layer 3 playground → Layer 4 property tests. Each layer is independently useful; if anything breaks mid-way the app keeps working.
+
+## What you do after this ships
+
+1. Review the 10 personas once, flag any that don't match reality
+2. Open `/dev/algorithms` whenever a score "feels off", reproduce it, tell me the expected output
+3. Everything else (unit + property tests + snapshot diffs) runs automatically
