@@ -28,10 +28,8 @@ import AccountSettings from "./pages/AccountSettings";
 import NotFound from "./pages/NotFound";
 import { lazy, Suspense } from "react";
 
-// Dev-only: algorithm tuning playground. Tree-shaken out of production builds.
-const AlgorithmPlayground = import.meta.env.DEV
-  ? lazy(() => import("./pages/dev/AlgorithmPlayground"))
-  : null;
+// Algorithm tuning playground — internal tool, unlinked from any nav.
+const AlgorithmPlayground = lazy(() => import("./pages/dev/AlgorithmPlayground"));
 
 const queryClient = new QueryClient();
 
@@ -62,16 +60,14 @@ const App = () => (
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/account" element={<AccountSettings />} />
-            {AlgorithmPlayground && (
-              <Route
-                path="/dev/algorithms"
-                element={
-                  <Suspense fallback={<div className="p-6">Loading playground…</div>}>
-                    <AlgorithmPlayground />
-                  </Suspense>
-                }
-              />
-            )}
+            <Route
+              path="/dev/algorithms"
+              element={
+                <Suspense fallback={<div className="p-6">Loading playground…</div>}>
+                  <AlgorithmPlayground />
+                </Suspense>
+              }
+            />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <GdprPrivacySheet />
