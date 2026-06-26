@@ -230,9 +230,11 @@ const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbein
             transition={{ duration: 0.2 }}
             className="px-5 pb-5 pt-3"
           >
-            {/* Steps 0, 2, 3 — simple single-select */}
-            {(step === 0 || step === 2 || step === 3) && (() => {
-              const cfg = SIMPLE_STEPS[step]!;
+            {/* Steps 0, 2, 3, 5 — simple single-select */}
+            {(step === 0 || step === 2 || step === 3 || step === 5) && (() => {
+              const cfg = step === 5
+                ? { question: "How emotionally worn-out are you feeling today?", options: EXHAUSTION_OPTIONS, selected: exhaustion, onSelect: setExhaustion }
+                : SIMPLE_STEPS[step]!;
               return (
                 <>
                   <p className="text-base font-semibold text-foreground mb-4">{cfg.question}</p>
