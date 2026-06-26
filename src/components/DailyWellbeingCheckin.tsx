@@ -62,6 +62,14 @@ const NIGHT_FACTORS = [
   { id: "normal", emoji: "✅", label: "Normal night" },
 ];
 
+const EXHAUSTION_OPTIONS = [
+  { value: 1, emoji: "🌿", label: "Not at all" },
+  { value: 2, emoji: "🙂", label: "A little" },
+  { value: 3, emoji: "😐", label: "Somewhat" },
+  { value: 4, emoji: "😞", label: "Quite drained" },
+  { value: 5, emoji: "🥀", label: "Completely worn out" },
+];
+
 const EXERCISE_TYPES: { value: "cardio" | "strength" | "walking"; emoji: string; label: string }[] = [
   { value: "cardio",   emoji: "🏃", label: "Cardio" },
   { value: "strength", emoji: "🏋️", label: "Strength" },
@@ -70,17 +78,18 @@ const EXERCISE_TYPES: { value: "cardio" | "strength" | "walking"; emoji: string;
 
 const EXERCISE_DURATIONS = [15, 30, 45, 60, 90];
 
-// 6 steps: rest, study-window, stress, motivation, night-factors, exercise
-type Step = 0 | 1 | 2 | 3 | 4 | 5;
+// 7 steps: rest, study-window, stress, motivation, night-factors, emotional-exhaustion, exercise
+type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 type StudyWindow = "within_30" | "1_2h" | "3plus" | "not_today";
 type ExerciseType = "cardio" | "strength" | "walking";
 
 const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbeingCheckinProps) => {
   const { user, universityId } = useAuth();
   const hasDetectedWorkout = !!detectedWorkout;
-  // When HealthKit has already given us a workout, the exercise step (5) is skipped.
-  const lastStep: Step = hasDetectedWorkout ? 4 : 5;
-  const totalSteps = hasDetectedWorkout ? 5 : 6;
+  // When HealthKit has already given us a workout, the exercise step (6) is skipped,
+  // and the emotional-exhaustion step (5) becomes the final step.
+  const lastStep: Step = hasDetectedWorkout ? 5 : 6;
+  const totalSteps = hasDetectedWorkout ? 6 : 7;
   const [step, setStep] = useState<Step>(0);
   const [rest, setRest] = useState<number | null>(null);
   const [studyWindow, setStudyWindow] = useState<StudyWindow | null>(null);
@@ -101,6 +110,7 @@ const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbein
   }, []);
   const [motivation, setMotivation] = useState<number | null>(null);
   const [nightFactors, setNightFactors] = useState<string[]>([]);
+  const [exhaustion, setExhaustion] = useState<number | null>(null);
   // null = unanswered, true = yes, false = no, "not_yet" = haven't yet (treated as no for scoring)
   const [didExercise, setDidExercise] = useState<boolean | "not_yet" | null>(null);
   const [exerciseType, setExerciseType] = useState<ExerciseType | null>(null);
@@ -143,6 +153,7 @@ const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbein
         stress_level: stress,
         motivation_level: motivation,
         night_factors: nightFactors,
+        emotional_exhaustion: exhaustion,
         study_plan_window: studyWindow,
         did_exercise: finalDidExercise,
         exercise_type: finalDidExercise ? finalExerciseType : null,
@@ -178,7 +189,8 @@ const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbein
     if (step === 2) return stress !== null;
     if (step === 3) return motivation !== null;
     if (step === 4) return nightFactors.length > 0;
-    if (step === 5) {
+    if (step === 5) return exhaustion !== null;
+    if (step === 6) {
       // Only reachable when no HealthKit workout was detected
       if (didExercise === null) return false;
       if (didExercise === false || didExercise === "not_yet") return true;
@@ -218,9 +230,11 @@ const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbein
             transition={{ duration: 0.2 }}
             className="px-5 pb-5 pt-3"
           >
-            {/* Steps 0, 2, 3 — simple single-select */}
-            {(step === 0 || step === 2 || step === 3) && (() => {
-              const cfg = SIMPLE_STEPS[step]!;
+            {/* Steps 0, 2, 3, 5 — simple single-select */}
+            {(step === 0 || step === 2 || step === 3 || step === 5) && (() => {
+              const cfg = step === 5
+                ? { question: "How emotionally worn-out are you feeling today?", options: EXHAUSTION_OPTIONS, selected: exhaustion, onSelect: setExhaustion }
+                : SIMPLE_STEPS[step]!;
               return (
                 <>
                   <p className="text-base font-semibold text-foreground mb-4">{cfg.question}</p>
@@ -300,8 +314,8 @@ const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbein
               </>
             )}
 
-            {/* Step 5 — exercise */}
-            {step === 5 && (
+            {/* Step 6 — exercise */}
+            {step === 6 && (
               <>
                 <p className="text-base font-semibold text-foreground mb-4">Did you exercise today?</p>
                 <div className="flex flex-col gap-2 mb-4">

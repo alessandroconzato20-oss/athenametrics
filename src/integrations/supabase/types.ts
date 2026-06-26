@@ -357,6 +357,7 @@ export type Database = {
           checkin_date: string
           created_at: string
           did_exercise: boolean | null
+          emotional_exhaustion: number | null
           exercise_duration_minutes: number | null
           exercise_type: string | null
           id: string
@@ -372,6 +373,7 @@ export type Database = {
           checkin_date?: string
           created_at?: string
           did_exercise?: boolean | null
+          emotional_exhaustion?: number | null
           exercise_duration_minutes?: number | null
           exercise_type?: string | null
           id?: string
@@ -387,6 +389,7 @@ export type Database = {
           checkin_date?: string
           created_at?: string
           did_exercise?: boolean | null
+          emotional_exhaustion?: number | null
           exercise_duration_minutes?: number | null
           exercise_type?: string | null
           id?: string

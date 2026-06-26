@@ -24,6 +24,30 @@ export interface AppleHealthData {
   sleep_quality_7d: number[];
   /** True when hrv_today/baseline are derived from RHR because no real HRV samples are available. */
   hrv_is_estimated?: boolean;
+
+  // ── Behavioural burnout signals (all optional; missing data → signal skipped) ──
+  /** Daily study hours over the last 14 days, oldest first. Index alignment with `study_hours_14d_is_weekend` if provided. */
+  study_hours_14d?: number[];
+  /** Per-day weekend flag (Sat/Sun) matching `study_hours_14d`. */
+  study_hours_14d_is_weekend?: boolean[];
+  /** 60-day personal average of daily study hours (excluding today). */
+  study_hours_60d_avg?: number;
+  /** Fraction in [0,1] of rest days in the last 7d where sleep quality > 60 AND next-day Q1 ≥ 4. */
+  recovery_day_quality_7d?: number;
+  /** Total rest days (<1h study) observed in the last 7d. RDQ is only used when ≥ 2. */
+  recovery_day_rest_count_7d?: number;
+  /** Fraction in [0,1] of study sessions ended < 50% of planned duration over last 14d. */
+  session_abandonment_rate_14d?: number;
+  /** Trend of abandonment rate week-on-week (positive = worsening). */
+  session_abandonment_trend_14d?: number;
+  /** Sleep-midpoint times in minutes-since-midnight for last 7 nights. Used for Sleep Regularity Index. */
+  sleep_midpoints_7d?: number[];
+  /** Today's resting wrist skin temperature in °C (Apple Watch Series 8+ / Oura / Garmin). */
+  wrist_temp_today?: number;
+  /** 30-day personal baseline of resting wrist temperature. */
+  wrist_temp_baseline_30d?: number;
+  /** Count of consecutive recent days with wrist temp > baseline + 0.4°C. */
+  wrist_temp_elevated_days?: number;
 }
 
 // Toggle when the HealthKit plugin gains HRV SDNN support.
@@ -177,26 +201,161 @@ export function getBurnoutRisk(d: AppleHealthData): number {
   const resp_delta = d.respiratory_rate_bpm - d.respiratory_rate_baseline_30d;
   const resp_score = clamp(50 + (resp_delta * 12), 0, 100);
 
+  let baseRisk: number;
   if (HRV_AVAILABLE) {
     const hrv_slope = trendSlope(d.hrv_7d);
     const hrv_baseline_avg = d.hrv_7d.reduce((a, b) => a + b, 0) / d.hrv_7d.length;
     const hrv_trend_score = clamp(50 - (hrv_slope / hrv_baseline_avg) * 300, 0, 100);
 
-    const risk =
+    baseRisk =
       hrv_trend_score * 0.35 +
       hr_trend_score * 0.25 +
       sleep_trend_score * 0.25 +
       resp_score * 0.15;
-    return Math.round(clamp(risk, 0, 100));
+  } else {
+    // HRV unavailable — redistributed weights
+    baseRisk =
+      hr_trend_score * 0.60 +
+      sleep_trend_score * 0.30 +
+      resp_score * 0.10;
   }
 
-  // HRV unavailable — redistributed weights
-  const risk =
-    hr_trend_score * 0.60 +
-    sleep_trend_score * 0.30 +
-    resp_score * 0.10;
+  const behavioural = getBehaviouralBurnoutRiskPoints(d);
+  return Math.round(clamp(baseRisk + behavioural, 0, 100));
+}
 
-  return Math.round(clamp(risk, 0, 100));
+// ─────────────────────────────────────────────
+// 3b. BEHAVIOURAL BURNOUT SIGNALS (additive)
+// Each signal is gated on data availability and contributes 0..N additional
+// risk points on top of the biometric baseline. Designed so total uplift
+// stays ≤ ~40 points even with multiple converging signals.
+// ─────────────────────────────────────────────
+
+function mean(arr: number[]): number {
+  return arr.length === 0 ? 0 : arr.reduce((a, b) => a + b, 0) / arr.length;
+}
+
+function stdDev(arr: number[]): number {
+  if (arr.length < 2) return 0;
+  const m = mean(arr);
+  const variance = arr.reduce((a, b) => a + (b - m) ** 2, 0) / arr.length;
+  return Math.sqrt(variance);
+}
+
+export interface BurnoutBreakdown {
+  loadVolatility: number;       // CV signal
+  cumulativeOverreach: number;  // CWI
+  recoveryDayQuality: number;   // RDQ
+  sessionAbandonment: number;   // efficacy
+  sleepRegularity: number;      // SRI
+  weekendAsymmetry: number;     // detachment
+  wristTempElevation: number;   // physiological stress
+}
+
+export function getBurnoutBreakdown(d: AppleHealthData): BurnoutBreakdown {
+  const out: BurnoutBreakdown = {
+    loadVolatility: 0,
+    cumulativeOverreach: 0,
+    recoveryDayQuality: 0,
+    sessionAbandonment: 0,
+    sleepRegularity: 0,
+    weekendAsymmetry: 0,
+    wristTempElevation: 0,
+  };
+
+  // 1. Load regularity — Coefficient of Variation over 14 days
+  if (d.study_hours_14d && d.study_hours_14d.length >= 7) {
+    const m = mean(d.study_hours_14d);
+    if (m > 0.25) {
+      const cv = stdDev(d.study_hours_14d) / m;
+      let pts = 0;
+      if (cv > 0.90) pts = 8;
+      else if (cv > 0.60) pts = 5;
+      // High CV + above personal baseline → clearest precursor
+      if (pts > 0 && d.study_hours_60d_avg && m > d.study_hours_60d_avg) pts += 2;
+      out.loadVolatility = pts;
+    }
+  }
+
+  // 2. Cumulative Workload Index (ACWR analogue)
+  if (d.study_hours_14d && d.study_hours_14d.length >= 7 && d.study_hours_60d_avg && d.study_hours_60d_avg > 0.25) {
+    const total14 = d.study_hours_14d.reduce((a, b) => a + b, 0);
+    const expected = d.study_hours_60d_avg * d.study_hours_14d.length;
+    const cwi = total14 / expected;
+    if (cwi > 1.60) out.cumulativeOverreach = 12;
+    else if (cwi > 1.30) out.cumulativeOverreach = 6;
+  }
+
+  // 3. Recovery Day Quality — only meaningful with ≥2 rest days
+  if (
+    typeof d.recovery_day_quality_7d === "number" &&
+    (d.recovery_day_rest_count_7d ?? 0) >= 2
+  ) {
+    if (d.recovery_day_quality_7d < 0.20) out.recoveryDayQuality = 8;
+    else if (d.recovery_day_quality_7d < 0.40) out.recoveryDayQuality = 4;
+  }
+
+  // 4. Session abandonment (reduced-efficacy proxy)
+  if (typeof d.session_abandonment_rate_14d === "number") {
+    if (d.session_abandonment_rate_14d > 0.30) {
+      out.sessionAbandonment = 5;
+      if ((d.session_abandonment_trend_14d ?? 0) > 0.05) out.sessionAbandonment += 3;
+    }
+  }
+
+  // 5. Sleep Regularity Index proxy
+  if (d.sleep_midpoints_7d && d.sleep_midpoints_7d.length >= 5) {
+    const sri = 100 - stdDev(d.sleep_midpoints_7d) * 2;
+    if (sri < 55) out.sleepRegularity = 9;
+    else if (sri < 70) out.sleepRegularity = 5;
+  }
+
+  // 6. Weekday vs weekend asymmetry (both extremes are signals)
+  if (
+    d.study_hours_14d &&
+    d.study_hours_14d_is_weekend &&
+    d.study_hours_14d.length === d.study_hours_14d_is_weekend.length
+  ) {
+    const weekend: number[] = [];
+    const weekday: number[] = [];
+    d.study_hours_14d.forEach((h, i) => {
+      (d.study_hours_14d_is_weekend![i] ? weekend : weekday).push(h);
+    });
+    if (weekend.length >= 2 && weekday.length >= 3) {
+      const wdAvg = mean(weekday);
+      if (wdAvg > 0.5) {
+        const ratio = mean(weekend) / wdAvg;
+        if (ratio > 0.85) out.weekendAsymmetry = 4;        // no detachment
+        else if (ratio < 0.15 && wdAvg > 3) out.weekendAsymmetry = 4; // crash from high load
+      }
+    }
+  }
+
+  // 7. Wrist skin temperature elevation
+  if ((d.wrist_temp_elevated_days ?? 0) >= 3) {
+    out.wristTempElevation = 6;
+  } else if (
+    typeof d.wrist_temp_today === "number" &&
+    typeof d.wrist_temp_baseline_30d === "number" &&
+    d.wrist_temp_today - d.wrist_temp_baseline_30d > 0.4
+  ) {
+    out.wristTempElevation = 3;
+  }
+
+  return out;
+}
+
+export function getBehaviouralBurnoutRiskPoints(d: AppleHealthData): number {
+  const b = getBurnoutBreakdown(d);
+  return (
+    b.loadVolatility +
+    b.cumulativeOverreach +
+    b.recoveryDayQuality +
+    b.sessionAbandonment +
+    b.sleepRegularity +
+    b.weekendAsymmetry +
+    b.wristTempElevation
+  );
 }
 
 // ─────────────────────────────────────────────

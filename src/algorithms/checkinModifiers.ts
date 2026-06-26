@@ -12,6 +12,11 @@ export interface CheckinData {
   exercise_type?: "cardio" | "strength" | "walking" | null;
   exercise_duration_minutes?: number | null;
   study_plan_window?: "within_30" | "1_2h" | "3plus" | "not_today" | null;
+  /**
+   * Q6 — single-item proxy for MBI-SS emotional exhaustion subscale (1 = not at all, 5 = completely drained).
+   * Multiplies burnout risk only; biometrics drive cognitive/study/retention adjustments.
+   */
+  emotional_exhaustion?: number | null;
 }
 
 export interface HistoricalCheckin {
@@ -250,6 +255,12 @@ export function applyCheckinModifiers(
   let scMul = rest.sc * stress.sc * motivation.sc * nightSc * ex.sc;
   let roMul = rest.ro * motivation.ro * nightRo * ex.ro;
   let brMul = rest.br * stress.br * motivation.br * nightBr * ex.br;
+
+  // Q6 — emotional exhaustion (MBI-SS proxy). Burnout multiplier only.
+  const EXHAUSTION_BR: Record<number, number> = { 1: 0.90, 2: 0.95, 3: 1.00, 4: 1.15, 5: 1.30 };
+  if (checkin.emotional_exhaustion && EXHAUSTION_BR[checkin.emotional_exhaustion]) {
+    brMul *= EXHAUSTION_BR[checkin.emotional_exhaustion];
+  }
 
   // Illness override: hard 0.65x on all metrics (and br ≥ 1.30 already)
   if (illness) {
