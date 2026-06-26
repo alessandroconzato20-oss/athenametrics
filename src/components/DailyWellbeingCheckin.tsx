@@ -86,9 +86,10 @@ type ExerciseType = "cardio" | "strength" | "walking";
 const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbeingCheckinProps) => {
   const { user, universityId } = useAuth();
   const hasDetectedWorkout = !!detectedWorkout;
-  // When HealthKit has already given us a workout, the exercise step (5) is skipped.
-  const lastStep: Step = hasDetectedWorkout ? 4 : 5;
-  const totalSteps = hasDetectedWorkout ? 5 : 6;
+  // When HealthKit has already given us a workout, the exercise step (6) is skipped,
+  // and the emotional-exhaustion step (5) becomes the final step.
+  const lastStep: Step = hasDetectedWorkout ? 5 : 6;
+  const totalSteps = hasDetectedWorkout ? 6 : 7;
   const [step, setStep] = useState<Step>(0);
   const [rest, setRest] = useState<number | null>(null);
   const [studyWindow, setStudyWindow] = useState<StudyWindow | null>(null);
@@ -109,6 +110,7 @@ const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbein
   }, []);
   const [motivation, setMotivation] = useState<number | null>(null);
   const [nightFactors, setNightFactors] = useState<string[]>([]);
+  const [exhaustion, setExhaustion] = useState<number | null>(null);
   // null = unanswered, true = yes, false = no, "not_yet" = haven't yet (treated as no for scoring)
   const [didExercise, setDidExercise] = useState<boolean | "not_yet" | null>(null);
   const [exerciseType, setExerciseType] = useState<ExerciseType | null>(null);
