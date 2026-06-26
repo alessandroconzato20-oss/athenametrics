@@ -256,6 +256,12 @@ export function applyCheckinModifiers(
   let roMul = rest.ro * motivation.ro * nightRo * ex.ro;
   let brMul = rest.br * stress.br * motivation.br * nightBr * ex.br;
 
+  // Q6 — emotional exhaustion (MBI-SS proxy). Burnout multiplier only.
+  const EXHAUSTION_BR: Record<number, number> = { 1: 0.90, 2: 0.95, 3: 1.00, 4: 1.15, 5: 1.30 };
+  if (checkin.emotional_exhaustion && EXHAUSTION_BR[checkin.emotional_exhaustion]) {
+    brMul *= EXHAUSTION_BR[checkin.emotional_exhaustion];
+  }
+
   // Illness override: hard 0.65x on all metrics (and br ≥ 1.30 already)
   if (illness) {
     crMul *= 0.65 / Math.max(nightCr, 0.65); // ensure final illness floor
