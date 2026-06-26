@@ -189,7 +189,8 @@ const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbein
     if (step === 2) return stress !== null;
     if (step === 3) return motivation !== null;
     if (step === 4) return nightFactors.length > 0;
-    if (step === 5) {
+    if (step === 5) return exhaustion !== null;
+    if (step === 6) {
       // Only reachable when no HealthKit workout was detected
       if (didExercise === null) return false;
       if (didExercise === false || didExercise === "not_yet") return true;
