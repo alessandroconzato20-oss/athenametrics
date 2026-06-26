@@ -12,6 +12,11 @@ export interface CheckinData {
   exercise_type?: "cardio" | "strength" | "walking" | null;
   exercise_duration_minutes?: number | null;
   study_plan_window?: "within_30" | "1_2h" | "3plus" | "not_today" | null;
+  /**
+   * Q6 — single-item proxy for MBI-SS emotional exhaustion subscale (1 = not at all, 5 = completely drained).
+   * Multiplies burnout risk only; biometrics drive cognitive/study/retention adjustments.
+   */
+  emotional_exhaustion?: number | null;
 }
 
 export interface HistoricalCheckin {
