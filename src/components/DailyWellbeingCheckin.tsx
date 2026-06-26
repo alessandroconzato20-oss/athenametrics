@@ -62,6 +62,14 @@ const NIGHT_FACTORS = [
   { id: "normal", emoji: "✅", label: "Normal night" },
 ];
 
+const EXHAUSTION_OPTIONS = [
+  { value: 1, emoji: "🌿", label: "Not at all" },
+  { value: 2, emoji: "🙂", label: "A little" },
+  { value: 3, emoji: "😐", label: "Somewhat" },
+  { value: 4, emoji: "😞", label: "Quite drained" },
+  { value: 5, emoji: "🥀", label: "Completely worn out" },
+];
+
 const EXERCISE_TYPES: { value: "cardio" | "strength" | "walking"; emoji: string; label: string }[] = [
   { value: "cardio",   emoji: "🏃", label: "Cardio" },
   { value: "strength", emoji: "🏋️", label: "Strength" },
@@ -70,8 +78,8 @@ const EXERCISE_TYPES: { value: "cardio" | "strength" | "walking"; emoji: string;
 
 const EXERCISE_DURATIONS = [15, 30, 45, 60, 90];
 
-// 6 steps: rest, study-window, stress, motivation, night-factors, exercise
-type Step = 0 | 1 | 2 | 3 | 4 | 5;
+// 7 steps: rest, study-window, stress, motivation, night-factors, emotional-exhaustion, exercise
+type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 type StudyWindow = "within_30" | "1_2h" | "3plus" | "not_today";
 type ExerciseType = "cardio" | "strength" | "walking";
 
