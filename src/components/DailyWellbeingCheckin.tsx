@@ -314,8 +314,8 @@ const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbein
               </>
             )}
 
-            {/* Step 5 — exercise */}
-            {step === 5 && (
+            {/* Step 6 — exercise */}
+            {step === 6 && (
               <>
                 <p className="text-base font-semibold text-foreground mb-4">Did you exercise today?</p>
                 <div className="flex flex-col gap-2 mb-4">
