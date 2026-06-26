@@ -24,6 +24,30 @@ export interface AppleHealthData {
   sleep_quality_7d: number[];
   /** True when hrv_today/baseline are derived from RHR because no real HRV samples are available. */
   hrv_is_estimated?: boolean;
+
+  // ── Behavioural burnout signals (all optional; missing data → signal skipped) ──
+  /** Daily study hours over the last 14 days, oldest first. Index alignment with `study_hours_14d_is_weekend` if provided. */
+  study_hours_14d?: number[];
+  /** Per-day weekend flag (Sat/Sun) matching `study_hours_14d`. */
+  study_hours_14d_is_weekend?: boolean[];
+  /** 60-day personal average of daily study hours (excluding today). */
+  study_hours_60d_avg?: number;
+  /** Fraction in [0,1] of rest days in the last 7d where sleep quality > 60 AND next-day Q1 ≥ 4. */
+  recovery_day_quality_7d?: number;
+  /** Total rest days (<1h study) observed in the last 7d. RDQ is only used when ≥ 2. */
+  recovery_day_rest_count_7d?: number;
+  /** Fraction in [0,1] of study sessions ended < 50% of planned duration over last 14d. */
+  session_abandonment_rate_14d?: number;
+  /** Trend of abandonment rate week-on-week (positive = worsening). */
+  session_abandonment_trend_14d?: number;
+  /** Sleep-midpoint times in minutes-since-midnight for last 7 nights. Used for Sleep Regularity Index. */
+  sleep_midpoints_7d?: number[];
+  /** Today's resting wrist skin temperature in °C (Apple Watch Series 8+ / Oura / Garmin). */
+  wrist_temp_today?: number;
+  /** 30-day personal baseline of resting wrist temperature. */
+  wrist_temp_baseline_30d?: number;
+  /** Count of consecutive recent days with wrist temp > baseline + 0.4°C. */
+  wrist_temp_elevated_days?: number;
 }
 
 // Toggle when the HealthKit plugin gains HRV SDNN support.
