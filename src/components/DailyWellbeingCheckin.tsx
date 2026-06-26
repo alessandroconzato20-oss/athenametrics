@@ -153,6 +153,7 @@ const DailyWellbeingCheckin = ({ open, onClose, detectedWorkout }: DailyWellbein
         stress_level: stress,
         motivation_level: motivation,
         night_factors: nightFactors,
+        emotional_exhaustion: exhaustion,
         study_plan_window: studyWindow,
         did_exercise: finalDidExercise,
         exercise_type: finalDidExercise ? finalExerciseType : null,
