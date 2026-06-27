@@ -340,6 +340,9 @@ const StudyTimer = () => {
       ? (active.pauseLog.length / (final.active_seconds / 3600))
       : 0;
 
+    const plannedSec = active.plannedDurationMinutes * 60;
+    const status = final.active_seconds < plannedSec * 0.5 ? "abandoned" : "completed";
+
     await supabase
       .from("study_sessions")
       .update({
@@ -349,7 +352,9 @@ const StudyTimer = () => {
         pause_count: active.pauseLog.length,
         pause_rate: Number(pauseRate.toFixed(3)),
         pause_log: log,
-        status: "completed",
+        background_away_seconds: active.backgroundAwaySeconds,
+        background_away_count: active.backgroundAwayCount,
+        status,
       } as any)
       .eq("id", active.sessionId);
 
