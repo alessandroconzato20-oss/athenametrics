@@ -194,6 +194,17 @@ const StudyTimer = () => {
 
   const durations = active ? computeDurations(active, now) : null;
 
+  // 90-minute break nudge
+  useEffect(() => {
+    if (!active || !durations) return;
+    if (durations.continuous_active_seconds >= 90 * 60 && !breakNudgedRef.current) {
+      breakNudgedRef.current = true;
+      setShowBreakNudge(true);
+    }
+  }, [durations, active]);
+
+
+
   // Background auto-pause: if app is hidden/backgrounded >60s mid-session, auto-pause
   // and log the away segment toward the session_abandonment signal.
   useEffect(() => {
