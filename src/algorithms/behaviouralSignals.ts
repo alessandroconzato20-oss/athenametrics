@@ -103,7 +103,7 @@ export async function loadBehaviouralSignals(userId: string): Promise<Partials> 
   const since14 = subDays(now, 14).toISOString();
   const { data: sessions } = await (supabase
     .from("study_sessions" as any)
-    .select("session_start_at,session_end_at,active_duration_seconds,status")
+    .select("session_start_at,session_end_at,active_duration_seconds,status,planned_duration_minutes")
     .eq("user_id", userId)
     .gte("session_start_at", since14) as any);
 
@@ -111,9 +111,11 @@ export async function loadBehaviouralSignals(userId: string): Promise<Partials> 
     const score = (s: any): { abandoned: boolean; t: number } => {
       const start = new Date(s.session_start_at).getTime();
       const end = s.session_end_at ? new Date(s.session_end_at).getTime() : start;
-      const planned = Math.max(1, (end - start) / 1000);
-      const actual = s.active_duration_seconds ?? planned;
-      const abandoned = s.status === "abandoned" || actual < planned * 0.5;
+      const plannedSec = s.planned_duration_minutes
+        ? s.planned_duration_minutes * 60
+        : Math.max(1, (end - start) / 1000);
+      const actual = s.active_duration_seconds ?? plannedSec;
+      const abandoned = s.status === "abandoned" || actual < plannedSec * 0.5;
       return { abandoned, t: start };
     };
     const scored = sessions.map(score).sort((a, b) => a.t - b.t);
