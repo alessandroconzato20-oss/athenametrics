@@ -410,6 +410,9 @@ const StudyTimer = () => {
             studyMethod={studyMethod} setStudyMethod={setStudyMethod}
             location={location} setLocation={setLocation}
             locationOther={locationOther} setLocationOther={setLocationOther}
+            plannedDuration={plannedDuration} setPlannedDuration={setPlannedDuration}
+            customDuration={customDuration} setCustomDuration={setCustomDuration}
+            medianDuration={medianDuration}
             ready={!!setupReady}
             onStart={handleStart}
           />
