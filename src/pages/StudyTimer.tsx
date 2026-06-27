@@ -106,8 +106,38 @@ const StudyTimer = () => {
   const [studyMethod, setStudyMethod] = useState("");
   const [location, setLocation] = useState("");
   const [locationOther, setLocationOther] = useState("");
+  const [plannedDuration, setPlannedDuration] = useState<number>(50);
+  const [customDuration, setCustomDuration] = useState<string>("");
+  const [medianDuration, setMedianDuration] = useState<number | null>(null);
 
   const { courses: availableCourses } = useStudentCourses({ mergeSyllabi: true });
+
+  // Load personal median session length (≥5 completed sessions)
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase
+        .from("study_sessions")
+        .select("active_duration_seconds")
+        .eq("user_id", user.id)
+        .eq("status", "completed")
+        .order("session_start_at", { ascending: false })
+        .limit(30);
+      if (data && data.length >= 5) {
+        const mins = data
+          .map((r: any) => Math.round((r.active_duration_seconds ?? 0) / 60))
+          .filter((m) => m >= 5)
+          .sort((a, b) => a - b);
+        if (mins.length >= 5) {
+          const median = mins[Math.floor(mins.length / 2)];
+          setMedianDuration(median);
+          // Snap default to closest preset, or use median directly
+          const closest = DURATION_PRESETS.reduce((p, c) => Math.abs(c - median) < Math.abs(p - median) ? c : p);
+          setPlannedDuration(Math.abs(closest - median) <= 10 ? closest : median);
+        }
+      }
+    })();
+  }, [user]);
 
   // ---------- Live timer state ----------
   const [active, setActive] = useState<ActiveSessionState | null>(null);
