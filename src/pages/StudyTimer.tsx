@@ -208,6 +208,13 @@ const StudyTimer = () => {
 
   const handleStart = async () => {
     if (!user || !setupReady) return;
+    const planned = plannedDuration === -1
+      ? Math.max(5, Math.min(240, parseInt(customDuration, 10) || 0))
+      : plannedDuration;
+    if (!planned) {
+      toast.error("Pick a session length");
+      return;
+    }
     const startISO = new Date().toISOString();
     const { data, error } = await supabase
       .from("study_sessions")
@@ -219,6 +226,7 @@ const StudyTimer = () => {
         location,
         location_other: location === "other" ? locationOther.trim() : null,
         session_start_at: startISO,
+        planned_duration_minutes: planned,
         status: "active",
       } as any)
       .select("id")
@@ -236,6 +244,9 @@ const StudyTimer = () => {
       sessionStartAt: startISO,
       pauseLog: [],
       paused: false,
+      plannedDurationMinutes: planned,
+      backgroundAwaySeconds: 0,
+      backgroundAwayCount: 0,
     };
     setActive(newActive);
     setStep("timer");
