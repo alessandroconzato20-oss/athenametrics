@@ -17,6 +17,7 @@ const AUTH_READ_PERMISSIONS = [
   "heartRateVariability",
   "oxygenSaturation",
   "bodyTemperature",
+  "appleSleepingWristTemperature",
   "sleepAnalysis",
 ];
 
@@ -271,6 +272,7 @@ export async function fetchHealthData(): Promise<AppleHealthData> {
 
   const now = new Date();
   const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
   try {
@@ -291,6 +293,10 @@ export async function fetchHealthData(): Promise<AppleHealthData> {
       // 7-day trends
       hrv7dDaily,
       restingHR7d,
+      // Behavioural-burnout enrichments
+      sleep7d,
+      wristTempToday,
+      wristTemp30d,
     ] = await Promise.all([
       querySample(QUERY_SAMPLE_TYPES.heartRate, yesterday, now),
       querySample(QUERY_SAMPLE_TYPES.restingHeartRate, yesterday, now),
@@ -307,6 +313,10 @@ export async function fetchHealthData(): Promise<AppleHealthData> {
       // 7-day trends
       queryDailyValues(QUERY_SAMPLE_TYPES.hrv, 7, "avg"),
       queryDailyValues(QUERY_SAMPLE_TYPES.restingHeartRate, 7, "avg"),
+      // Behavioural enrichments — best-effort; plugin may not support these
+      querySample(QUERY_SAMPLE_TYPES.sleep, sevenDaysAgo, now),
+      querySample("appleSleepingWristTemperature", yesterday, now),
+      querySample("appleSleepingWristTemperature", thirtyDaysAgo, now),
     ]);
 
     // SDNN samples may come back in seconds (plugin default) — convert to ms when value < 5
