@@ -17,6 +17,7 @@ const AUTH_READ_PERMISSIONS = [
   "heartRateVariability",
   "oxygenSaturation",
   "bodyTemperature",
+  "appleSleepingWristTemperature",
   "sleepAnalysis",
 ];
 
@@ -271,6 +272,7 @@ export async function fetchHealthData(): Promise<AppleHealthData> {
 
   const now = new Date();
   const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
   try {
@@ -291,6 +293,10 @@ export async function fetchHealthData(): Promise<AppleHealthData> {
       // 7-day trends
       hrv7dDaily,
       restingHR7d,
+      // Behavioural-burnout enrichments
+      sleep7d,
+      wristTempToday,
+      wristTemp30d,
     ] = await Promise.all([
       querySample(QUERY_SAMPLE_TYPES.heartRate, yesterday, now),
       querySample(QUERY_SAMPLE_TYPES.restingHeartRate, yesterday, now),
@@ -307,6 +313,10 @@ export async function fetchHealthData(): Promise<AppleHealthData> {
       // 7-day trends
       queryDailyValues(QUERY_SAMPLE_TYPES.hrv, 7, "avg"),
       queryDailyValues(QUERY_SAMPLE_TYPES.restingHeartRate, 7, "avg"),
+      // Behavioural enrichments — best-effort; plugin may not support these
+      querySample(QUERY_SAMPLE_TYPES.sleep, sevenDaysAgo, now),
+      querySample("appleSleepingWristTemperature", yesterday, now),
+      querySample("appleSleepingWristTemperature", thirtyDaysAgo, now),
     ]);
 
     // SDNN samples may come back in seconds (plugin default) — convert to ms when value < 5
@@ -409,6 +419,48 @@ export async function fetchHealthData(): Promise<AppleHealthData> {
       return Math.round(Math.min(100, (hrv / 60) * 50 + (1 - Math.abs(rhr - 60) / 40) * 50));
     });
 
+    // 7-day sleep midpoints — Sleep Regularity Index input (one per night)
+    const midpointsByDay = new Map<string, { sum: number; n: number }>();
+    for (const s of (sleep7d as any[])) {
+      const start = new Date(s.startDate).getTime();
+      const end = new Date(s.endDate).getTime();
+      if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) continue;
+      const midDate = new Date((start + end) / 2);
+      const k = midDate.toISOString().slice(0, 10);
+      const mins = midDate.getHours() * 60 + midDate.getMinutes();
+      const cur = midpointsByDay.get(k) ?? { sum: 0, n: 0 };
+      cur.sum += mins; cur.n += 1;
+      midpointsByDay.set(k, cur);
+    }
+    const sleepMidpoints7d = Array.from(midpointsByDay.values())
+      .map(v => Math.round(v.sum / v.n))
+      .slice(-7);
+
+    // Wrist temperature (Apple Watch S8+) — best-effort
+    const wristTempTodayAvg = (wristTempToday as any[]).length > 0
+      ? average((wristTempToday as any[]).map((s: any) => s.value || 0))
+      : undefined;
+    const wristTempBaseline = (wristTemp30d as any[]).length > 0
+      ? average((wristTemp30d as any[]).map((s: any) => s.value || 0))
+      : undefined;
+    let wristTempElevatedDays = 0;
+    if (wristTempBaseline !== undefined) {
+      // count consecutive recent days above baseline + 0.4°C
+      const dailyByDay = new Map<string, number[]>();
+      for (const s of (wristTemp30d as any[])) {
+        const k = new Date(s.startDate).toISOString().slice(0, 10);
+        const arr = dailyByDay.get(k) ?? [];
+        arr.push(s.value || 0);
+        dailyByDay.set(k, arr);
+      }
+      const sortedKeys = [...dailyByDay.keys()].sort().reverse();
+      for (const k of sortedKeys) {
+        const avg = average(dailyByDay.get(k)!);
+        if (avg > wristTempBaseline + 0.4) wristTempElevatedDays++;
+        else break;
+      }
+    }
+
     const healthData: AppleHealthData = {
       hrv_today: estimatedHRVToday,
       hrv_baseline_30d: estimatedHRVBaseline,
@@ -430,6 +482,10 @@ export async function fetchHealthData(): Promise<AppleHealthData> {
       hrv_7d: hrv7dValues,
       resting_hr_7d: restingHR7d.map((v: number) => Math.round(v || avgRestingHR30d)),
       sleep_quality_7d: sleepQuality7d,
+      ...(sleepMidpoints7d.length >= 3 ? { sleep_midpoints_7d: sleepMidpoints7d } : {}),
+      ...(wristTempTodayAvg !== undefined ? { wrist_temp_today: Number(wristTempTodayAvg.toFixed(2)) } : {}),
+      ...(wristTempBaseline !== undefined ? { wrist_temp_baseline_30d: Number(wristTempBaseline.toFixed(2)) } : {}),
+      ...(wristTempBaseline !== undefined ? { wrist_temp_elevated_days: wristTempElevatedDays } : {}),
     };
 
     console.log("HealthKit computed AppleHealthData:", healthData);
