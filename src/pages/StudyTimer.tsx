@@ -554,17 +554,60 @@ const SetupScreen = ({
             />
           )}
         </div>
+
+        {/* Q4 — Duration */}
+        <div>
+          <Label className="flex items-center gap-2 mb-3">
+            <Coffee className="h-4 w-4 text-primary" /> How long do you plan to study?
+          </Label>
+          <div className="grid grid-cols-4 gap-2">
+            {DURATION_PRESETS.map((mins) => (
+              <motion.button
+                key={mins} type="button" whileTap={{ scale: 0.95 }}
+                onClick={() => setPlannedDuration(mins)}
+                className={`rounded-xl px-2 py-3 text-sm font-semibold transition-all ${
+                  plannedDuration === mins ? "bg-primary text-primary-foreground shadow-soft" : "bg-muted text-foreground hover:bg-muted/70"
+                }`}
+              >
+                {mins}m
+              </motion.button>
+            ))}
+            <motion.button
+              type="button" whileTap={{ scale: 0.95 }}
+              onClick={() => setPlannedDuration(-1)}
+              className={`rounded-xl px-2 py-3 text-sm font-semibold transition-all ${
+                plannedDuration === -1 ? "bg-primary text-primary-foreground shadow-soft" : "bg-muted text-foreground hover:bg-muted/70"
+              }`}
+            >
+              Custom
+            </motion.button>
+          </div>
+          {plannedDuration === -1 && (
+            <Input
+              type="number" inputMode="numeric" min={5} max={240}
+              placeholder="Minutes (5–240)"
+              value={customDuration}
+              onChange={(e) => setCustomDuration(e.target.value)}
+              className="mt-3 h-11 rounded-xl"
+            />
+          )}
+          {medianDuration && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Suggested based on your usual sessions: ~{medianDuration} min
+            </p>
+          )}
+        </div>
       </div>
 
       <div className="mt-8">
         <Button
-          onClick={onStart} disabled={!ready}
+          onClick={onStart} disabled={!ready || !durationReady}
           className="h-14 w-full rounded-2xl bg-gradient-primary text-base font-semibold text-primary-foreground"
         >
           Start timer
         </Button>
-        <p className="mt-3 text-center text-xs text-muted-foreground">
-          Your session will be timed automatically. We'll ask a few questions when you finish.
+        <p className="mt-3 text-center text-xs font-medium text-foreground/80 leading-relaxed">
+          Your progress is only as accurate as your timer. Tap Stop whenever you step away so we can give you the most accurate burnout insights.
         </p>
       </div>
     </motion.div>
