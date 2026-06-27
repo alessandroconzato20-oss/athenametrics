@@ -413,6 +413,12 @@ export async function fetchHealthData(): Promise<AppleHealthData> {
         : estimatedHRVBaseline;
     });
 
+    // 7-day sleep quality (simplified composite)
+    const sleepQuality7d = hrv7dValues.map((hrv: number, i: number) => {
+      const rhr = restingHR7d[i] || avgRestingHR30d;
+      return Math.round(Math.min(100, (hrv / 60) * 50 + (1 - Math.abs(rhr - 60) / 40) * 50));
+    });
+
     // 7-day sleep midpoints — Sleep Regularity Index input (one per night)
     const midpointsByDay = new Map<string, { sum: number; n: number }>();
     for (const s of (sleep7d as any[])) {
