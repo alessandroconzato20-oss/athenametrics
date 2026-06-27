@@ -453,9 +453,17 @@ const StudyTimer = () => {
 // ============================================================
 const SetupScreen = ({
   onBack, availableCourses, subject, setSubject, studyMethod, setStudyMethod,
-  location, setLocation, locationOther, setLocationOther, ready, onStart,
+  location, setLocation, locationOther, setLocationOther,
+  plannedDuration, setPlannedDuration, customDuration, setCustomDuration, medianDuration,
+  ready, onStart,
 }: any) => {
-  const dots = [!!subject, !!studyMethod, !!location && (location !== "other" || locationOther.trim())];
+  const durationReady = plannedDuration > 0 && (plannedDuration !== -1 || (parseInt(customDuration, 10) >= 5));
+  const dots = [
+    !!subject,
+    !!studyMethod,
+    !!location && (location !== "other" || locationOther.trim()),
+    durationReady,
+  ];
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       <button onClick={onBack} className="mb-4 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
@@ -469,7 +477,7 @@ const SetupScreen = ({
       </div>
 
       <h1 className="font-display text-2xl font-bold text-foreground mb-1">Quick setup</h1>
-      <p className="text-sm text-muted-foreground mb-6">3 taps and you're studying.</p>
+      <p className="text-sm text-muted-foreground mb-6">A few taps and you're studying.</p>
 
       <div className="space-y-6">
         {/* Q1 — Subject */}
