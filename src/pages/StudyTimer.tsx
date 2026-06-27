@@ -194,14 +194,55 @@ const StudyTimer = () => {
 
   const durations = active ? computeDurations(active, now) : null;
 
-  // 90-minute break nudge
+  // Background auto-pause: if app is hidden/backgrounded >60s mid-session, auto-pause
+  // and log the away segment toward the session_abandonment signal.
   useEffect(() => {
-    if (!active || !durations) return;
-    if (durations.continuous_active_seconds >= 90 * 60 && !breakNudgedRef.current) {
-      breakNudgedRef.current = true;
-      setShowBreakNudge(true);
-    }
-  }, [durations, active]);
+    if (step !== "timer" || !active) return;
+    let hiddenAt: number | null = null;
+    let timerId: number | null = null;
+
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        if (active.paused) return;
+        hiddenAt = Date.now();
+        // Schedule auto-pause after threshold
+        timerId = window.setTimeout(() => {
+          setActive((prev) => {
+            if (!prev || prev.paused) return prev;
+            const nowISO = new Date().toISOString();
+            return {
+              ...prev,
+              paused: true,
+              pauseLog: [...prev.pauseLog, { pause_start: nowISO }],
+            };
+          });
+        }, BACKGROUND_PAUSE_THRESHOLD_SEC * 1000);
+      } else {
+        // Returned
+        if (timerId) { clearTimeout(timerId); timerId = null; }
+        if (hiddenAt) {
+          const awaySec = Math.floor((Date.now() - hiddenAt) / 1000);
+          hiddenAt = null;
+          if (awaySec >= BACKGROUND_PAUSE_THRESHOLD_SEC) {
+            setActive((prev) => prev ? {
+              ...prev,
+              backgroundAwaySeconds: prev.backgroundAwaySeconds + awaySec,
+              backgroundAwayCount: prev.backgroundAwayCount + 1,
+            } : prev);
+            toast.message("Auto-paused while you were away", {
+              description: "Tap Resume when you're back.",
+            });
+          }
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      if (timerId) clearTimeout(timerId);
+    };
+  }, [step, active]);
 
   // ---------- Setup → Start ----------
   const setupReady = subject && studyMethod && location && (location !== "other" || locationOther.trim());
