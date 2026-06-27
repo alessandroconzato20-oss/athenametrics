@@ -944,6 +944,8 @@ export type Database = {
       study_sessions: {
         Row: {
           active_duration_seconds: number
+          background_away_count: number
+          background_away_seconds: number
           comprehension: number | null
           confidence: number | null
           created_at: string
@@ -954,6 +956,7 @@ export type Database = {
           pause_count: number
           pause_log: Json
           pause_rate: number | null
+          planned_duration_minutes: number | null
           post_session_completed: boolean
           revision_priority: number | null
           session_end_at: string | null
@@ -969,6 +972,8 @@ export type Database = {
         }
         Insert: {
           active_duration_seconds?: number
+          background_away_count?: number
+          background_away_seconds?: number
           comprehension?: number | null
           confidence?: number | null
           created_at?: string
@@ -979,6 +984,7 @@ export type Database = {
           pause_count?: number
           pause_log?: Json
           pause_rate?: number | null
+          planned_duration_minutes?: number | null
           post_session_completed?: boolean
           revision_priority?: number | null
           session_end_at?: string | null
@@ -994,6 +1000,8 @@ export type Database = {
         }
         Update: {
           active_duration_seconds?: number
+          background_away_count?: number
+          background_away_seconds?: number
           comprehension?: number | null
           confidence?: number | null
           created_at?: string
@@ -1004,6 +1012,7 @@ export type Database = {
           pause_count?: number
           pause_log?: Json
           pause_rate?: number | null
+          planned_duration_minutes?: number | null
           post_session_completed?: boolean
           revision_priority?: number | null
           session_end_at?: string | null

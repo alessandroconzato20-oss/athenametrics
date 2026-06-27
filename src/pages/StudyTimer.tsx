@@ -45,7 +45,13 @@ interface ActiveSessionState {
   sessionStartAt: string; // ISO
   pauseLog: PauseEntry[];
   paused: boolean;
+  plannedDurationMinutes: number;
+  backgroundAwaySeconds: number;
+  backgroundAwayCount: number;
 }
+
+const DURATION_PRESETS = [25, 50, 90];
+const BACKGROUND_PAUSE_THRESHOLD_SEC = 60;
 
 const fmtHMS = (totalSec: number) => {
   const s = Math.max(0, Math.floor(totalSec));
@@ -100,8 +106,38 @@ const StudyTimer = () => {
   const [studyMethod, setStudyMethod] = useState("");
   const [location, setLocation] = useState("");
   const [locationOther, setLocationOther] = useState("");
+  const [plannedDuration, setPlannedDuration] = useState<number>(50);
+  const [customDuration, setCustomDuration] = useState<string>("");
+  const [medianDuration, setMedianDuration] = useState<number | null>(null);
 
   const { courses: availableCourses } = useStudentCourses({ mergeSyllabi: true });
+
+  // Load personal median session length (≥5 completed sessions)
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase
+        .from("study_sessions")
+        .select("active_duration_seconds")
+        .eq("user_id", user.id)
+        .eq("status", "completed")
+        .order("session_start_at", { ascending: false })
+        .limit(30);
+      if (data && data.length >= 5) {
+        const mins = data
+          .map((r: any) => Math.round((r.active_duration_seconds ?? 0) / 60))
+          .filter((m) => m >= 5)
+          .sort((a, b) => a - b);
+        if (mins.length >= 5) {
+          const median = mins[Math.floor(mins.length / 2)];
+          setMedianDuration(median);
+          // Snap default to closest preset, or use median directly
+          const closest = DURATION_PRESETS.reduce((p, c) => Math.abs(c - median) < Math.abs(p - median) ? c : p);
+          setPlannedDuration(Math.abs(closest - median) <= 10 ? closest : median);
+        }
+      }
+    })();
+  }, [user]);
 
   // ---------- Live timer state ----------
   const [active, setActive] = useState<ActiveSessionState | null>(null);
@@ -167,11 +203,70 @@ const StudyTimer = () => {
     }
   }, [durations, active]);
 
+
+
+  // Background auto-pause: if app is hidden/backgrounded >60s mid-session, auto-pause
+  // and log the away segment toward the session_abandonment signal.
+  useEffect(() => {
+    if (step !== "timer" || !active) return;
+    let hiddenAt: number | null = null;
+    let timerId: number | null = null;
+
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        if (active.paused) return;
+        hiddenAt = Date.now();
+        // Schedule auto-pause after threshold
+        timerId = window.setTimeout(() => {
+          setActive((prev) => {
+            if (!prev || prev.paused) return prev;
+            const nowISO = new Date().toISOString();
+            return {
+              ...prev,
+              paused: true,
+              pauseLog: [...prev.pauseLog, { pause_start: nowISO }],
+            };
+          });
+        }, BACKGROUND_PAUSE_THRESHOLD_SEC * 1000);
+      } else {
+        // Returned
+        if (timerId) { clearTimeout(timerId); timerId = null; }
+        if (hiddenAt) {
+          const awaySec = Math.floor((Date.now() - hiddenAt) / 1000);
+          hiddenAt = null;
+          if (awaySec >= BACKGROUND_PAUSE_THRESHOLD_SEC) {
+            setActive((prev) => prev ? {
+              ...prev,
+              backgroundAwaySeconds: prev.backgroundAwaySeconds + awaySec,
+              backgroundAwayCount: prev.backgroundAwayCount + 1,
+            } : prev);
+            toast.message("Auto-paused while you were away", {
+              description: "Tap Resume when you're back.",
+            });
+          }
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      if (timerId) clearTimeout(timerId);
+    };
+  }, [step, active]);
+
   // ---------- Setup → Start ----------
   const setupReady = subject && studyMethod && location && (location !== "other" || locationOther.trim());
 
   const handleStart = async () => {
     if (!user || !setupReady) return;
+    const planned = plannedDuration === -1
+      ? Math.max(5, Math.min(240, parseInt(customDuration, 10) || 0))
+      : plannedDuration;
+    if (!planned) {
+      toast.error("Pick a session length");
+      return;
+    }
     const startISO = new Date().toISOString();
     const { data, error } = await supabase
       .from("study_sessions")
@@ -183,6 +278,7 @@ const StudyTimer = () => {
         location,
         location_other: location === "other" ? locationOther.trim() : null,
         session_start_at: startISO,
+        planned_duration_minutes: planned,
         status: "active",
       } as any)
       .select("id")
@@ -200,6 +296,9 @@ const StudyTimer = () => {
       sessionStartAt: startISO,
       pauseLog: [],
       paused: false,
+      plannedDurationMinutes: planned,
+      backgroundAwaySeconds: 0,
+      backgroundAwayCount: 0,
     };
     setActive(newActive);
     setStep("timer");
@@ -241,6 +340,9 @@ const StudyTimer = () => {
       ? (active.pauseLog.length / (final.active_seconds / 3600))
       : 0;
 
+    const plannedSec = active.plannedDurationMinutes * 60;
+    const status = final.active_seconds < plannedSec * 0.5 ? "abandoned" : "completed";
+
     await supabase
       .from("study_sessions")
       .update({
@@ -250,7 +352,9 @@ const StudyTimer = () => {
         pause_count: active.pauseLog.length,
         pause_rate: Number(pauseRate.toFixed(3)),
         pause_log: log,
-        status: "completed",
+        background_away_seconds: active.backgroundAwaySeconds,
+        background_away_count: active.backgroundAwayCount,
+        status,
       } as any)
       .eq("id", active.sessionId);
 
@@ -306,6 +410,9 @@ const StudyTimer = () => {
             studyMethod={studyMethod} setStudyMethod={setStudyMethod}
             location={location} setLocation={setLocation}
             locationOther={locationOther} setLocationOther={setLocationOther}
+            plannedDuration={plannedDuration} setPlannedDuration={setPlannedDuration}
+            customDuration={customDuration} setCustomDuration={setCustomDuration}
+            medianDuration={medianDuration}
             ready={!!setupReady}
             onStart={handleStart}
           />
@@ -346,9 +453,17 @@ const StudyTimer = () => {
 // ============================================================
 const SetupScreen = ({
   onBack, availableCourses, subject, setSubject, studyMethod, setStudyMethod,
-  location, setLocation, locationOther, setLocationOther, ready, onStart,
+  location, setLocation, locationOther, setLocationOther,
+  plannedDuration, setPlannedDuration, customDuration, setCustomDuration, medianDuration,
+  ready, onStart,
 }: any) => {
-  const dots = [!!subject, !!studyMethod, !!location && (location !== "other" || locationOther.trim())];
+  const durationReady = plannedDuration > 0 && (plannedDuration !== -1 || (parseInt(customDuration, 10) >= 5));
+  const dots = [
+    !!subject,
+    !!studyMethod,
+    !!location && (location !== "other" || locationOther.trim()),
+    durationReady,
+  ];
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       <button onClick={onBack} className="mb-4 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
@@ -362,7 +477,7 @@ const SetupScreen = ({
       </div>
 
       <h1 className="font-display text-2xl font-bold text-foreground mb-1">Quick setup</h1>
-      <p className="text-sm text-muted-foreground mb-6">3 taps and you're studying.</p>
+      <p className="text-sm text-muted-foreground mb-6">A few taps and you're studying.</p>
 
       <div className="space-y-6">
         {/* Q1 — Subject */}
@@ -439,17 +554,60 @@ const SetupScreen = ({
             />
           )}
         </div>
+
+        {/* Q4 — Duration */}
+        <div>
+          <Label className="flex items-center gap-2 mb-3">
+            <Coffee className="h-4 w-4 text-primary" /> How long do you plan to study?
+          </Label>
+          <div className="grid grid-cols-4 gap-2">
+            {DURATION_PRESETS.map((mins) => (
+              <motion.button
+                key={mins} type="button" whileTap={{ scale: 0.95 }}
+                onClick={() => setPlannedDuration(mins)}
+                className={`rounded-xl px-2 py-3 text-sm font-semibold transition-all ${
+                  plannedDuration === mins ? "bg-primary text-primary-foreground shadow-soft" : "bg-muted text-foreground hover:bg-muted/70"
+                }`}
+              >
+                {mins}m
+              </motion.button>
+            ))}
+            <motion.button
+              type="button" whileTap={{ scale: 0.95 }}
+              onClick={() => setPlannedDuration(-1)}
+              className={`rounded-xl px-2 py-3 text-sm font-semibold transition-all ${
+                plannedDuration === -1 ? "bg-primary text-primary-foreground shadow-soft" : "bg-muted text-foreground hover:bg-muted/70"
+              }`}
+            >
+              Custom
+            </motion.button>
+          </div>
+          {plannedDuration === -1 && (
+            <Input
+              type="number" inputMode="numeric" min={5} max={240}
+              placeholder="Minutes (5–240)"
+              value={customDuration}
+              onChange={(e) => setCustomDuration(e.target.value)}
+              className="mt-3 h-11 rounded-xl"
+            />
+          )}
+          {medianDuration && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Suggested based on your usual sessions: ~{medianDuration} min
+            </p>
+          )}
+        </div>
       </div>
 
       <div className="mt-8">
         <Button
-          onClick={onStart} disabled={!ready}
+          onClick={onStart} disabled={!ready || !durationReady}
           className="h-14 w-full rounded-2xl bg-gradient-primary text-base font-semibold text-primary-foreground"
         >
           Start timer
         </Button>
-        <p className="mt-3 text-center text-xs text-muted-foreground">
-          Your session will be timed automatically. We'll ask a few questions when you finish.
+        <p className="mt-3 text-center text-xs font-medium text-foreground/80 leading-relaxed">
+          Your progress is only as accurate as your timer. Tap Stop whenever you step away so we can give you the most accurate burnout insights.
         </p>
       </div>
     </motion.div>
