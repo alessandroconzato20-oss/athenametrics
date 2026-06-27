@@ -255,6 +255,11 @@ const Index = () => {
       setStreak(count);
     };
     computeStreak();
+
+    // Behavioural burnout signals: derived passively from study logs + check-ins.
+    loadBehaviouralSignals(user.id)
+      .then(setBehaviouralSignals)
+      .catch(err => console.error("loadBehaviouralSignals failed:", err));
   }, [user]);
 
   // Check if daily wellbeing check-in was already done today
