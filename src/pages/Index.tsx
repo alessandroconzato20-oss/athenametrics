@@ -33,6 +33,7 @@ import {
 } from "@/services/healthkit";
 import { scheduleDailyNotifications, setupNotificationActionListener } from "@/services/notifications";
 import { applyCheckinModifiers, type HistoricalCheckin } from "@/algorithms/checkinModifiers";
+import { loadBehaviouralSignals } from "@/algorithms/behaviouralSignals";
 import { getCalibrationDays, getScoreCalibration, getOverallTier, CALIBRATION_TOTAL_DAYS, type ScoreCalibration } from "@/algorithms/calibration";
 import { format } from "date-fns";
 
@@ -185,6 +186,7 @@ const Index = () => {
   const [healthConnected, setHealthConnected] = useState(false);
   const [healthAvailable, setHealthAvailable] = useState(false);
   const [healthData, setHealthData] = useState<AppleHealthData | null>(null);
+  const [behaviouralSignals, setBehaviouralSignals] = useState<Partial<AppleHealthData>>({});
   const [loading, setLoading] = useState(true);
   const [syncingHealth, setSyncingHealth] = useState(false);
   const [syncStatus, setSyncStatus] = useState("");
@@ -375,7 +377,11 @@ const Index = () => {
     }
   };
 
-  const rawScores = useMemo(() => healthData ? calculateApexScores(healthData) : null, [healthData]);
+  const enrichedHealthData = useMemo(
+    () => healthData ? { ...healthData, ...behaviouralSignals } : null,
+    [healthData, behaviouralSignals]
+  );
+  const rawScores = useMemo(() => enrichedHealthData ? calculateApexScores(enrichedHealthData) : null, [enrichedHealthData]);
   const scores = useMemo(() => rawScores ? applyCheckinModifiers(rawScores, checkinData, historicalCheckins) : null, [rawScores, checkinData, historicalCheckins]);
   const scoresData = useMemo(() => scores ? buildScoresData(scores, healthData?.hrv_is_estimated ?? true) : [], [scores, healthData?.hrv_is_estimated]);
   const peakLabel = scores ? (scores.peakStudyWindow.primary_start === "Rest" ? "Rest" : `${scores.peakStudyWindow.primary_start} – ${scores.peakStudyWindow.primary_end}`) : "";
