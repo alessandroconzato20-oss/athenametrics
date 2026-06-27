@@ -45,7 +45,13 @@ interface ActiveSessionState {
   sessionStartAt: string; // ISO
   pauseLog: PauseEntry[];
   paused: boolean;
+  plannedDurationMinutes: number;
+  backgroundAwaySeconds: number;
+  backgroundAwayCount: number;
 }
+
+const DURATION_PRESETS = [25, 50, 90];
+const BACKGROUND_PAUSE_THRESHOLD_SEC = 60;
 
 const fmtHMS = (totalSec: number) => {
   const s = Math.max(0, Math.floor(totalSec));
