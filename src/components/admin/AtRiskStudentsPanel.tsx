@@ -23,6 +23,8 @@ import {
 import { AlertTriangle, Download, ChevronDown, Check, X, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+const STUDY_ACTIVE = true;
+
 interface Props {
   universityId: string | null;
 }
@@ -306,6 +308,20 @@ const AtRiskStudentsPanel: React.FC<Props> = ({ universityId }) => {
   };
 
   if (!canView) return null;
+
+  if (STUDY_ACTIVE) {
+    return (
+      <div className="rounded-lg border border-gray-200 bg-gray-50 p-6 text-center opacity-60">
+        <p className="text-sm font-medium text-gray-500">
+          At-Risk Dashboard
+        </p>
+        <p className="mt-1 text-xs text-gray-400">
+          Risk scores are not active during the study period (CO-BURN protocol §7.6).
+          This panel will be re-enabled by the administrator after study completion.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <Card className="border-border">
