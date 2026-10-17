@@ -33,7 +33,6 @@ import { scheduleDailyNotifications, setupNotificationActionListener } from "@/s
 import { applyCheckinModifiers, type HistoricalCheckin } from "@/algorithms/checkinModifiers";
 import { loadBehaviouralSignals } from "@/algorithms/behaviouralSignals";
 import { getCalibrationDays, getScoreCalibration, getOverallTier, CALIBRATION_TOTAL_DAYS, type ScoreCalibration } from "@/algorithms/calibration";
-import { format } from "date-fns";
 
 function getActionText(icon: string, numValue: number): string {
   if (icon === "brain") {
