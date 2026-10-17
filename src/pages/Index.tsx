@@ -370,8 +370,6 @@ const Index = () => {
   if (authLoading) return null;
   if (!user) return <Navigate to="/welcome" replace />;
 
-  const blockRec = scores ? getStudyBlockRecommendation(scores) : null;
-
   // Calibration — visible from day 1, drives chips/overlays per score
   const calibDays = getCalibrationDays(firstSyncAt);
   const overallTier = getOverallTier(calibDays);
