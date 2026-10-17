@@ -2,9 +2,8 @@ import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useNavigate } from "react-router-dom";
-import { LogOut, Activity, BookOpen, Trophy, Plus, RefreshCcw, Target, Settings, GraduationCap, ChevronDown, Info } from "lucide-react";
+import { LogOut, Activity, BookOpen, Plus, RefreshCcw, Settings, Info } from "lucide-react";
 import OnboardingGuide from "@/components/OnboardingGuide";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import ScoreCard from "@/components/ScoreCard";
@@ -12,11 +11,8 @@ import ScoreDetailModal from "@/components/ScoreDetailModal";
 import WeeklyChallenges from "@/components/WeeklyChallenges";
 import GettingToKnowYouQuizzes from "@/components/GettingToKnowYouQuizzes";
 
-import HeroAction from "@/components/HeroAction";
-import TodaysInsight from "@/components/TodaysInsight";
 import MicroReward from "@/components/MicroReward";
 import DailyWellbeingCheckin from "@/components/DailyWellbeingCheckin";
-import ExamChecklist from "@/components/ExamChecklist";
 import { format } from "date-fns";
 import {
   fetchHealthData,
@@ -177,7 +173,7 @@ function buildScoresData(scores: ApexScores, hrvIsEstimated: boolean) {
 }
 
 const Index = () => {
-  const { user, signOut, displayName, loading: authLoading, universityId } = useAuth();
+  const { user, signOut, loading: authLoading, universityId } = useAuth();
   const navigate = useNavigate();
   const [selectedScore, setSelectedScore] = useState<any>(null);
   const [healthConnected, setHealthConnected] = useState(false);
@@ -191,7 +187,6 @@ const Index = () => {
   const [showWellbeingCheckin, setShowWellbeingCheckin] = useState(false);
   const [checkinData, setCheckinData] = useState<{ rest_level: number; stress_level: number; motivation_level: number; night_factors: string[] } | null>(null);
   const [historicalCheckins, setHistoricalCheckins] = useState<HistoricalCheckin[]>([]);
-  const [examOpen, setExamOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingPending, setOnboardingPending] = useState(true);
   const [detectedWorkout, setDetectedWorkout] = useState<DetectedWorkout | null>(null);
@@ -337,7 +332,6 @@ const Index = () => {
   const rawScores = useMemo(() => enrichedHealthData ? calculateApexScores(enrichedHealthData) : null, [enrichedHealthData]);
   const scores = useMemo(() => rawScores ? applyCheckinModifiers(rawScores, checkinData, historicalCheckins) : null, [rawScores, checkinData, historicalCheckins]);
   const scoresData = useMemo(() => scores ? buildScoresData(scores, healthData?.hrv_is_estimated ?? true) : [], [scores, healthData?.hrv_is_estimated]);
-  const peakLabel = scores ? (scores.peakStudyWindow.primary_start === "Rest" ? "Rest" : `${scores.peakStudyWindow.primary_start} – ${scores.peakStudyWindow.primary_end}`) : "";
 
   // Check for micro reward triggers
   useEffect(() => {
@@ -415,60 +409,15 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Hero action sentence */}
-        <HeroAction
-          displayName={displayName}
-          scores={scores ? {
-            cognitiveReadiness: scores.cognitiveReadiness,
-            burnoutRisk: scores.burnoutRisk,
-            peakWindow: peakLabel,
-            studyCapacity: scores.studyCapacity.label,
-          } : null}
-        />
-
         {/* Quick actions */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="mb-2 grid grid-cols-4 gap-2">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="mb-5 grid grid-cols-2 gap-2">
           <Button onClick={() => navigate("/study-logs/new")} className="w-full rounded-xl h-11 gap-1.5 bg-gradient-primary text-primary-foreground font-semibold text-xs">
             <Plus className="h-3.5 w-3.5" /> Log
-          </Button>
-          <Button onClick={() => navigate("/weekly-goals")} className="w-full rounded-xl h-11 gap-1.5 bg-goals-purple text-primary-foreground font-semibold text-xs hover:bg-goals-purple/90">
-            <Target className="h-3.5 w-3.5" /> Goals
           </Button>
           <Button onClick={() => navigate("/study-logs")} variant="outline" className="w-full rounded-xl h-11 gap-1.5 border-primary/20 text-primary text-xs">
             <BookOpen className="h-3.5 w-3.5" /> Logs
           </Button>
-          <Button onClick={() => navigate("/leaderboard")} variant="outline" className="w-full rounded-xl h-11 gap-1.5 border-accent/30 text-accent-foreground text-xs">
-            <Trophy className="h-3.5 w-3.5" /> Rank
-          </Button>
         </motion.div>
-
-        {/* Exam Progress Tab */}
-        <Collapsible open={examOpen} onOpenChange={setExamOpen}>
-          <CollapsibleTrigger className="flex w-full items-center justify-between rounded-xl border border-border bg-card px-4 py-2.5 mb-5 hover:bg-muted/50 transition-colors">
-            <div className="flex items-center gap-2">
-              <GraduationCap className="h-4 w-4 text-primary" />
-              <span className="text-xs font-semibold text-foreground">Exam Progress</span>
-            </div>
-            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${examOpen ? "rotate-180" : ""}`} />
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="mb-5 -mt-3">
-              <ExamChecklist />
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-
-        {/* Today's Insight */}
-        {!loading && scores && (
-          <div className="mb-5">
-            <TodaysInsight scores={{
-              cognitiveReadiness: scores.cognitiveReadiness,
-              burnoutRisk: scores.burnoutRisk,
-              retentionOutlook: scores.retentionOutlook,
-              studyCapacity: scores.studyCapacity.label,
-            }} />
-          </div>
-        )}
 
         {/* Score cards */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="mb-3 flex items-center justify-between">
