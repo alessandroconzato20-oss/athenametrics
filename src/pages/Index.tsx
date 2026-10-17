@@ -400,8 +400,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-lg px-5 pb-10 pt-8">
         {/* Header */}
-        <div className="mb-5 flex items-start justify-between">
-          <StreakBadge streak={streak} studySessions={totalSessions} />
+        <div className="mb-5 flex items-start justify-end">
           <div className="flex gap-1">
             <button
               onClick={() => setShowOnboarding(true)}
@@ -429,16 +428,6 @@ const Index = () => {
             studyCapacity: scores.studyCapacity.label,
           } : null}
         />
-
-        {/* Start Study Timer — primary CTA */}
-        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-2">
-          <Button
-            onClick={() => navigate("/study-timer")}
-            className="w-full rounded-xl h-12 gap-2 bg-gradient-primary text-primary-foreground font-semibold text-sm shadow-md"
-          >
-            <Timer className="h-4 w-4" /> Start Study Timer
-          </Button>
-        </motion.div>
 
         {/* Quick actions */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="mb-2 grid grid-cols-4 gap-2">
