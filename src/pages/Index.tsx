@@ -217,41 +217,9 @@ const Index = () => {
     setOnboardingPending(false);
   };
 
-  // Compute streak and total sessions from study_logs
+  // Behavioural burnout signals: derived passively from study logs + check-ins.
   useEffect(() => {
     if (!user) return;
-    const computeStreak = async () => {
-      const { data, error } = await supabase
-        .from("study_logs")
-        .select("studied_at")
-        .eq("user_id", user.id)
-        .order("studied_at", { ascending: false });
-      if (error || !data) return;
-      setTotalSessions(data.length);
-
-      // Calculate consecutive day streak ending today or yesterday
-      const uniqueDays = [...new Set(data.map(d => format(new Date(d.studied_at), "yyyy-MM-dd")))].sort().reverse();
-      if (uniqueDays.length === 0) { setStreak(0); return; }
-
-      const today = format(new Date(), "yyyy-MM-dd");
-      const yesterday = format(new Date(Date.now() - 86400000), "yyyy-MM-dd");
-
-      // Streak must start from today or yesterday
-      if (uniqueDays[0] !== today && uniqueDays[0] !== yesterday) { setStreak(0); return; }
-
-      let count = 1;
-      for (let i = 1; i < uniqueDays.length; i++) {
-        const prev = new Date(uniqueDays[i - 1]);
-        const curr = new Date(uniqueDays[i]);
-        const diff = (prev.getTime() - curr.getTime()) / 86400000;
-        if (diff === 1) count++;
-        else break;
-      }
-      setStreak(count);
-    };
-    computeStreak();
-
-    // Behavioural burnout signals: derived passively from study logs + check-ins.
     loadBehaviouralSignals(user.id)
       .then(setBehaviouralSignals)
       .catch(err => console.error("loadBehaviouralSignals failed:", err));
