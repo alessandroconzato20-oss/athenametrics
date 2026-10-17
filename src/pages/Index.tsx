@@ -2,24 +2,22 @@ import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useNavigate } from "react-router-dom";
-import { LogOut, Activity, BookOpen, Trophy, Plus, RefreshCcw, Target, Settings, GraduationCap, ChevronDown, Info, Timer } from "lucide-react";
+import { LogOut, Activity, BookOpen, Trophy, Plus, RefreshCcw, Target, Settings, GraduationCap, ChevronDown, Info } from "lucide-react";
 import OnboardingGuide from "@/components/OnboardingGuide";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import ScoreCard from "@/components/ScoreCard";
 import ScoreDetailModal from "@/components/ScoreDetailModal";
-import StreakBadge from "@/components/StreakBadge";
 import WeeklyChallenges from "@/components/WeeklyChallenges";
 import GettingToKnowYouQuizzes from "@/components/GettingToKnowYouQuizzes";
 
 import HeroAction from "@/components/HeroAction";
 import TodaysInsight from "@/components/TodaysInsight";
-import DailyStudyPlan from "@/components/DailyStudyPlan";
 import MicroReward from "@/components/MicroReward";
 import DailyWellbeingCheckin from "@/components/DailyWellbeingCheckin";
 import ExamChecklist from "@/components/ExamChecklist";
-import { startOfWeek } from "date-fns";
+import { format } from "date-fns";
 import {
   fetchHealthData,
   fetchTodaysWorkout,
@@ -35,7 +33,6 @@ import { scheduleDailyNotifications, setupNotificationActionListener } from "@/s
 import { applyCheckinModifiers, type HistoricalCheckin } from "@/algorithms/checkinModifiers";
 import { loadBehaviouralSignals } from "@/algorithms/behaviouralSignals";
 import { getCalibrationDays, getScoreCalibration, getOverallTier, CALIBRATION_TOTAL_DAYS, type ScoreCalibration } from "@/algorithms/calibration";
-import { format } from "date-fns";
 
 function getActionText(icon: string, numValue: number): string {
   if (icon === "brain") {
@@ -192,9 +189,6 @@ const Index = () => {
   const [syncStatus, setSyncStatus] = useState("");
   const [reward, setReward] = useState<{ show: boolean; message: string; emoji: string }>({ show: false, message: "", emoji: "" });
   const [showWellbeingCheckin, setShowWellbeingCheckin] = useState(false);
-  const [weeklyDailyBreakdown, setWeeklyDailyBreakdown] = useState<Record<string, string[]> | null>(null);
-  const [streak, setStreak] = useState(0);
-  const [totalSessions, setTotalSessions] = useState(0);
   const [checkinData, setCheckinData] = useState<{ rest_level: number; stress_level: number; motivation_level: number; night_factors: string[] } | null>(null);
   const [historicalCheckins, setHistoricalCheckins] = useState<HistoricalCheckin[]>([]);
   const [examOpen, setExamOpen] = useState(false);
@@ -222,41 +216,9 @@ const Index = () => {
     setOnboardingPending(false);
   };
 
-  // Compute streak and total sessions from study_logs
+  // Behavioural burnout signals: derived passively from study logs + check-ins.
   useEffect(() => {
     if (!user) return;
-    const computeStreak = async () => {
-      const { data, error } = await supabase
-        .from("study_logs")
-        .select("studied_at")
-        .eq("user_id", user.id)
-        .order("studied_at", { ascending: false });
-      if (error || !data) return;
-      setTotalSessions(data.length);
-
-      // Calculate consecutive day streak ending today or yesterday
-      const uniqueDays = [...new Set(data.map(d => format(new Date(d.studied_at), "yyyy-MM-dd")))].sort().reverse();
-      if (uniqueDays.length === 0) { setStreak(0); return; }
-
-      const today = format(new Date(), "yyyy-MM-dd");
-      const yesterday = format(new Date(Date.now() - 86400000), "yyyy-MM-dd");
-
-      // Streak must start from today or yesterday
-      if (uniqueDays[0] !== today && uniqueDays[0] !== yesterday) { setStreak(0); return; }
-
-      let count = 1;
-      for (let i = 1; i < uniqueDays.length; i++) {
-        const prev = new Date(uniqueDays[i - 1]);
-        const curr = new Date(uniqueDays[i]);
-        const diff = (prev.getTime() - curr.getTime()) / 86400000;
-        if (diff === 1) count++;
-        else break;
-      }
-      setStreak(count);
-    };
-    computeStreak();
-
-    // Behavioural burnout signals: derived passively from study logs + check-ins.
     loadBehaviouralSignals(user.id)
       .then(setBehaviouralSignals)
       .catch(err => console.error("loadBehaviouralSignals failed:", err));
@@ -290,20 +252,6 @@ const Index = () => {
       if (data) setHistoricalCheckins(data as HistoricalCheckin[]);
     };
     loadHistory();
-
-    // Also load weekly goals breakdown
-    const loadWeeklyBreakdown = async () => {
-      const weekStart = format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd");
-      const { data } = await (supabase.from("weekly_goals" as any)
-        .select("daily_breakdown")
-        .eq("user_id", user.id)
-        .eq("week_start", weekStart)
-        .maybeSingle() as any);
-      if (data) {
-        setWeeklyDailyBreakdown(data.daily_breakdown as Record<string, string[]>);
-      }
-    };
-    loadWeeklyBreakdown();
   }, [user]);
 
   useEffect(() => {
@@ -421,8 +369,6 @@ const Index = () => {
   if (authLoading) return null;
   if (!user) return <Navigate to="/welcome" replace />;
 
-  const blockRec = scores ? getStudyBlockRecommendation(scores) : null;
-
   // Calibration — visible from day 1, drives chips/overlays per score
   const calibDays = getCalibrationDays(firstSyncAt);
   const overallTier = getOverallTier(calibDays);
@@ -451,8 +397,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-lg px-5 pb-10 pt-8">
         {/* Header */}
-        <div className="mb-5 flex items-start justify-between">
-          <StreakBadge streak={streak} studySessions={totalSessions} />
+        <div className="mb-5 flex items-start justify-end">
           <div className="flex gap-1">
             <button
               onClick={() => setShowOnboarding(true)}
@@ -480,16 +425,6 @@ const Index = () => {
             studyCapacity: scores.studyCapacity.label,
           } : null}
         />
-
-        {/* Start Study Timer — primary CTA */}
-        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-2">
-          <Button
-            onClick={() => navigate("/study-timer")}
-            className="w-full rounded-xl h-12 gap-2 bg-gradient-primary text-primary-foreground font-semibold text-sm shadow-md"
-          >
-            <Timer className="h-4 w-4" /> Start Study Timer
-          </Button>
-        </motion.div>
 
         {/* Quick actions */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="mb-2 grid grid-cols-4 gap-2">
@@ -609,24 +544,7 @@ const Index = () => {
           </div>
         )}
 
-        {/* AI Daily Plan */}
-        {!loading && (
-          <div className="mb-6">
-            <DailyStudyPlan
-              scores={scores ? {
-                cognitiveReadiness: scores.cognitiveReadiness,
-                burnoutRisk: scores.burnoutRisk,
-                peakWindow: peakLabel,
-                studyCapacity: scores.studyCapacity.label,
-                studyBlockRecommendation: blockRec!,
-              } : null}
-              weeklyGoalsTasks={weeklyDailyBreakdown}
-      />
-
-      <OnboardingGuide open={showOnboarding} onClose={closeOnboarding} />
-    </div>
-        )}
-
+        <OnboardingGuide open={showOnboarding} onClose={closeOnboarding} />
 
         <GettingToKnowYouQuizzes />
 
