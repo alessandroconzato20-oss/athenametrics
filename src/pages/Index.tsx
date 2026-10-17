@@ -17,7 +17,7 @@ import TodaysInsight from "@/components/TodaysInsight";
 import MicroReward from "@/components/MicroReward";
 import DailyWellbeingCheckin from "@/components/DailyWellbeingCheckin";
 import ExamChecklist from "@/components/ExamChecklist";
-import { startOfWeek } from "date-fns";
+import { format } from "date-fns";
 import {
   fetchHealthData,
   fetchTodaysWorkout,
@@ -253,20 +253,6 @@ const Index = () => {
       if (data) setHistoricalCheckins(data as HistoricalCheckin[]);
     };
     loadHistory();
-
-    // Also load weekly goals breakdown
-    const loadWeeklyBreakdown = async () => {
-      const weekStart = format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd");
-      const { data } = await (supabase.from("weekly_goals" as any)
-        .select("daily_breakdown")
-        .eq("user_id", user.id)
-        .eq("week_start", weekStart)
-        .maybeSingle() as any);
-      if (data) {
-        setWeeklyDailyBreakdown(data.daily_breakdown as Record<string, string[]>);
-      }
-    };
-    loadWeeklyBreakdown();
   }, [user]);
 
   useEffect(() => {
