@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import ScoreCard from "@/components/ScoreCard";
 import ScoreDetailModal from "@/components/ScoreDetailModal";
-import WeeklyChallenges from "@/components/WeeklyChallenges";
 import GettingToKnowYouQuizzes from "@/components/GettingToKnowYouQuizzes";
 
 import MicroReward from "@/components/MicroReward";
@@ -496,8 +495,6 @@ const Index = () => {
         <OnboardingGuide open={showOnboarding} onClose={closeOnboarding} />
 
         <GettingToKnowYouQuizzes />
-
-        <WeeklyChallenges />
       </div>
 
       {selectedScore && <ScoreDetailModal score={selectedScore} onClose={() => setSelectedScore(null)} />}
